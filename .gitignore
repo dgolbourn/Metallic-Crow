@@ -1,0 +1,14 @@
+*.a
+*.wav
+*.ogg
+*.mp3
+*.out
+*.err
+*.cdr
+build/
+*.1
+*.cproject
+*.project
+*.xcodeproj
+Debug/
+lib/

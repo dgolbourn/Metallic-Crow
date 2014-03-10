@@ -1,5 +1,8 @@
 #include "dynamics.h"
 #include <cmath>
+
+bool cccc = false;
+
 namespace game
 {
 class DynamicsImpl
@@ -8,7 +11,7 @@ public:
   DynamicsImpl(float x, float y, float u, float v, float w, float h, float c, float m);
   void Step(float dt);
   void Acceleration(float dt);
-  void Collision(DynamicsImpl const& other);
+  void Collision(DynamicsImpl& other);
   float x_;
   float y_;
   float u_;
@@ -22,16 +25,21 @@ public:
   float b_;
   float k_;
   float d_;
+
   float xk_;
   float yk_;
+  bool allowed_;
 };
 
 void DynamicsImpl::Acceleration(float dt)
 {
   float a = 0.f;
   float b = 0.f;
-  a -= std::copysign(xk_ * k_ * b_, u_);
-  b -= std::copysign(yk_ * k_ * a_, v_);
+  if(std::isfinite(m_))
+  {
+    a -= std::copysign(xk_ * k_ * m_ * b_, u_);
+    b -= std::copysign(yk_ * k_ * m_ * a_, v_);
+  }
   a -= d_ * u_;
   b -= d_ * v_;
   a += a_;
@@ -67,56 +75,103 @@ static float CollisionTime(float x0, float u0, float w0, float x1, float u1, flo
   float dx = x1 - x0;
   float du = u1 - u0;
   float dw = 0.5f * (w1 + w0);
-  if(du <= -0.f)
+  if(du < 0.f)
   {
     dx -= dw;
   }
-  else if(du >= 0.f)
+  else
   {
     dx += dw;
   }
   return dx / du;
 }
 
+static float CollisionTimeMax(float u0, float w0, float u1, float w1)
+{
+  float du = u1 - u0;
+  float dw = w1 + w0;
+  return std::abs(dw / du);
+}
+
 static float Collision(float u0, float m0, float c0, float u1, float m1, float c1)
 {
-  float v;
-  if(std::isfinite(m1))
+  float v = 0;
+  if(std::isfinite(m0))
   {
-    v = (c0 * c1 * m1 * (u1 - u0) + m0 * u0 + m1 * u1) / (m0 + m1);
-  }
-  else
-  {
-    v = -c0 * c1 * u0;
+    if(std::isfinite(m1))
+    {
+      v = (c0 * c1 * m1 * (u1 - u0) + m0 * u0 + m1 * u1) / (m0 + m1);
+    }
+    else
+    {
+      v = -c0 * c1 * u0;
+    }
   }
   return v;
 }
 
-void DynamicsImpl::Collision(DynamicsImpl const& other)
+void DynamicsImpl::Collision(DynamicsImpl& other)
 {
-  if(std::isfinite(m_))
+  if(std::isfinite(m_) && allowed_)
   {
     float dtx = CollisionTime(x_, u_, w_, other.x_, other.u_, other.w_);
     float dty = CollisionTime(y_, v_, h_, other.y_, other.v_, other.h_);
-    if(dtx < dty && dtx > 0.f && dtx < 4.f * dt_)
+    if(dtx < dty && dtx > 0.f)
     {
-      Step(-dtx);
-      u_ = game::Collision(u_, m_, c_, other.u_, other.m_, other.c_);
-      Step(dtx);
-      yk_ = other.k_;
+      if(dtx <= 4* dt_)
+      {
+        Step(-dtx);
+        other.Step(-dtx);
+        float temp_u = game::Collision(u_, m_, c_, other.u_, other.m_, other.c_);
+        other.u_ = game::Collision(other.u_, other.m_, other.c_, u_, m_, c_);
+        u_ = temp_u;
+        Step(dtx);
+        other.Step(dtx);
+        yk_ = other.k_;
+        other.yk_ = k_;
+        allowed_ = false;
+        other.allowed_ = false;
+        cccc = true;
+      }
+      else
+      {
+        if(std::isfinite(dtx))
+        {
+          cccc = cccc;
+        }
+      }
     }
-    else if(dty > 0.f && dty < 4.f * dt_)
+    else if(dty > 0.f)
     {
-      Step(-dty);
-      v_ = game::Collision(v_, m_, c_, other.v_, other.m_, other.c_);
-      Step(dty);
-      xk_ = other.k_;
+      if(dty <= 4 * dt_)
+      {
+        Step(-dty);
+        other.Step(-dty);
+        float temp_v = game::Collision(v_, m_, c_, other.v_, other.m_, other.c_);
+        other.v_ = game::Collision(other.v_, other.m_, other.c_, v_, m_, c_);
+        v_ = temp_v;
+        xk_ = other.k_;
+        other.xk_ = k_;
+        Step(dty);
+        other.Step(dty);
+        allowed_ = false;
+        other.allowed_ = false;
+        cccc = true;
+      }
+      else
+      {
+        if(std::isfinite(dty))
+        {
+          cccc = cccc;
+        }
+      }
     }
   }
 }
 
 DynamicsImpl::DynamicsImpl(float x, float y, float u, float v, float w, float h, float c, float m) : x_(x), u_(u), y_(y), v_(v), w_(w), h_(h), c_(c), m_(m), dt_(0), a_(0), b_(0), k_(0.f), d_(0.f), xk_(0.f), yk_(0.f)
 {
+  allowed_ = true;
 }
 
 Dynamics::Dynamics(float x, float y, float u, float v, float w, float h, float c, float m)
@@ -251,6 +306,12 @@ void Dynamics::Step(float dt)
   impl_->dt_ = dt;
   impl_->xk_ = 0.f;
   impl_->yk_ = 0.f;
+  impl_->allowed_ = true;
+}
+
+void Dynamics::CCCC(void)
+{
+  impl_->allowed_ = true;
 }
 
 void Dynamics::Collision(Dynamics const& other)
@@ -261,5 +322,10 @@ void Dynamics::Collision(Dynamics const& other)
 Dynamics::operator bool(void) const
 {
   return bool(impl_);
+}
+
+void Dynamics::Copy(Dynamics& other)
+{
+  *impl_ = *other.impl_;
 }
 }

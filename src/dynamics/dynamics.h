@@ -2,6 +2,9 @@
 #define DYNAMICS_H_
 #include <memory>
 #include "weak_ptr.h"
+
+extern bool cccc;
+
 namespace game
 {
 class Dynamics
@@ -36,6 +39,8 @@ public:
   void Step(float dt);
   void Collision(Dynamics const& other);
   explicit operator bool(void) const;
+  void Copy(Dynamics& other);
+  void CCCC(void);
   typedef memory::WeakPtr<Dynamics, class DynamicsImpl> WeakPtr;
 private:
   std::shared_ptr<class DynamicsImpl> impl_;

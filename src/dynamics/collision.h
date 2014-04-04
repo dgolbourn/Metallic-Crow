@@ -2,7 +2,7 @@
 #define COLLISION_H_
 #include <memory>
 #include "command.h"
-#include "world.h"
+#include "body.h"
 namespace game
 {
 class Collision

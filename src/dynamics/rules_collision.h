@@ -14,7 +14,7 @@ public:
   typedef event::Send<Rules> Send;
   typedef event::Receive<Rules> Receive;
   typedef event::Channel<Rules> Channel;
-  void Add(int group, display::BoundingBox const& bounding_box, Channel const& channel);
+  void Add(int group, dynamics::Body const& body, Channel const& channel);
   void Link(int group_a, int group_b);
 private:
   std::shared_ptr<class RulesCollisionImpl> impl_;

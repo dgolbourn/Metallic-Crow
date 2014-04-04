@@ -4,14 +4,13 @@
 #include "dynamics.h"
 #include "bind.h"
 #include "state.h"
-
 namespace game
 {
 class HeroImpl : public std::enable_shared_from_this<HeroImpl>
 {
 public:
-  HeroImpl(json::JSON const& json, display::Window& window, event::Queue& queue);
-  void Init(Scene& scene, RulesCollision& collision, DynamicsCollision& dcollision);
+  HeroImpl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world);
+  void Init(Scene& scene, RulesCollision& collision, DynamicsCollision& dcollision, dynamics::World& world);
   void End(event::Command const& command);
   State moving_;
   State destroyed_;
@@ -20,17 +19,16 @@ public:
   State hit_;
   State current_;
   display::BoundingBox render_box_;
-  display::BoundingBox collision_box_;
   bool paused_;
   event::Signal end_;
   event::Signal life_signal_;
-  game::Position position_;
-  Dynamics dynamics_;
+  dynamics::Body body_;
   int x_sign_;
   int x_facing_;
   int y_sign_;
   int y_facing_;
   int life_;
+  game::Position force_;
   void Render(void);
   void Pause(void);
   void Resume(void);
@@ -47,6 +45,9 @@ public:
   void Step(float dt);
   void Change(State& next);
   void Life(Hero::Command command);
+  void Position(game::Position const& position);
+  game::Position Position(void);
+  void BodyUpdate(void);
 };
 
 void HeroImpl::End(event::Command const& command)
@@ -69,9 +70,6 @@ void HeroImpl::Resume(void)
 void HeroImpl::Attack(void)
 {
 }
-
-static float const dv = 1500.f;
-static float const sqrt1_2 = std::sqrt(0.5f);
 
 void HeroImpl::Up(void)
 {
@@ -97,20 +95,22 @@ void HeroImpl::Right(void)
   Update();
 }
 
+static float const df = 20.f;
+static float const sqrt1_2 = std::sqrt(0.5f);
+
 void HeroImpl::Update(void)
 {
-  float v = dv;
+  float f = df;
   if(x_sign_ && y_sign_)
   {
-    v *= sqrt1_2;
+    f *= sqrt1_2;
   }
   if(x_sign_)
   {
     x_facing_ = x_sign_;
   }
 
-  dynamics_.a(float(x_sign_) * v);
-  dynamics_.b(float(y_sign_) * v + 1000.f);
+  force_ = game::Position(float(x_sign_) * f, float(y_sign_) * f);
 
   if(x_sign_ || y_sign_)
   {
@@ -163,7 +163,7 @@ static void BoxUpdate(display::BoundingBox const& source, display::BoundingBox& 
 {
   display::BoundingBox temp = source.Copy();
   float sourcex = temp.x();
-  temp.x(temp.x() + position.first);
+  temp.x(sourcex + position.first);
   temp.y(temp.y() + position.second);
   if(x_facing < 0)
   {
@@ -173,13 +173,10 @@ static void BoxUpdate(display::BoundingBox const& source, display::BoundingBox& 
   destination.Copy(temp);
 }
 
-void HeroImpl::Step(float dt)
+void HeroImpl::BodyUpdate(void)
 {
-  dynamics_.Step(dt);
-  position_.first = dynamics_.x(); 
-  position_.second = dynamics_.y();
-  BoxUpdate(current_.Render(), render_box_, position_, x_facing_);
-  BoxUpdate(current_.Collision(), collision_box_, position_, x_facing_);
+  BoxUpdate(current_.Render(), render_box_, Position(), x_facing_);
+  body_.Force(force_.first, force_.second);
 }
 
 void HeroImpl::Render(void)
@@ -198,20 +195,22 @@ void HeroImpl::SignalEnd(void)
   end_();
 }
 
-HeroImpl::HeroImpl(json::JSON const& json, display::Window& window, event::Queue& queue)
+HeroImpl::HeroImpl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world)
 {
   json_t* moving;
   json_t* destroyed;
   json_t* spawn;
   json_t* idle;
   json_t* hit;
+  json_t* body;
 
-  json.Unpack("{sososososo}",
+  json.Unpack("{sosososososo}",
     "moving", &moving,
     "destroyed", &destroyed,
     "spawn", &spawn,
     "idle", &idle,
-    "hit", &hit);
+    "hit", &hit,
+    "body", &body);
   
   paused_ = true;
   moving_ = State(moving, window, queue);
@@ -222,21 +221,21 @@ HeroImpl::HeroImpl(json::JSON const& json, display::Window& window, event::Queue
   current_ = spawn_;
   current_.Play();
   current_.Pause();
-  collision_box_ = current_.Collision().Copy();
-  render_box_ = current_.Render().Copy();
-  position_ = game::Position(0.f, 0.f);
-  dynamics_ = Dynamics(0.f, 0.f, 0.f, 0.f, 1.f, 1.f, 1.f, 1.f);
-  dynamics_.b(1000.f);
+  body_ = dynamics::Body(body, world);
   x_sign_ = 0;
   y_sign_ = 0;
   x_facing_ = 0;
   y_facing_ = 0;
   life_ = 100;
+  force_ = game::Position(0.f, 0.f);
+  render_box_ = display::BoundingBox(0.f, 0.f, 0.f, 0.f);
+  BodyUpdate();
 }
 
-void HeroImpl::Init(Scene& scene, RulesCollision& collision, DynamicsCollision& dcollision)
+void HeroImpl::Init(Scene& scene, RulesCollision& collision, DynamicsCollision& dcollision, dynamics::World& world)
 {
   auto ptr = shared_from_this();
+  world.Add(event::Bind(&HeroImpl::BodyUpdate, ptr));
   hit_.End(event::Bind(&HeroImpl::Reset, ptr));
   destroyed_.End(event::Bind(&HeroImpl::SignalEnd, ptr));
   spawn_.End(event::Bind(&HeroImpl::Reset, ptr));
@@ -255,14 +254,8 @@ void HeroImpl::Init(Scene& scene, RulesCollision& collision, DynamicsCollision& 
   RulesCollision::Send send(event::Bind(&HeroImpl::EnemySend, ptr));
   RulesCollision::Receive receive(event::Bind(&HeroImpl::EnemyReceive, ptr));
   RulesCollision::Channel channel(send, receive);
-  collision.Add(0, collision_box_, channel);
-  dcollision.Add(0, dynamics_, collision_box_);
-  dynamics_.x(collision_box_.w()*0.5f);
-  dynamics_.y(collision_box_.h()*0.5f);
-  dynamics_.w(collision_box_.w());
-  dynamics_.h(collision_box_.h());
-  dynamics_.k(0.9f);
-  dynamics_.d(0.9f);
+  collision.Add(0, body_, channel);
+  dcollision.Add(0, body_);
 }
 
 void HeroImpl::Life(Hero::Command command)
@@ -270,16 +263,42 @@ void HeroImpl::Life(Hero::Command command)
   life_signal_.Add([=](){return command(life_);});
 }
 
+static const float scale = 100.f;
+
+static void Metres(game::Position& pixels)
+{
+  pixels.first /= scale;
+  pixels.second /= scale;
+}
+
+static void Pixels(game::Position& metres)
+{
+  metres.first *= scale;
+  metres.second *= scale;
+}
+
+void HeroImpl::Position(game::Position const& position)
+{
+  game::Position metres = position;
+  Metres(metres);
+  body_.Position(metres.first, metres.second);
+}
+
+game::Position HeroImpl::Position(void)
+{
+  game::Position pixels = body_.Position();
+  Pixels(pixels);
+  return pixels;
+}
+
 void Hero::Position(game::Position const& position)
 {
-  impl_->position_ = position;
-  impl_->dynamics_.x(position.first);
-  impl_->dynamics_.y(position.second);
+  impl_->Position(position);
 }
 
 game::Position Hero::Position(void)
 {
-  return impl_->position_;
+  return impl_->Position();
 }
 
 void Hero::End(event::Command const& command)
@@ -292,14 +311,9 @@ void Hero::Life(Command const& command)
   impl_->Life(command);
 }
 
-void Hero::Step(float dt)
+Hero::Hero(json::JSON const& json, display::Window& window, Scene& scene, RulesCollision& collision, DynamicsCollision& dcollision, event::Queue& queue, dynamics::World& world)
 {
-  impl_->Step(dt);
-}
-
-Hero::Hero(json::JSON const& json, display::Window& window, Scene& scene, RulesCollision& collision, DynamicsCollision& dcollision, event::Queue& queue)
-{
-  impl_ = std::make_shared<HeroImpl>(json, window, queue);
-  impl_->Init(scene, collision, dcollision);
+  impl_ = std::make_shared<HeroImpl>(json, window, queue, world);
+  impl_->Init(scene, collision, dcollision, world);
 }
 }

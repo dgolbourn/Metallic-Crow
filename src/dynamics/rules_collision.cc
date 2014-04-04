@@ -1,6 +1,5 @@
 #include "rules_collision.h"
 #include "collision_group.h"
-
 namespace game
 {
 class RulesCollisionImpl final : public CollisionGroup<RulesCollision::Channel>
@@ -8,9 +7,9 @@ class RulesCollisionImpl final : public CollisionGroup<RulesCollision::Channel>
   using CollisionGroup::CollisionGroup;
 };
 
-void RulesCollision::Add(int group, display::BoundingBox const& bounding_box, Channel const& channel)
+void RulesCollision::Add(int group, dynamics::Body const& body, Channel const& channel)
 {
-  impl_->Add(group, bounding_box, channel);
+  impl_->Add(group, body, channel);
 }
 
 void RulesCollision::Link(int group_a, int group_b)

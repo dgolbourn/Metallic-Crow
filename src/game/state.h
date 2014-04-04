@@ -19,7 +19,6 @@ public:
   void Resume(void);
   void Stop(void);
   void End(event::Command const& command);
-  display::BoundingBox const& Collision(void) const;
   display::BoundingBox const& Render(void) const;
   void Render(display::BoundingBox const& bounding_box);
 private:

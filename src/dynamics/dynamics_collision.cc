@@ -2,36 +2,27 @@
 #include "collision_group.h"
 namespace game
 {
-typedef event::Send<Dynamics> Send;
-typedef event::Receive<Dynamics> Receive;
-typedef event::Channel<Dynamics> Channel;
+typedef event::Send<bool> Send;
+typedef event::Receive<bool> Receive;
+typedef event::Channel<bool> Channel;
 
 class DynamicsCollisionImpl final : public CollisionGroup<Channel>
 {
   using CollisionGroup::CollisionGroup;
 };
 
-void DynamicsCollision::Add(int group, Dynamics const& dynamics, display::BoundingBox const& bounding_box)
+void DynamicsCollision::Add(int group, dynamics::Body const& body)
 {
-  Dynamics::WeakPtr ptr = dynamics;
-  Send send = [=](void)
+  static const Send send = [=](void)
   {
-    Dynamics shared = ptr.Lock();
-    return std::pair<Dynamics, bool>(shared, bool(shared));
+    return std::pair<bool, bool>(true, true);
   };
-
-  Receive receive = [=](Dynamics const& other)
+  static const Receive receive = [=](bool)
   {
-    bool locked = false;
-    if(auto shared = ptr.Lock())
-    {
-      shared.Collision(other);
-      locked = true;
-    }
-    return locked;
+    return true;
   };
-
-  impl_->Add(group, bounding_box, Channel(send, receive));
+  static const Channel channel(send, receive);
+  impl_->Add(group, body, channel);
 }
 
 void DynamicsCollision::Link(int group_a, int group_b)

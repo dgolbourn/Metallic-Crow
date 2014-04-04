@@ -52,7 +52,10 @@ SoundImpl::SoundImpl(std::string const& filename) : chunk_(filename), volume_(de
 void SoundImpl::Play(int repeats)
 {
   int channel = chunk_.Play(repeats, volume_);
-  channels[channel] = this;
+  if(channel != -1)
+  {
+    channels[channel] = this;
+  }
 }
 
 void SoundImpl::Pause(void)

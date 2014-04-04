@@ -1,72 +1,72 @@
 #include "collision.h"
 #include <list>
 #include <map>
-
 namespace game
 {
-typedef std::pair<display::BoundingBox::WeakPtr, display::BoundingBox::WeakPtr> BoundingBoxPair;
+typedef std::pair<dynamics::Body::WeakPtr, dynamics::Body::WeakPtr> BodyPair;
 typedef std::list<event::Command> CommandList;
-typedef std::map<BoundingBoxPair, CommandList> CollisionMap;
+typedef std::map<BodyPair, CommandList> CollisionMap;
 
 class CollisionImpl
 {
 public:
-  void Check(void);
-  void Add(display::BoundingBox const& a, display::BoundingBox const& b, event::Command const& c);
+  void Add(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c);
+  bool Check(dynamics::Body const& a, dynamics::Body const& b) const;
+  void Signal(dynamics::Body const& a, dynamics::Body const& b);
+  void Clear(void);
   CollisionMap collisions_;
 };
 
-void CollisionImpl::Check(void)
+static BodyPair MakePair(dynamics::Body const& a, dynamics::Body const& b)
 {
-  for(auto iter = collisions_.begin(); iter != collisions_.end();)
+  BodyPair body_pair;
+  if(b < a)
   {
-    bool erase_flag = true;
-    if(display::BoundingBox first_region = iter->first.first.Lock())
+    body_pair = BodyPair(b, a);
+  }
+  else
+  {
+    body_pair = BodyPair(a, b);
+  }
+  return body_pair;
+}
+
+void CollisionImpl::Add(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c)
+{
+  collisions_[MakePair(a, b)].push_back(c);
+}
+
+bool CollisionImpl::Check(dynamics::Body const& a, dynamics::Body const& b) const
+{
+  return collisions_.find(MakePair(a, b)) != collisions_.end();
+}
+
+void CollisionImpl::Signal(dynamics::Body const& a, dynamics::Body const& b)
+{
+  auto iter = collisions_.find(MakePair(a, b));
+  if(iter != collisions_.end())
+  {
+    for(auto command_iter = iter->second.begin(); command_iter != iter->second.end();)
     {
-      if(display::BoundingBox second_region = iter->first.second.Lock())
+      if((*command_iter)())
       {
-        erase_flag = false;
-        if(first_region && second_region)
-        {
-          for(auto command_iter = iter->second.begin(); command_iter != iter->second.end();)
-          {
-            if((*command_iter)())
-            {
-              ++command_iter;
-            }
-            else
-            {
-              command_iter = iter->second.erase(command_iter);
-            }
-          }
-          if(iter->second.empty())
-          {
-            erase_flag = true;
-          }
-        }
+        ++command_iter;
+      }
+      else
+      {
+        command_iter = iter->second.erase(command_iter);
       }
     }
-    if(erase_flag)
+    if(iter->second.empty())
     {
       iter = collisions_.erase(iter);
-    }
-    else
-    {
-      ++iter;
     }
   }
 }
 
-void CollisionImpl::Add(display::BoundingBox const& a, display::BoundingBox const& b, event::Command const& c)
+void CollisionImpl::Clear(void)
 {
-  if(b < a)
-  {
-    collisions_[BoundingBoxPair(b, a)].push_back(c);
-  }
-  else
-  {
-    collisions_[BoundingBoxPair(a, b)].push_back(c);
-  }
+  collisions_.clear();
 }
 
 Collision::Collision(void)
@@ -74,13 +74,23 @@ Collision::Collision(void)
   impl_ = std::make_shared<CollisionImpl>();
 }
 
-void Collision::Add(display::BoundingBox const& a, display::BoundingBox const& b, event::Command const& c)
+void Collision::Add(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c)
 {
   impl_->Add(a, b, c);
 }
 
-void Collision::Check(void)
+bool Collision::Check(dynamics::Body const& a, dynamics::Body const& b) const
 {
-  impl_->Check();
+  return impl_->Check(a, b);
+}
+
+void Collision::Signal(dynamics::Body const& a, dynamics::Body const& b)
+{
+  impl_->Signal(a, b);
+}
+
+void Collision::Clear(void)
+{
+  impl_->Clear();
 }
 }

@@ -13,19 +13,10 @@ public:
 
 GraphImpl::GraphImpl(void)
 {
-  graph_ = nullptr;
-  try
+  graph_ = avfilter_graph_alloc();
+  if(!graph_)
   {
-    graph_ = avfilter_graph_alloc();
-    if(!graph_)
-    {
-      BOOST_THROW_EXCEPTION(Exception());
-    }
-  }
-  catch(...)
-  {
-    avfilter_graph_free(&graph_);
-    throw;
+    BOOST_THROW_EXCEPTION(Exception());
   }
 }
 

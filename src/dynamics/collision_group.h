@@ -10,7 +10,7 @@ namespace game
 template<class Channel> class CollisionGroup
 {
 public:
-  typedef std::pair<display::BoundingBox::WeakPtr, Channel> Member;
+  typedef std::pair<dynamics::Body::WeakPtr, Channel> Member;
   typedef std::list<Member> MemberList;
   typedef std::map<int, MemberList> MemberMap;
   typedef std::set<int> LinkSet;
@@ -32,13 +32,13 @@ public:
       MemberList& members_b = members_[group_b];
       for(auto iter_a = members_a.begin(); iter_a != members_a.end();)
       {
-        if(display::BoundingBox box_a = iter_a->first.Lock())
+        if(dynamics::Body body_a = iter_a->first.Lock())
         {
           for(auto iter_b = members_b.begin(); iter_b != members_b.end();)
           {
-            if(display::BoundingBox box_b = iter_b->first.Lock())
+            if(dynamics::Body body_b = iter_b->first.Lock())
             {
-              collision_.Add(box_a, box_b, event::Bind(iter_a->second, iter_b->second));
+              collision_.Add(body_a, body_b, event::Bind(iter_a->second, iter_b->second));
               ++iter_b;
             }
             else
@@ -56,16 +56,16 @@ public:
     }
   }
 
-  void Add(int this_group, display::BoundingBox const& this_box, Channel const& channel)
+  void Add(int this_group, dynamics::Body const& this_body, Channel const& channel)
   {
     for(int group : links_[this_group])
     {
       MemberList& members = members_[group];
       for(auto iter = members.begin(); iter != members.end();)
       {
-        if(display::BoundingBox box = iter->first.Lock())
+        if(dynamics::Body body = iter->first.Lock())
         {
-          collision_.Add(this_box, box, event::Bind(iter->second, channel));
+          collision_.Add(this_body, body, event::Bind(iter->second, channel));
           ++iter;
         }
         else
@@ -74,7 +74,7 @@ public:
         }
       }
     }
-    members_[this_group].push_back(Member(this_box, channel));
+    members_[this_group].push_back(Member(this_body, channel));
   }
 
   CollisionGroup(Collision const& collision) : collision_(collision)

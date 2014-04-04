@@ -3,34 +3,14 @@
 
 namespace sdl
 {
-static void FreeTexture(SDL_Texture* impl)
-{
-  if(impl)
-  {
-    SDL_DestroyTexture(impl);
-  }
-}
-
 Texture::Texture(SDL_Renderer* renderer, SDL_Surface* surface)
 {
-  SDL_Texture* impl = nullptr;
-  try
+  SDL_Texture* impl = SDL_CreateTextureFromSurface(renderer, surface);
+  if(!impl)
   {
-    impl = SDL_CreateTextureFromSurface(renderer, surface);
-    if(!impl)
-    {
-      BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
-    }
-    impl_ = std::shared_ptr<SDL_Texture>(impl, FreeTexture);
+    BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
   }
-  catch(...)
-  {
-    if(!impl_)
-    {
-      FreeTexture(impl);
-    }
-    throw;
-  }
+  impl_ = std::shared_ptr<SDL_Texture>(impl, SDL_DestroyTexture);
 }
 
 Texture::operator SDL_Texture*(void) const

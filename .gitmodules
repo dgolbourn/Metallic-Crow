@@ -58,3 +58,6 @@
 [submodule "lib/boost/static_assert"]
 	path = lib/boost/static_assert
 	url = https://github.com/boostorg/static_assert.git
+[submodule "lib/box2d"]
+	path = lib/box2d
+	url = https://github.com/ansman/box2d.git

@@ -6,56 +6,24 @@
 
 namespace sdl
 {
-static void FreeSurface(SDL_Surface* ptr)
-{
-  if(ptr)
-  {
-    SDL_FreeSurface(ptr);
-  }
-}
-
 Surface::Surface(TTF_Font* font, char const* text, SDL_Color colour)
 {
-  SDL_Surface* impl = nullptr;
-  try
+  SDL_Surface* impl = TTF_RenderText_Blended(font, text, colour);
+  if(!impl)
   {
-    impl = TTF_RenderText_Blended(font, text, colour);
-    if(!impl)
-    {
-      BOOST_THROW_EXCEPTION(ttf::Exception() << ttf::Exception::What(ttf::Error()));
-    }
-    impl_ = std::shared_ptr<SDL_Surface>(impl, FreeSurface);
+    BOOST_THROW_EXCEPTION(ttf::Exception() << ttf::Exception::What(ttf::Error()));
   }
-  catch(...)
-  {
-    if(!impl_)
-    {
-      FreeSurface(impl);
-    }
-    throw;
-  }
+  impl_ = std::shared_ptr<SDL_Surface>(impl, SDL_FreeSurface);
 }
 
 Surface::Surface(char const* file)
 {
-  SDL_Surface* impl = nullptr;
-  try
+  SDL_Surface* impl = IMG_Load(file);
+  if(!impl)
   {
-    impl = IMG_Load(file);
-    if(!impl)
-    {
-      BOOST_THROW_EXCEPTION(img::Exception() << img::Exception::What(img::Error()));
-    }
-    impl_ = std::shared_ptr<SDL_Surface>(impl, FreeSurface);
+    BOOST_THROW_EXCEPTION(img::Exception() << img::Exception::What(img::Error()));
   }
-  catch(...)
-  {
-    if(!impl_)
-    {
-      FreeSurface(impl);
-    }
-    throw;
-  }
+  impl_ = std::shared_ptr<SDL_Surface>(impl, SDL_FreeSurface);
 }
 
 Surface::operator SDL_Surface*(void) const

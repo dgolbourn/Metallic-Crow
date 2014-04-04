@@ -18,7 +18,6 @@ public:
   Animation animation_;
   display::BoundingBox render_box_;
   audio::Sound sound_;
-  display::BoundingBox collision_box_;
   int loops_;
 };
 
@@ -26,20 +25,17 @@ StateImpl::StateImpl(json::JSON const& json, display::Window& window, event::Que
 {
   json_t* animation;
   json_t* render_box;
-  json_t* collision_box;
   char const* sound_effect;
 
-  json.Unpack("{sososssosi}",
+  json.Unpack("{sososssi}",
     "animation", &animation,
     "render box", &render_box,
     "sound effect", &sound_effect,
-    "collision box", &collision_box,
     "loops", &loops_);
 
   animation_ = Animation(animation, window, queue);
   render_box_ = display::BoundingBox(render_box);
   sound_ = audio::Sound(sound_effect);
-  collision_box_ = display::BoundingBox(collision_box);
 }
 
 void StateImpl::Play(void)
@@ -101,11 +97,6 @@ void State::Stop(void)
 void State::End(event::Command const& command)
 {
   impl_->End(command);
-}
-
-display::BoundingBox const& State::Collision(void) const
-{
-  return impl_->collision_box_;
 }
 
 display::BoundingBox const& State::Render(void) const

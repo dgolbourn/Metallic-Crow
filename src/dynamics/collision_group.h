@@ -3,11 +3,10 @@
 #include <list>
 #include <map>
 #include <set>
-#include "channel.h"
 #include "collision.h"
 namespace game
 {
-template<class Channel> class CollisionGroup
+template<class Channel, bool start> class CollisionGroup
 {
 public:
   typedef std::pair<dynamics::Body::WeakPtr, Channel> Member;
@@ -38,7 +37,7 @@ public:
           {
             if(dynamics::Body body_b = iter_b->first.Lock())
             {
-              collision_.Add(body_a, body_b, event::Bind(iter_a->second, iter_b->second));
+              collision_.Add(body_a, body_b, event::Bind(iter_a->second, iter_b->second), start);
               ++iter_b;
             }
             else
@@ -65,7 +64,7 @@ public:
       {
         if(dynamics::Body body = iter->first.Lock())
         {
-          collision_.Add(this_body, body, event::Bind(iter->second, channel));
+          collision_.Add(this_body, body, event::Bind(iter->second, channel), start);
           ++iter;
         }
         else

@@ -164,4 +164,9 @@ void Sound::Volume(int volume)
   thread::Lock lock(mutex);
   impl_->Volume(volume);
 }
+
+Sound::operator bool(void) const
+{
+  return bool(impl_);
+}
 }

@@ -17,6 +17,7 @@ public:
   void Stop(void) const;
   void Fade(int ms) const;
   void Volume(int volume);
+  explicit operator bool(void) const;
 private:
   std::shared_ptr<class SoundImpl> impl_;
 };

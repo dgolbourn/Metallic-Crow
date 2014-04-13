@@ -25,6 +25,9 @@
 #include "ffmpeg_exception.h"
 #include "img_exception.h"
 #include "world.h"
+#include "box.h"
+#include "item.h"
+#include "command_collision.h"
 static bool run = true;
 static bool Quit(void)
 {
@@ -32,7 +35,7 @@ static bool Quit(void)
   return false;
 }
 
-int main(int argc, char *argv[]) 
+int main(int argc, char* argv[]) 
 {
   int ret;
   try
@@ -50,51 +53,41 @@ int main(int argc, char *argv[])
     event::pause.first.Add(event::Bind(&audio::Music::Pause, mixer));
     event::pause.second.Add(event::Bind(&audio::Music::Resume, mixer));
     game::Scene Sc(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/scene.json"), w);
-    game::Collision col;
+    event::Queue queue;
+    game::Collision col(queue);
     game::RulesCollision rc(col);
     game::DynamicsCollision dc(col);
+    game::CommandCollision cc(col);
     dc.Link(0, 1);
-    dc.Link(1, 2);
-    dc.Link(2, 0);
-    dc.Link(2, 2);
-    event::Queue queue;
+    dc.Link(1, 1);
+    dc.Link(0, 2);
+    cc.Link(0, 3);
+    cc.Link(0, 4);
     dynamics::World world(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/world.json"), col);
-    game::Hero h(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/hero.json"), w, Sc, rc, dc, queue, world);
+    game::Hero h(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/hero.json"), w, Sc, rc, dc, cc, queue, world);
     h.End(Quit);
     game::HUD hud(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/hud.json"), w, Sc);
     h.Life(event::Bind(&game::HUD::Life, hud));
     
-    std::vector<display::BoundingBox> boxes(100);
-    std::vector<dynamics::Body> bodies(100);
-    int idx = 0;
+    std::vector<game::Box> platforms(100);
+    for(auto& platform : platforms)
+    {
+      platform = game::Box(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/platform.json"), w, Sc, queue, dc, world);
+      platform.Position(game::Position(float(200 + rand() % 10000), float(200 + rand() % 3000)));
+    }
+
+    std::vector<game::Box> boxes(30);
     for(auto& box : boxes)
     {
-      box = display::BoundingBox(200 + rand() % 1000, 200+rand() % 1000, 50, 50);
-      event::Command c = std::bind(S, display::BoundingBox(), box, 1.f, false, 0.);
-      Sc.Add(c, -1);
-      if (idx & 5)
-      {
-        bodies[idx] = dynamics::Body((box.x() + 0.5f * box.w()) / 100.f, (box.y() + 0.5f* box.h()) / 100.f, 0.f, 0.f, box.w() / 100.f, box.h() / 100.f, std::numeric_limits<float>::infinity(), 0.1, 0.f, 0.f, world);
-        dc.Add(1, bodies[idx]);
-      }
-      else
-      {
-        box.y(-box.y());
-        bodies[idx] = dynamics::Body((box.x() + 0.5f * box.w()) / 100.f, (box.y() + 0.5f* box.h()) / 100.f, 0.f, 0.f, box.w() / 100.f, box.h() / 100.f, 1.0f, 0.1, 0.f, 0.f, world);
-        dc.Add(2, bodies[idx]);
-      }
-      display::BoundingBox::WeakPtr b = box;
-      dynamics::Body::WeakPtr d = bodies[idx];
-      event::Command cc = [=](void)
-      {
-        game::Position p = d.Lock().Position();  
-        display::BoundingBox c = b.Lock();
-        c.x(p.first * 100.f - 0.5*c.w());
-        c.y(p.second * 100.f - 0.5*c.h());
-        return true; 
-      };
-      world.Add(cc);
-      idx++;
+      box = game::Box(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/box.json"), w, Sc, queue, dc, world);
+      box.Position(game::Position(float(200 + rand() % 10000), -400.f));
+    }
+
+    std::vector<game::Item> items(1);
+    for(auto& item : items)
+    {
+      item = game::Item(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/watering_can.json"), w, Sc, queue, dc, cc, world);
+      item.Position(game::Position(300.f, 300.f));
     }
 
     event::pause.second();

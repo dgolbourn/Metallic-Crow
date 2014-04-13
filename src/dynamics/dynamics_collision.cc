@@ -1,28 +1,17 @@
 #include "dynamics_collision.h"
 #include "collision_group.h"
+#include "channel.h"
+#include "make_channel.h"
 namespace game
 {
-typedef event::Send<bool> Send;
-typedef event::Receive<bool> Receive;
-typedef event::Channel<bool> Channel;
-
-class DynamicsCollisionImpl final : public CollisionGroup<Channel>
+class DynamicsCollisionImpl final : public CollisionGroup<dynamics::Channel, true>
 {
   using CollisionGroup::CollisionGroup;
 };
 
 void DynamicsCollision::Add(int group, dynamics::Body const& body)
 {
-  static const Send send = [=](void)
-  {
-    return std::pair<bool, bool>(true, true);
-  };
-  static const Receive receive = [=](bool)
-  {
-    return true;
-  };
-  static const Channel channel(send, receive);
-  impl_->Add(group, body, channel);
+  impl_->Add(group, body, dynamics::MakeChannel());
 }
 
 void DynamicsCollision::Link(int group_a, int group_b)

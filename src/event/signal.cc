@@ -10,6 +10,7 @@ class SignalImpl
 public:
   void Notify(void);
   void Add(Command const& comand);
+  bool Empty(void) const;
   CommandList commands_;
 };
 
@@ -33,6 +34,11 @@ void SignalImpl::Add(Command const& comand)
   commands_.push_back(comand);
 }
 
+bool SignalImpl::Empty(void) const
+{
+  return commands_.empty();
+}
+
 void Signal::operator()(Queue& queue)
 {
   queue.Add(event::Bind(&SignalImpl::Notify, impl_));
@@ -51,5 +57,10 @@ void Signal::Add(Command const& comand)
 Signal::Signal(void)
 {
   impl_ = std::make_shared<SignalImpl>();
+}
+
+Signal::operator bool(void) const
+{
+  return !impl_->Empty();
 }
 }

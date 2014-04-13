@@ -20,6 +20,7 @@ public:
   game::Position Velocity(void) const;
   void Velocity(float x, float y);
   void Force(float x, float y);
+  void Impulse(float x, float y);
   typedef memory::WeakPtr<Body, class BodyImpl> WeakPtr;
 private:
   std::shared_ptr<class BodyImpl> impl_;

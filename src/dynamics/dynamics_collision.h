@@ -2,7 +2,7 @@
 #define DYNAMICS_COLLISION_H_
 #include <memory>
 #include "collision.h"
-#include "world.h"
+#include "body.h"
 namespace game
 {
 class DynamicsCollision

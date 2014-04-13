@@ -18,7 +18,7 @@ class WindowImpl
 public:
   WindowImpl(json::JSON const& json);
   sdl::Texture::WeakPtr Load(std::string const& filename);
-  sdl::Texture Text(std::string const& text, Font const& font);
+  sdl::Texture Text(std::string const& text, sdl::Font const& font);
   void Free(void);
   void Clear(void) const;
   void Show(void) const;
@@ -128,11 +128,9 @@ sdl::Texture::WeakPtr WindowImpl::Load(std::string const& filename)
   return texture_ptr;
 }
 
-sdl::Texture WindowImpl::Text(std::string const& text, Font const& font)
+sdl::Texture WindowImpl::Text(std::string const& text, sdl::Font const& font)
 {
-  sdl::Surface surface(font.impl_->font_, text.c_str(), font.impl_->colour_);
-  SDL_SetSurfaceAlphaMod(surface, font.impl_->colour_.a);
-  return sdl::Texture(renderer_, surface);
+  return sdl::Texture(renderer_, sdl::Surface(text, font));
 }
 
 void WindowImpl::Clear(void) const
@@ -231,7 +229,7 @@ Texture Window::Load(std::string const& filename)
   return Bind(impl_, impl_->Load(filename));
 }
 
-Texture Window::Text(std::string const& text, Font const& font)
+Texture Window::Text(std::string const& text, sdl::Font const& font)
 {
   return Bind(impl_, impl_->Text(text, font));
 }

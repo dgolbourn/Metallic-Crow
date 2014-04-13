@@ -7,7 +7,7 @@
 #include "body.h"
 namespace dynamics
 {
-class BodyImpl : public std::enable_shared_from_this<BodyImpl>
+class BodyImpl final : public std::enable_shared_from_this<BodyImpl>
 {
 public:
   BodyImpl(json::JSON const& json, World& world);
@@ -19,6 +19,7 @@ public:
   game::Position Velocity(void) const;
   void Velocity(float x, float y);
   void Force(float x, float y);
+  void Impulse(float x, float y);
   static Body MakeBody(b2Body* body);
   World::WeakPtr world_;
   b2Body* body_;

@@ -12,9 +12,9 @@ public:
   void Pause(void);
   void Resume(void);
   void Stop(void);
-  void Render(display::BoundingBox const& bounding_box);
+  void Render(display::BoundingBox const& bounding_box) const;
   void End(event::Command const& command);
-
+  void Add(event::Command const& command);
   Animation animation_;
   display::BoundingBox render_box_;
   audio::Sound sound_;
@@ -35,25 +35,37 @@ StateImpl::StateImpl(json::JSON const& json, display::Window& window, event::Que
 
   animation_ = Animation(animation, window, queue);
   render_box_ = display::BoundingBox(render_box);
-  sound_ = audio::Sound(sound_effect);
+  if(strcmp(sound_effect, ""))
+  {
+    sound_ = audio::Sound(sound_effect);
+  }
 }
 
 void StateImpl::Play(void)
 {
   animation_.Play(loops_);
-  sound_.Play(loops_);
+  if(sound_)
+  {
+    sound_.Play(loops_);
+  }
 }
 
 void StateImpl::Pause(void)
 {
   animation_.Pause();
-  sound_.Pause();
+  if(sound_)
+  {
+    sound_.Pause();
+  }
 }
 
 void StateImpl::Resume(void)
 {
   animation_.Resume();
-  sound_.Resume();
+  if(sound_)
+  {
+    sound_.Resume();
+  }
 }
 
 static const int fade = 1000;
@@ -61,10 +73,13 @@ static const int fade = 1000;
 void StateImpl::Stop(void)
 {
   animation_.Pause();
-  sound_.Fade(fade);
+  if(sound_)
+  {
+    sound_.Fade(fade);
+  }
 }
 
-void StateImpl::Render(display::BoundingBox const& bounding_box)
+void StateImpl::Render(display::BoundingBox const& bounding_box) const
 {
   animation_.Render(bounding_box, 1.f, false, 0.);
 }
@@ -72,6 +87,11 @@ void StateImpl::Render(display::BoundingBox const& bounding_box)
 void StateImpl::End(event::Command const& command)
 {
   animation_.End(command);
+}
+
+void StateImpl::Add(event::Command const& command)
+{
+  animation_.Add(command);
 }
 
 void State::Play(void)
@@ -99,12 +119,17 @@ void State::End(event::Command const& command)
   impl_->End(command);
 }
 
-display::BoundingBox const& State::Render(void) const
+void State::Add(event::Command const& command)
+{
+  impl_->Add(command);
+}
+
+display::BoundingBox const& State::Render(void)
 {
   return impl_->render_box_;
 }
 
-void State::Render(display::BoundingBox const& bounding_box)
+void State::Render(display::BoundingBox const& bounding_box) const
 {
   impl_->Render(bounding_box);
 }

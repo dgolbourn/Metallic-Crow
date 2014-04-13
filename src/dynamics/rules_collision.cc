@@ -2,7 +2,7 @@
 #include "collision_group.h"
 namespace game
 {
-class RulesCollisionImpl final : public CollisionGroup<RulesCollision::Channel>
+class RulesCollisionImpl final : public CollisionGroup<RulesCollision::Channel, true>
 {
   using CollisionGroup::CollisionGroup;
 };

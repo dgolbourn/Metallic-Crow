@@ -1,21 +1,26 @@
 #include "collision.h"
-#include <list>
 #include <map>
+#include "switch.h"
 namespace game
 {
 typedef std::pair<dynamics::Body::WeakPtr, dynamics::Body::WeakPtr> BodyPair;
-typedef std::list<event::Command> CommandList;
-typedef std::map<BodyPair, CommandList> CollisionMap;
+typedef std::map<BodyPair, event::Switch> CollisionMap;
 
 class CollisionImpl
 {
 public:
-  void Add(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c);
+  CollisionImpl(event::Queue& queue);
+  void Add(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c, bool start);
   bool Check(dynamics::Body const& a, dynamics::Body const& b) const;
-  void Signal(dynamics::Body const& a, dynamics::Body const& b);
+  void Notify(dynamics::Body const& a, dynamics::Body const& b, bool start);
   void Clear(void);
   CollisionMap collisions_;
+  event::Queue queue_;
 };
+
+CollisionImpl::CollisionImpl(event::Queue& queue) : queue_(queue)
+{
+}
 
 static BodyPair MakePair(dynamics::Body const& a, dynamics::Body const& b)
 {
@@ -31,9 +36,16 @@ static BodyPair MakePair(dynamics::Body const& a, dynamics::Body const& b)
   return body_pair;
 }
 
-void CollisionImpl::Add(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c)
+void CollisionImpl::Add(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c, bool start)
 {
-  collisions_[MakePair(a, b)].push_back(c);
+  if(start)
+  {
+    collisions_[MakePair(a, b)].first.Add(c);
+  }
+  else
+  {
+    collisions_[MakePair(a, b)].second.Add(c);
+  }
 }
 
 bool CollisionImpl::Check(dynamics::Body const& a, dynamics::Body const& b) const
@@ -41,23 +53,25 @@ bool CollisionImpl::Check(dynamics::Body const& a, dynamics::Body const& b) cons
   return collisions_.find(MakePair(a, b)) != collisions_.end();
 }
 
-void CollisionImpl::Signal(dynamics::Body const& a, dynamics::Body const& b)
+static bool Empty(event::Switch const& s)
+{
+  return !(bool(s.first) || bool(s.second));
+}
+
+void CollisionImpl::Notify(dynamics::Body const& a, dynamics::Body const& b, bool start)
 {
   auto iter = collisions_.find(MakePair(a, b));
   if(iter != collisions_.end())
   {
-    for(auto command_iter = iter->second.begin(); command_iter != iter->second.end();)
+    if(start)
     {
-      if((*command_iter)())
-      {
-        ++command_iter;
-      }
-      else
-      {
-        command_iter = iter->second.erase(command_iter);
-      }
+      iter->second.first(queue_);
     }
-    if(iter->second.empty())
+    else
+    {
+      iter->second.second(queue_);
+    }
+    if(Empty(iter->second))
     {
       iter = collisions_.erase(iter);
     }
@@ -69,14 +83,14 @@ void CollisionImpl::Clear(void)
   collisions_.clear();
 }
 
-Collision::Collision(void)
+Collision::Collision(event::Queue& queue)
 {
-  impl_ = std::make_shared<CollisionImpl>();
+  impl_ = std::make_shared<CollisionImpl>(queue);
 }
 
-void Collision::Add(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c)
+void Collision::Add(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c, bool start)
 {
-  impl_->Add(a, b, c);
+  impl_->Add(a, b, c, start);
 }
 
 bool Collision::Check(dynamics::Body const& a, dynamics::Body const& b) const
@@ -84,9 +98,9 @@ bool Collision::Check(dynamics::Body const& a, dynamics::Body const& b) const
   return impl_->Check(a, b);
 }
 
-void Collision::Signal(dynamics::Body const& a, dynamics::Body const& b)
+void Collision::operator()(dynamics::Body const& a, dynamics::Body const& b, bool start)
 {
-  impl_->Signal(a, b);
+  impl_->Notify(a, b, start);
 }
 
 void Collision::Clear(void)

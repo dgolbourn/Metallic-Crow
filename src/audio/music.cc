@@ -8,7 +8,7 @@
 #include "boost/throw_exception.hpp"
 namespace audio
 {
-class MusicImpl : public std::enable_shared_from_this<MusicImpl>
+class MusicImpl final : public std::enable_shared_from_this<MusicImpl>
 {  
 public:
   MusicImpl(std::string const& filename);

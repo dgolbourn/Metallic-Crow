@@ -19,8 +19,9 @@ public:
   void Resume(void);
   void Stop(void);
   void End(event::Command const& command);
-  display::BoundingBox const& Render(void) const;
-  void Render(display::BoundingBox const& bounding_box);
+  void Add(event::Command const& command);
+  display::BoundingBox const& Render(void);
+  void Render(display::BoundingBox const& bounding_box) const;
 private:
   std::shared_ptr<class StateImpl> impl_;
 };

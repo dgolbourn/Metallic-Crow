@@ -1,6 +1,7 @@
 #include "world.h"
 #include "world_impl.h"
 #include "body_impl.h"
+#include "units.h"
 namespace dynamics
 {
 bool WorldImpl::ShouldCollide(b2Fixture* fixtureA, b2Fixture* fixtureB)
@@ -10,7 +11,12 @@ bool WorldImpl::ShouldCollide(b2Fixture* fixtureA, b2Fixture* fixtureB)
 
 void WorldImpl::BeginContact(b2Contact* contact)
 {
-  return collision_.Signal(BodyImpl::MakeBody(contact->GetFixtureA()->GetBody()), BodyImpl::MakeBody(contact->GetFixtureB()->GetBody()));
+  return collision_(BodyImpl::MakeBody(contact->GetFixtureA()->GetBody()), BodyImpl::MakeBody(contact->GetFixtureB()->GetBody()), true);
+}
+
+void WorldImpl::EndContact(b2Contact* contact)
+{
+  return collision_(BodyImpl::MakeBody(contact->GetFixtureA()->GetBody()), BodyImpl::MakeBody(contact->GetFixtureB()->GetBody()), false);
 }
 
 void WorldImpl::Step(void)
@@ -32,7 +38,7 @@ WorldImpl::WorldImpl(json::JSON const& json, game::Collision& collision) : world
   json.Unpack("{s[ff]}",
     "gravity", &x, &y);
 
-  world_.SetGravity(b2Vec2(float32(x),float32(y)));
+  world_.SetGravity(b2Vec2(Metres(float32(x)),Metres(float32(y))));
   world_.SetAutoClearForces(true);
   world_.SetContactListener(this);
   world_.SetContactFilter(this);

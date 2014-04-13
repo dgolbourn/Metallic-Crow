@@ -1,5 +1,6 @@
 #include "world_impl.h"
 #include "body_impl.h"
+#include "units.h"
 namespace dynamics
 {
 BodyImpl::BodyImpl(json::JSON const& json, World& world)
@@ -24,9 +25,15 @@ BodyImpl::BodyImpl(float x, float y, float u, float v, float w, float h, float m
 
 void BodyImpl::Init(float32 x, float32 y, float32 u, float32 v, float32 w, float32 h, float32 m, float32 c, float32 d, float32 k, World& world)
 {
+  x = Metres(x);
+  y = Metres(y);
+  u = Metres(u);
+  v = Metres(v);
+  w = Metres(w);
+  h = Metres(h);
   b2BodyDef body_def;
   b2FixtureDef fixture_def;
-  if(std::isfinite(m) && (m > 0.f))
+  if(m > 0.f)
   {
     body_def.type = b2_dynamicBody;
     fixture_def.density = m / (w * h);
@@ -75,28 +82,33 @@ Body BodyImpl::MakeBody(b2Body* body_ptr)
 game::Position BodyImpl::Position(void) const
 {
   b2Vec2 position = body_->GetPosition();
-  return game::Position(position.x, position.y);
+  return game::Position(Pixels(position.x), Pixels(position.y));
 }
 
 void BodyImpl::Position(float x, float y)
 {
-  body_->SetTransform(b2Vec2(x, y), 0.f);
+  body_->SetTransform(b2Vec2(Metres(x), Metres(y)), 0.f);
 }
 
 game::Position BodyImpl::Velocity(void) const
 {
   b2Vec2 velocity = body_->GetLinearVelocity();
-  return game::Position(velocity.x, velocity.y);
+  return game::Position(Pixels(velocity.x), Pixels(velocity.y));
 }
 
 void BodyImpl::Velocity(float x, float y)
 {
-  body_->SetLinearVelocity(b2Vec2(x, y));
+  body_->SetLinearVelocity(b2Vec2(Metres(x), Metres(y)));
 }
 
 void BodyImpl::Force(float x, float y)
 {
-  body_->ApplyForceToCenter(b2Vec2(x, y), true);
+  body_->ApplyForceToCenter(b2Vec2(Metres(x), Metres(y)), true);
+}
+
+void BodyImpl::Impulse(float x, float y)
+{
+  body_->ApplyLinearImpulse(b2Vec2(Metres(x), Metres(y)), body_->GetWorldCenter(), true);
 }
 
 BodyImpl::~BodyImpl(void)
@@ -150,5 +162,10 @@ void Body::Velocity(float x, float y)
 void Body::Force(float x, float y)
 {
   impl_->Force(x, y);
+}
+
+void Body::Impulse(float x, float y)
+{
+  impl_->Impulse(x, y);
 }
 }

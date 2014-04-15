@@ -18,6 +18,7 @@ public:
   void Resume(void);
   void Play(int loops, bool end_on_first);
   void End(event::Command const& command);
+  void Add(event::Command const& command);
 
   display::Texture texture_;
   std::vector<display::BoundingBox> frames_;
@@ -94,6 +95,11 @@ void AnimationImpl::End(event::Command const& command)
   timer_.End(command);
 }
 
+void AnimationImpl::Add(event::Command const& command)
+{
+  timer_.Add(command);
+}
+
 Animation::Animation(json::JSON const& json, display::Window& window, event::Queue& queue)
 {
   impl_ = std::make_shared<AnimationImpl>(json, window, queue);
@@ -123,5 +129,10 @@ void Animation::Play(int loops, bool end_on_first)
 void Animation::End(event::Command const& command)
 {
   impl_->End(command);
+}
+
+void Animation::Add(event::Command const& command)
+{
+  impl_->Add(command);
 }
 }

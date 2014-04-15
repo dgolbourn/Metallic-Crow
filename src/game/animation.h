@@ -20,6 +20,7 @@ public:
   void Resume(void);
   void Play(int loops = 0, bool end_on_first = false);
   void End(event::Command const& command);
+  void Add(event::Command const& command);
 private:
   std::shared_ptr<class AnimationImpl> impl_;
 };

@@ -1,18 +1,18 @@
 #include "hud.h"
 #include "bind.h"
 #include <limits>
-
 namespace game
 {
-class HUDImpl
+class HUDImpl final : public std::enable_shared_from_this<HUDImpl>
 {
 public:
   HUDImpl(json::JSON const& json, display::Window& window);
   void Score(int score);
   void Life(int life);
-  void Render(void);
+  void Render(void) const;
+  void Init(Scene& scene);
   display::Window window_;
-  display::Font font_;
+  sdl::Font font_;
   display::Texture score_;
   display::Texture life_;
   display::BoundingBox score_position_;
@@ -21,22 +21,18 @@ public:
 
 HUDImpl::HUDImpl(json::JSON const& json, display::Window& window) : window_(window)
 {
-  char const* filename;
-  int score_x;
-  int score_y;
-  int life_x;
-  int life_y;
-  int r, g, b, a;
-  int point;
+  double score_x;
+  double score_y;
+  double life_x;
+  double life_y;
+  json_t* font;
 
-  json.Unpack("{sssis[iiii]s[ii]s[ii]}",
-    "font", &filename,
-    "point", &point,
-    "colour", &r, &g, &b, &a,
+  json.Unpack("{sos[ff]s[ff]}",
+    "font", &font,
     "score position", &score_x, &score_y,
     "life position", &life_x, &life_y);
 
-  font_ = display::Font(std::string(filename), point, r, g, b, a);
+  font_ = sdl::Font(font);
   score_position_ = display::BoundingBox((float)score_x, (float)score_y, 0.f, 0.f);
   life_position_ = display::BoundingBox((float)life_x, (float)life_y, 0.f, 0.f);
   Score(0);
@@ -53,10 +49,15 @@ void HUDImpl::Life(int life)
   life_ = window_.Text(std::to_string(life), font_);
 }
 
-void HUDImpl::Render(void)
+void HUDImpl::Render(void) const
 {
   score_(display::BoundingBox(), score_position_, 0.f, false, 0.);
   life_(display::BoundingBox(), life_position_, 0.f, false, 0.);
+}
+
+void HUDImpl::Init(Scene& scene)
+{
+  scene.Add(event::Bind(&HUDImpl::Render, shared_from_this()), std::numeric_limits<int>().max());
 }
 
 void HUD::Score(int score)
@@ -77,6 +78,6 @@ HUD::operator bool(void) const
 HUD::HUD(json::JSON const& json, display::Window& window, Scene& scene)
 {
   impl_ = std::make_shared<HUDImpl>(json, window);
-  scene.Add(event::Bind(&HUDImpl::Render, impl_), std::numeric_limits<int>().max());
+  impl_->Init(scene);
 }
 }

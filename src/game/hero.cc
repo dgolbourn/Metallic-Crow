@@ -6,11 +6,11 @@
 #include "state.h"
 namespace game
 {
-class HeroImpl : public std::enable_shared_from_this<HeroImpl>
+class HeroImpl final : public std::enable_shared_from_this<HeroImpl>
 {
 public:
   HeroImpl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world);
-  void Init(Scene& scene, RulesCollision& collision, DynamicsCollision& dcollision, dynamics::World& world);
+  void Init(Scene& scene, RulesCollision& collision, DynamicsCollision& dcollision, CommandCollision& ccollision, dynamics::World& world);
   void End(event::Command const& command);
   State moving_;
   State destroyed_;
@@ -29,7 +29,7 @@ public:
   int y_facing_;
   int life_;
   game::Position force_;
-  void Render(void);
+  void Render(void) const;
   void Pause(void);
   void Resume(void);
   void Up(void);
@@ -48,6 +48,7 @@ public:
   void Position(game::Position const& position);
   game::Position Position(void);
   void BodyUpdate(void);
+  void ItemCollide(void);
 };
 
 void HeroImpl::End(event::Command const& command)
@@ -95,7 +96,7 @@ void HeroImpl::Right(void)
   Update();
 }
 
-static float const df = 20.f;
+static float const df = 2000.f;
 static float const sqrt1_2 = std::sqrt(0.5f);
 
 void HeroImpl::Update(void)
@@ -148,14 +149,21 @@ void HeroImpl::EnemyReceive(RulesCollision::Rules const& rules)
   life_signal_();
 }
 
+void HeroImpl::ItemCollide(void)
+{
+}
+
 void HeroImpl::Change(State& next)
 {
-  current_.Stop();
-  current_ = next;
-  current_.Play();
-  if(paused_)
+  if(!(current_ == next))
   {
-    current_.Pause();
+    current_.Stop();
+    current_ = next;
+    current_.Play();
+    if(paused_)
+    {
+      current_.Pause();
+    }
   }
 }
 
@@ -179,7 +187,7 @@ void HeroImpl::BodyUpdate(void)
   body_.Force(force_.first, force_.second);
 }
 
-void HeroImpl::Render(void)
+void HeroImpl::Render(void) const
 {
   current_.Render(render_box_);
 }
@@ -232,7 +240,7 @@ HeroImpl::HeroImpl(json::JSON const& json, display::Window& window, event::Queue
   BodyUpdate();
 }
 
-void HeroImpl::Init(Scene& scene, RulesCollision& collision, DynamicsCollision& dcollision, dynamics::World& world)
+void HeroImpl::Init(Scene& scene, RulesCollision& collision, DynamicsCollision& dcollision, CommandCollision& ccollision, dynamics::World& world)
 {
   auto ptr = shared_from_this();
   world.Add(event::Bind(&HeroImpl::BodyUpdate, ptr));
@@ -256,6 +264,7 @@ void HeroImpl::Init(Scene& scene, RulesCollision& collision, DynamicsCollision& 
   RulesCollision::Channel channel(send, receive);
   collision.Add(0, body_, channel);
   dcollision.Add(0, body_);
+  ccollision.Add(0, body_, event::Bind(&HeroImpl::ItemCollide, ptr), true);
 }
 
 void HeroImpl::Life(Hero::Command command)
@@ -263,32 +272,14 @@ void HeroImpl::Life(Hero::Command command)
   life_signal_.Add([=](){return command(life_);});
 }
 
-static const float scale = 100.f;
-
-static void Metres(game::Position& pixels)
-{
-  pixels.first /= scale;
-  pixels.second /= scale;
-}
-
-static void Pixels(game::Position& metres)
-{
-  metres.first *= scale;
-  metres.second *= scale;
-}
-
 void HeroImpl::Position(game::Position const& position)
 {
-  game::Position metres = position;
-  Metres(metres);
-  body_.Position(metres.first, metres.second);
+  body_.Position(position.first, position.second);
 }
 
 game::Position HeroImpl::Position(void)
 {
-  game::Position pixels = body_.Position();
-  Pixels(pixels);
-  return pixels;
+  return body_.Position();
 }
 
 void Hero::Position(game::Position const& position)
@@ -311,9 +302,9 @@ void Hero::Life(Command const& command)
   impl_->Life(command);
 }
 
-Hero::Hero(json::JSON const& json, display::Window& window, Scene& scene, RulesCollision& collision, DynamicsCollision& dcollision, event::Queue& queue, dynamics::World& world)
+Hero::Hero(json::JSON const& json, display::Window& window, Scene& scene, RulesCollision& collision, DynamicsCollision& dcollision, CommandCollision& ccollision, event::Queue& queue, dynamics::World& world)
 {
   impl_ = std::make_shared<HeroImpl>(json, window, queue, world);
-  impl_->Init(scene, collision, dcollision, world);
+  impl_->Init(scene, collision, dcollision, ccollision, world);
 }
 }

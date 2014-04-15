@@ -83,7 +83,7 @@ void Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
           {
             destination.x += (float)w - destination.w;
           }
-          if(destination.h < 0)
+          if(destination.y < 0)
           {
             destination.y += (float)h - destination.h;
           }
@@ -99,7 +99,7 @@ void Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
       destination.w = (float)w;
       destination.h = (float)h;
     }
-   
+
     if(tile)
     {
       algorithm::FloodFill<Painter>()(Painter(window, renderer, texture, &source, &destination, angle));

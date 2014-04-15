@@ -17,7 +17,8 @@ class WindowImpl
 {
 public:
   WindowImpl(json::JSON const& json);
-  sdl::Texture::WeakPtr Load(std::string const& filename);
+  sdl::Texture::WeakPtr Load(std::string const& file);
+  sdl::Texture Text(std::string const& text, sdl::Font const& font, int length);
   sdl::Texture Text(std::string const& text, sdl::Font const& font);
   void Free(void);
   void Clear(void) const;
@@ -111,21 +112,26 @@ WindowImpl::~WindowImpl(void)
   Destroy();
 }
 
-sdl::Texture::WeakPtr WindowImpl::Load(std::string const& filename)
+sdl::Texture::WeakPtr WindowImpl::Load(std::string const& file)
 {
   sdl::Texture::WeakPtr texture_ptr;
-  auto fileiter = textures_.find(filename);
+  auto fileiter = textures_.find(file);
   if(fileiter != textures_.end())
   {
     texture_ptr = fileiter->second;
   }
   else
   {
-    sdl::Texture texture(renderer_, sdl::Surface(filename.c_str()));
-    textures_[filename] = texture;
+    sdl::Texture texture(renderer_, sdl::Surface(file));
+    textures_[file] = texture;
     texture_ptr = texture;
   }
   return texture_ptr;
+}
+
+sdl::Texture WindowImpl::Text(std::string const& text, sdl::Font const& font, int length)
+{
+  return sdl::Texture(renderer_, sdl::Surface(text, font, length));
 }
 
 sdl::Texture WindowImpl::Text(std::string const& text, sdl::Font const& font)
@@ -227,6 +233,11 @@ static Texture Bind(std::weak_ptr<WindowImpl> window_ptr, sdl::Texture texture)
 Texture Window::Load(std::string const& filename)
 {
   return Bind(impl_, impl_->Load(filename));
+}
+
+Texture Window::Text(std::string const& text, sdl::Font const& font, int length)
+{
+  return Bind(impl_, impl_->Text(text, font, length));
 }
 
 Texture Window::Text(std::string const& text, sdl::Font const& font)

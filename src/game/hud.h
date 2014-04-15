@@ -6,14 +6,13 @@
 #include "window.h"
 #include "scene.h"
 #include "weak_ptr.h"
-
 namespace game
 {
 class HUD
 {
 public:
-  HUD(json::JSON const& json, display::Window& window, Scene& scene);
   HUD(void) = default;
+  HUD(json::JSON const& json, display::Window& window, Scene& scene);
   void Score(int score);
   void Life(int life);
   explicit operator bool(void) const;

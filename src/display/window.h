@@ -16,6 +16,7 @@ public:
   Window(json::JSON const& json);
   Window(void) = default;
   Texture Load(std::string const& filename);
+  Texture Text(std::string const& text, sdl::Font const& font, int length);
   Texture Text(std::string const& text, sdl::Font const& font);
   void Free(void);
   void Clear(void) const;

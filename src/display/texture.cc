@@ -1,30 +1,80 @@
 #include "texture.h"
-#include "sdl_exception.h"
+#include "sdl_texture.h"
+#include "window.h"
+#include "window_impl.h"
+namespace display
+{
+class TextureImpl
+{
+public:
+  TextureImpl(std::string const& file, Window& window);
+  TextureImpl(std::string const& text, sdl::Font const& font, int length, Window& window);
+  TextureImpl(std::string const& text, sdl::Font const& font, Window& window);
+  bool Render(display::BoundingBox const& source, display::BoundingBox const& destination, float parallax, bool tile, double angle);
+  bool Check(void);
+  Window::WeakPtr window_;
+  sdl::Texture::WeakPtr texture_ptr_;
+  sdl::Texture texture_;
+};
 
-namespace sdl
+TextureImpl::TextureImpl(std::string const& file, Window& window) : window_(window)
 {
-Texture::Texture(SDL_Renderer* renderer, SDL_Surface* surface)
+  texture_ptr_ = window.impl_->Load(file);
+}
+
+TextureImpl::TextureImpl(std::string const& text, sdl::Font const& font, int length, Window& window) : window_(window)
 {
-  SDL_Texture* impl = SDL_CreateTextureFromSurface(renderer, surface);
-  if(!impl)
+  texture_ = window.impl_->Text(text, font, length);
+  texture_ptr_ = texture_;
+}
+
+TextureImpl::TextureImpl(std::string const& text, sdl::Font const& font, Window& window) : window_(window)
+{
+  texture_ = window.impl_->Text(text, font);
+  texture_ptr_ = texture_;
+}
+
+bool TextureImpl::Render(display::BoundingBox const& source, display::BoundingBox const& destination, float parallax, bool tile, double angle)
+{
+  bool locked = false;
+  if(auto window = window_.Lock())
   {
-    BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
+    if(auto texture = texture_ptr_.Lock())
+    {
+      window.impl_->Render(texture, source, destination, parallax, tile, angle);
+      locked = true;
+    }
   }
-  impl_ = std::shared_ptr<SDL_Texture>(impl, SDL_DestroyTexture);
+  return locked;
 }
 
-Texture::operator SDL_Texture*(void) const
+bool TextureImpl::Check(void)
 {
-  return impl_.get();
+  return bool(window_.Lock()) && bool(texture_ptr_.Lock());
 }
 
-SDL_Texture* Texture::operator->(void) const
+bool Texture::operator()(display::BoundingBox const& source, display::BoundingBox const& destination, float parallax, bool tile, double angle)
 {
-  return impl_.get();
+  return impl_->Render(source, destination, parallax, tile, angle);
 }
 
 Texture::operator bool(void) const
 {
-  return bool(impl_);
+  return bool(impl_) && impl_->Check();
+}
+
+Texture::Texture(std::string const& file, Window& window)
+{
+  impl_ = std::make_shared<TextureImpl>(file, window);
+}
+
+Texture::Texture(std::string const& text, sdl::Font const& font, int length, Window& window)
+{
+  impl_ = std::make_shared<TextureImpl>(text, font, length, window);
+}
+
+Texture::Texture(std::string const& text, sdl::Font const& font, Window& window)
+{
+  impl_ = std::make_shared<TextureImpl>(text, font, window);
 }
 }

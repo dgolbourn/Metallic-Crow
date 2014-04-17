@@ -9,7 +9,7 @@ public:
   HUDImpl(json::JSON const& json, display::Window& window);
   void Score(int score);
   void Life(int life);
-  void Render(void) const;
+  void Render(void);
   void Init(Scene& scene);
   display::Window window_;
   sdl::Font font_;
@@ -41,15 +41,15 @@ HUDImpl::HUDImpl(json::JSON const& json, display::Window& window) : window_(wind
 
 void HUDImpl::Score(int score)
 {
-  score_ = window_.Text(std::to_string(score), font_);
+  score_ = display::Texture(std::to_string(score), font_, window_);
 }
 
 void HUDImpl::Life(int life)
 {
-  life_ = window_.Text(std::to_string(life), font_);
+  life_ = display::Texture(std::to_string(life), font_, window_);
 }
 
-void HUDImpl::Render(void) const
+void HUDImpl::Render(void) 
 {
   score_(display::BoundingBox(), score_position_, 0.f, false, 0.);
   life_(display::BoundingBox(), life_position_, 0.f, false, 0.);

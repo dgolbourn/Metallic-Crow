@@ -13,7 +13,7 @@ class AnimationImpl
 public:
   AnimationImpl(json::JSON const& json, display::Window& window, event::Queue& queue);
   void Next(void);
-  void Render(display::BoundingBox const& destination, float parallax, bool tile, double angle) const;
+  void Render(display::BoundingBox const& destination, float parallax, bool tile, double angle);
   void Pause(void);
   void Resume(void);
   void Play(int loops, bool end_on_first);
@@ -41,7 +41,7 @@ AnimationImpl::AnimationImpl(json::JSON const& json, display::Window& window, ev
     "height", &height,
     "frames", &frames);
 
-  texture_ = window.Load(std::string(sprite_sheet));
+  texture_ = display::Texture(sprite_sheet, window);
   timer_ = event::Timer(interval, queue);
   frames_ = std::vector<display::BoundingBox>(json_array_size(frames));
   frame_ = frames_.begin();
@@ -68,7 +68,7 @@ void AnimationImpl::Next(void)
   }
 }
 
-void AnimationImpl::Render(display::BoundingBox const& destination, float parallax, bool tile, double angle) const
+void AnimationImpl::Render(display::BoundingBox const& destination, float parallax, bool tile, double angle)
 {
   texture_(*frame_, destination, parallax, tile, angle);
 }

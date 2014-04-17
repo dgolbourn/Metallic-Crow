@@ -44,20 +44,20 @@ SceneImpl::SceneImpl(json::JSON const& json, display::Window& window)
   json_t* layer;
   json_array_foreach(layers, index, layer)
   {
-    char const* filename;
+    char const* file;
     int plane;
     double parallax;
     json_t* render_box;
     double angle;
     json_unpack(layer, "{sssisfsosf}", 
-      "image", &filename,
+      "image", &file,
       "z", &plane,
       "parallax", &parallax,
       "render box", &render_box,
       "angle", &angle);
 
     event::Command bind = std::bind(
-      window.Load(filename),
+      display::Texture(file, window),
       display::BoundingBox(),
       display::BoundingBox(render_box),
       float(parallax),

@@ -11,6 +11,7 @@
 #include "img_library.h"
 #include "ttf_library.h"
 #include "SDL_sysrender.h"
+#include "shape.h"
 namespace display
 {
 class WindowImpl
@@ -25,7 +26,8 @@ public:
   void Show(void) const;
   void Destroy(void);
   void View(float x, float y, float zoom);
-  void Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle);
+  void Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle) const;
+  Shape Shape(void) const;
   ~WindowImpl(void);
   sdl::Library const sdl_;
   img::Library const img_;

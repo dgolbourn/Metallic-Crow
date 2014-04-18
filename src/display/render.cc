@@ -57,37 +57,21 @@ void Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
       destination.h = destination_ptr->h;
       if(destination.w == 0.f)
       {
-        destination.w = (float)texture->w;
+        destination.w = float(texture->w);
       }
       if(destination.h == 0.f)
       {
-        destination.h = (float)texture->h;
+        destination.h = float(texture->h);
       }
 
       if(parallax > 0.f)
       {
         int w, h;
         SDL_GetWindowSize(window, &w, &h);
-        destination.x = Transform(destination.x, view->x, (float)w, zoom, parallax);
-        destination.y = Transform(destination.y, view->y, (float)h, zoom, parallax);
+        destination.x = Transform(destination.x, view->x, float(w), zoom, parallax);
+        destination.y = Transform(destination.y, view->y, float(h), zoom, parallax);
         destination.w = zoom * destination.w;
         destination.h = zoom * destination.h;
-      }
-      else
-      {
-        if((destination.x < 0.f) || (destination.y < 0.f))
-        {
-          int w, h;
-          SDL_GetWindowSize(window, &w, &h);
-          if(destination.x < 0)
-          {
-            destination.x += (float)w - destination.w;
-          }
-          if(destination.y < 0)
-          {
-            destination.y += (float)h - destination.h;
-          }
-        }
       }
     }
     else
@@ -96,8 +80,8 @@ void Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
       SDL_GetWindowSize(window, &w, &h);
       destination.x = 0.f;
       destination.y = 0.f;
-      destination.w = (float)w;
-      destination.h = (float)h;
+      destination.w = float(w);
+      destination.h = float(h);
     }
 
     if(tile)

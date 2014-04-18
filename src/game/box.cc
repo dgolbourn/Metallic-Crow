@@ -38,7 +38,7 @@ void BoxImpl::Resume(void)
 void BoxImpl::Update(void)
 {
   game::Position position = Position();
-  display::BoundingBox temp = state_.Render().Copy();
+  display::BoundingBox temp = state_.Shape().Copy();
   temp.x(temp.x() + position.first);
   temp.y(temp.y() + position.second);
   render_box_.Copy(temp);

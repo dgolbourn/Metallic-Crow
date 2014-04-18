@@ -10,8 +10,9 @@ public:
   TextureImpl(std::string const& file, Window& window);
   TextureImpl(std::string const& text, sdl::Font const& font, int length, Window& window);
   TextureImpl(std::string const& text, sdl::Font const& font, Window& window);
-  bool Render(display::BoundingBox const& source, display::BoundingBox const& destination, float parallax, bool tile, double angle);
-  bool Check(void);
+  bool Render(display::BoundingBox const& source, display::BoundingBox const& destination, float parallax, bool tile, double angle) const;
+  bool Check(void) const;
+  Shape Shape(void) const;
   Window::WeakPtr window_;
   sdl::Texture::WeakPtr texture_ptr_;
   sdl::Texture texture_;
@@ -34,7 +35,7 @@ TextureImpl::TextureImpl(std::string const& text, sdl::Font const& font, Window&
   texture_ptr_ = texture_;
 }
 
-bool TextureImpl::Render(display::BoundingBox const& source, display::BoundingBox const& destination, float parallax, bool tile, double angle)
+bool TextureImpl::Render(display::BoundingBox const& source, display::BoundingBox const& destination, float parallax, bool tile, double angle) const
 {
   bool locked = false;
   if(auto window = window_.Lock())
@@ -48,19 +49,36 @@ bool TextureImpl::Render(display::BoundingBox const& source, display::BoundingBo
   return locked;
 }
 
-bool TextureImpl::Check(void)
+bool TextureImpl::Check(void) const
 {
   return bool(window_.Lock()) && bool(texture_ptr_.Lock());
 }
 
-bool Texture::operator()(display::BoundingBox const& source, display::BoundingBox const& destination, float parallax, bool tile, double angle)
+Shape TextureImpl::Shape(void) const
 {
-  return impl_->Render(source, destination, parallax, tile, angle);
+  float width = 0.f;
+  float height = 0.f;
+  if(auto texture = texture_ptr_.Lock())
+  {
+    width = float(texture->w);
+    height = float(texture->h);
+  }
+  return display::Shape(width, height);
+}
+
+bool Texture::operator()(display::BoundingBox const& source, display::BoundingBox const& destination, float parallax, bool tile, double angle) const
+{
+  return bool(impl_) && impl_->Render(source, destination, parallax, tile, angle);
 }
 
 Texture::operator bool(void) const
 {
   return bool(impl_) && impl_->Check();
+}
+
+Shape Texture::Shape(void) const
+{
+  return impl_->Shape();
 }
 
 Texture::Texture(std::string const& file, Window& window)

@@ -12,7 +12,7 @@ public:
   void Pause(void);
   void Resume(void);
   void Stop(void);
-  void Render(display::BoundingBox const& bounding_box) const;
+  void Render(display::BoundingBox const& bounding_box, float parallax, bool tile, double angle) const;
   void End(event::Command const& command);
   void Add(event::Command const& command);
   Animation animation_;
@@ -79,9 +79,9 @@ void StateImpl::Stop(void)
   }
 }
 
-void StateImpl::Render(display::BoundingBox const& bounding_box) const
+void StateImpl::Render(display::BoundingBox const& bounding_box, float parallax, bool tile, double angle) const
 {
-  animation_.Render(bounding_box, 1.f, false, 0.);
+  animation_.Render(bounding_box, parallax, tile, angle);
 }
 
 void StateImpl::End(event::Command const& command)
@@ -124,14 +124,14 @@ void State::Add(event::Command const& command)
   impl_->Add(command);
 }
 
-display::BoundingBox const& State::Render(void)
+display::BoundingBox const& State::Shape(void)
 {
   return impl_->render_box_;
 }
 
-void State::Render(display::BoundingBox const& bounding_box) const
+void State::Render(display::BoundingBox const& bounding_box, float parallax, bool tile, double angle) const
 {
-  impl_->Render(bounding_box);
+  impl_->Render(bounding_box, parallax, tile, angle);
 }
 
 bool State::operator==(State const& other) const

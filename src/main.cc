@@ -28,6 +28,7 @@
 #include "box.h"
 #include "item.h"
 #include "command_collision.h"
+#include "subtitle.h"
 static bool run = true;
 static bool Quit(void)
 {
@@ -67,6 +68,7 @@ int main(int argc, char* argv[])
     game::Hero h(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/hero.json"), w, Sc, rc, dc, cc, queue, world);
     h.End(Quit);
     game::HUD hud(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/hud.json"), w, Sc);
+    game::Subtitle sub(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/subtitle.json"), w, Sc, queue);
     h.Life(event::Bind(&game::HUD::Life, hud));
     
     std::vector<game::Box> platforms(100);
@@ -91,6 +93,9 @@ int main(int argc, char* argv[])
     }
 
     event::pause.second();
+
+    sub.Choice("This is a test", "the quick brown fox...", "Jumps over the lazy dog...", "Such game!");
+    //sub.Text("Cat: This is a test!\na b c d e f g h j i g f");
 
     std::chrono::steady_clock::time_point last = std::chrono::steady_clock::now();
     std::chrono::steady_clock::time_point tick = last;

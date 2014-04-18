@@ -128,12 +128,19 @@ void WindowImpl::View(float x, float y, float zoom)
 {
   int w, h;
   SDL_GetWindowSize(window_, &w, &h);
-  view_.x = x - .5f * (float)w;
-  view_.y = y - .5f * (float)h;
+  view_.x = x - .5f * float(w);
+  view_.y = y - .5f * float(h);
   zoom_ = zoom;
 }
 
-void WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle)
+Shape WindowImpl::Shape(void) const
+{
+  int w, h;
+  SDL_GetWindowSize(window_, &w, &h);
+  return display::Shape(float(w), float(h));
+}
+
+void WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle) const
 {
   SDL_Rect* source_ptr = nullptr;
   SDL_Rect source_copy;
@@ -158,6 +165,12 @@ void WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, 
   }
 
   sdl::Render(window_, renderer_, texture, source_ptr, destination_ptr, &view_, zoom_, parallax, tile, angle);
+}
+
+
+Shape Window::Shape(void) const
+{
+  return impl_->Shape();
 }
 
 Window::Window(json::JSON const& json)

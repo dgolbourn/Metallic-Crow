@@ -46,7 +46,7 @@ void ItemImpl::Resume(void)
 void ItemImpl::Update(void)
 {
   game::Position position = Position();
-  display::BoundingBox temp = current_.Render().Copy();
+  display::BoundingBox temp = current_.Shape().Copy();
   temp.x(temp.x() + position.first);
   temp.y(temp.y() + position.second);
   render_box_.Copy(temp);

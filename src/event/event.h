@@ -18,6 +18,10 @@ extern Switch down;
 extern Switch left;
 extern Switch right;
 extern Switch button1;
+extern Switch button_up;
+extern Switch button_down;
+extern Switch button_left;
+extern Switch button_right;
 extern Switch pause;
 
 void Check(void);
@@ -27,7 +31,6 @@ class Event
 {
 public:
   Event(void);
-  ~Event(void);
 private:
   sdl::Library const sdl_;
 };

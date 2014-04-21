@@ -13,7 +13,7 @@ class AnimationImpl
 public:
   AnimationImpl(json::JSON const& json, display::Window& window, event::Queue& queue);
   void Next(void);
-  void Render(display::BoundingBox const& destination, float parallax, bool tile, double angle);
+  void Render(display::BoundingBox const& destination, float parallax, bool tile, double angle) const;
   void Pause(void);
   void Resume(void);
   void Play(int loops, bool end_on_first);
@@ -68,7 +68,7 @@ void AnimationImpl::Next(void)
   }
 }
 
-void AnimationImpl::Render(display::BoundingBox const& destination, float parallax, bool tile, double angle)
+void AnimationImpl::Render(display::BoundingBox const& destination, float parallax, bool tile, double angle) const
 {
   texture_(*frame_, destination, parallax, tile, angle);
 }

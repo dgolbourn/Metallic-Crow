@@ -94,8 +94,18 @@ int main(int argc, char* argv[])
 
     event::pause.second();
 
-    sub.Choice("This is a test", "the quick brown fox...", "Jumps over the lazy dog...", "Such game!");
-    //sub.Text("Cat: This is a test!\na b c d e f g h j i g f");
+    sub.Choice("", "the quick brown fox...", "", "Such game!");
+    sub.Text("Cat: This is a test!");
+    sub.Down([&]()
+    {
+      sub.Choice("", "", "", "done");
+      sub.Right([&]()
+      {
+        sub.Choice("yes!", "", "", "");
+        return false; 
+      });
+      return false;
+    });
 
     std::chrono::steady_clock::time_point last = std::chrono::steady_clock::now();
     std::chrono::steady_clock::time_point tick = last;

@@ -183,7 +183,7 @@ static void BoxUpdate(display::BoundingBox const& source, display::BoundingBox& 
 
 void HeroImpl::BodyUpdate(void)
 {
-  BoxUpdate(current_.Render(), render_box_, Position(), x_facing_);
+  BoxUpdate(current_.Shape(), render_box_, Position(), x_facing_);
   body_.Force(force_.first, force_.second);
 }
 

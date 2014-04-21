@@ -1,7 +1,6 @@
 #include "event.h"
 #include "SDL.h"
 #include "SDL_events.h"
-
 namespace event
 {
 Signal quit;
@@ -10,6 +9,10 @@ Switch down;
 Switch left;
 Switch right;
 Switch button1;
+Switch button_up;
+Switch button_down;
+Switch button_left;
+Switch button_right;
 Switch pause;
 
 KeyMap key_map;
@@ -38,20 +41,16 @@ Event::Event(void) : sdl_(SDL_INIT_EVENTS)
 {
 }
 
-Event::~Event(void)
-{
-}
-
 void Default(void)
 {
   key_map[SDL_SCANCODE_UP] = up;
-  key_map[SDL_SCANCODE_W] = up;
+  key_map[SDL_SCANCODE_W] = button_up;
   key_map[SDL_SCANCODE_DOWN] = down;
-  key_map[SDL_SCANCODE_S] = down;
+  key_map[SDL_SCANCODE_S] = button_down;
   key_map[SDL_SCANCODE_LEFT] = left;
-  key_map[SDL_SCANCODE_A] = left;
+  key_map[SDL_SCANCODE_A] = button_left;
   key_map[SDL_SCANCODE_RIGHT] = right;
-  key_map[SDL_SCANCODE_D] = right;
+  key_map[SDL_SCANCODE_D] = button_right;
   key_map[SDL_SCANCODE_SPACE] = button1;
   key_map[SDL_SCANCODE_ESCAPE] = pause;
 }

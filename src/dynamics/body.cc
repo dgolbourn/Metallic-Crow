@@ -113,9 +113,9 @@ void BodyImpl::Impulse(float x, float y)
 
 BodyImpl::~BodyImpl(void)
 {
-  if(world_.Lock())
+  //if(auto world = world_.Lock())
   {
-    body_->GetWorld()->DestroyBody(body_);
+    //body_->GetWorld()->DestroyBody(body_);
   }
 }
 

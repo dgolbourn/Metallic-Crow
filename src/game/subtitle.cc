@@ -81,11 +81,6 @@ public:
   display::BoundingBox right_text_offset_;
 };
 
-static float const icon_offset = 40.f;
-static float const base_offset = 100.f;
-static float const text_offset = 125.f;
-static float const icon_text_offset = 60.f;
-
 SubtitleImpl::SubtitleImpl(json::JSON const& json, display::Window& window, event::Queue& queue) : window_(window), subtitle_(false), up_choice_(false), down_choice_(false), left_choice_(false), right_choice_(false), active_(true), paused_(true)
 {
   json_t* text_font;
@@ -98,10 +93,16 @@ SubtitleImpl::SubtitleImpl(json::JSON const& json, display::Window& window, even
   json_t* down_active;
   json_t* left_active;
   json_t* right_active;
-  json.Unpack("{sososisosososososososo}",
+  double base_offset, text_offset, choice_icon_offset, choice_text_offset;
+
+  json.Unpack("{sososisfsfsfsfsosososososososo}",
     "text font", &text_font,
     "choice font", &choice_font,
     "length", &length_,
+    "base offset", &base_offset,
+    "text offset", &text_offset,
+    "choice icon offset", &choice_icon_offset,
+    "choice text offset", &choice_text_offset,
     "up idle", &up_idle,
     "down idle", &down_idle,
     "left idle", &left_idle,
@@ -134,20 +135,20 @@ SubtitleImpl::SubtitleImpl(json::JSON const& json, display::Window& window, even
   right_current_.Pause();
   display::Shape shape = window_.Shape();
   float x = .5f * shape.first;
-  float y = shape.second - base_offset;
-  up_offset_ = display::BoundingBox(x, y - icon_offset, 0.f, 0.f);
-  down_offset_ = display::BoundingBox(x, y + icon_offset, 0.f, 0.f);
-  left_offset_ = display::BoundingBox(x - icon_offset, y, 0.f, 0.f);
-  right_offset_ = display::BoundingBox(x + icon_offset, y, 0.f, 0.f);
+  float y = shape.second - float(base_offset);
+  up_offset_ = display::BoundingBox(x, y - float(choice_icon_offset), 0.f, 0.f);
+  down_offset_ = display::BoundingBox(x, y + float(choice_icon_offset), 0.f, 0.f);
+  left_offset_ = display::BoundingBox(x - float(choice_icon_offset), y, 0.f, 0.f);
+  right_offset_ = display::BoundingBox(x + float(choice_icon_offset), y, 0.f, 0.f);
   up_icon_box_ = Update(up_current_, up_offset_);
   down_icon_box_ = Update(down_current_, down_offset_);
   left_icon_box_ = Update(left_current_, left_offset_);
   right_icon_box_ = Update(right_current_, right_offset_);
-  text_offset_ = display::BoundingBox(x, y - text_offset, 0.f, 0.f);
-  up_text_offset_ = display::BoundingBox(x, y - icon_text_offset, 0.f, 0.f);
-  down_text_offset_ = display::BoundingBox(x, y + icon_text_offset, 0.f, 0.f);
-  left_text_offset_ = display::BoundingBox(x - icon_text_offset, y, 0.f, 0.f);
-  right_text_offset_ = display::BoundingBox(x + icon_text_offset, y, 0.f, 0.f);
+  text_offset_ = display::BoundingBox(x, y - float(text_offset), 0.f, 0.f);
+  up_text_offset_ = display::BoundingBox(x, y - float(choice_text_offset), 0.f, 0.f);
+  down_text_offset_ = display::BoundingBox(x, y + float(choice_text_offset), 0.f, 0.f);
+  left_text_offset_ = display::BoundingBox(x - float(choice_text_offset), y, 0.f, 0.f);
+  right_text_offset_ = display::BoundingBox(x + float(choice_text_offset), y, 0.f, 0.f);
 }
 
 void SubtitleImpl::Init(Scene& scene)
@@ -388,6 +389,19 @@ void SubtitleImpl::Right(event::Command const& command)
   right_signal_.Add(command);
 }
 
+void SubtitleImpl::Clear(void)
+{
+  up_signal_.Clear();
+  down_signal_.Clear();
+  left_signal_.Clear();
+  right_signal_.Clear();
+  auto ptr = shared_from_this();
+  up_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
+  down_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
+  left_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
+  right_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
+}
+
 void Subtitle::Text(std::string const& text)
 {
   impl_->Text(text);
@@ -416,6 +430,11 @@ void Subtitle::Right(event::Command const& command)
 void Subtitle::Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right)
 {
   impl_->Choice(up, down, left, right);
+}
+
+void Subtitle::Clear(void)
+{
+  impl_->Clear();
 }
 
 Subtitle::Subtitle(json::JSON const& json, display::Window& window, Scene& scene, event::Queue& queue)

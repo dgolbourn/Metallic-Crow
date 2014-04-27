@@ -11,6 +11,7 @@ public:
   void Notify(void);
   void Add(Command const& comand);
   bool Empty(void) const;
+  void Clear(void);
   CommandList commands_;
 };
 
@@ -39,6 +40,11 @@ bool SignalImpl::Empty(void) const
   return commands_.empty();
 }
 
+void SignalImpl::Clear(void)
+{
+  commands_.clear();
+}
+
 void Signal::operator()(Queue& queue)
 {
   queue.Add(event::Bind(&SignalImpl::Notify, impl_));
@@ -62,5 +68,10 @@ Signal::Signal(void)
 Signal::operator bool(void) const
 {
   return !impl_->Empty();
+}
+
+void Signal::Clear(void)
+{
+  impl_->Clear();
 }
 }

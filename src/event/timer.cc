@@ -4,7 +4,7 @@
 #include "sdl_library.h"
 #include "sdl_exception.h"
 #include "signal.h"
-#include "thread.h"
+#include <mutex>
 namespace event
 {
 class TimerImpl
@@ -190,31 +190,31 @@ Timer::Timer(int interval, event::Queue& queue)
 
 void Timer::Pause(void)
 {
-  thread::Lock lock(impl_->mutex_);
+  std::lock_guard<std::mutex> lock(impl_->mutex_);
   impl_->Pause();
 }
 
 void Timer::Resume(void)
 {
-  thread::Lock lock(impl_->mutex_);
+  std::lock_guard<std::mutex> lock(impl_->mutex_);
   impl_->Resume();
 }
 
 void Timer::Add(event::Command const& command)
 {
-  thread::Lock lock(impl_->mutex_);
+  std::lock_guard<std::mutex> lock(impl_->mutex_);
   return impl_->Add(command);
 }
 
 void Timer::End(event::Command const& command)
 {
-  thread::Lock lock(impl_->mutex_);
+  std::lock_guard<std::mutex> lock(impl_->mutex_);
   impl_->End(command);
 }
 
 void Timer::Play(int loops)
 {
-  thread::Lock lock(impl_->mutex_);
+  std::lock_guard<std::mutex> lock(impl_->mutex_);
   impl_->Play(loops);
 }
 }

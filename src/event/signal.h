@@ -12,6 +12,7 @@ public:
   void operator()(void);
   void operator()(Queue& queue);
   void Add(Command const& command);
+  void Clear(void);
   explicit operator bool(void) const;
 private:
   std::shared_ptr<class SignalImpl> impl_;

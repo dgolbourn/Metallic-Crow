@@ -4,6 +4,7 @@
 #include "command.h"
 #include "signal.h"
 #include "collision.h"
+#include "queue.h"
 namespace dynamics
 {
 class WorldImpl final : public b2ContactFilter, public b2ContactListener
@@ -21,6 +22,7 @@ public:
   game::Collision collision_;
   event::Signal signal_;
   b2World world_;
+  event::Queue queue_;
 };
 }
 #endif

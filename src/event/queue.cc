@@ -1,6 +1,6 @@
 #include "queue.h"
 #include <queue>
-#include "thread.h"
+#include <mutex>
 namespace event
 {
 class QueueImpl
@@ -28,13 +28,13 @@ void QueueImpl::Check(void)
 
 void Queue::Add(Command const& command)
 {
-  thread::Lock lock(impl_->mutex_);
+  std::lock_guard<std::mutex> lock(impl_->mutex_);
   impl_->Add(command);
 }
 
 void Queue::operator()(void)
 {
-  thread::Lock lock(impl_->mutex_);
+  std::lock_guard<std::mutex> lock(impl_->mutex_);
   impl_->Check();
 }
 

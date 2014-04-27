@@ -75,7 +75,14 @@ void BodyImpl::Init(float32 x, float32 y, float32 u, float32 v, float32 w, float
 Body BodyImpl::MakeBody(b2Body* body_ptr)
 {
   Body body;
-  body.impl_ = ((BodyImpl*)body_ptr->GetUserData())->shared_from_this();
+  if(body_ptr)
+  {
+    BodyImpl* impl = (BodyImpl*)body_ptr->GetUserData();
+    if(impl)
+    {
+      body.impl_ = impl->shared_from_this();
+    }
+  }
   return body;
 }
 
@@ -113,9 +120,10 @@ void BodyImpl::Impulse(float x, float y)
 
 BodyImpl::~BodyImpl(void)
 {
-  //if(auto world = world_.Lock())
+  if(auto world = world_.Lock())
   {
-    //body_->GetWorld()->DestroyBody(body_);
+    body_->SetUserData(nullptr);
+    body_->GetWorld()->DestroyBody(body_);
   }
 }
 

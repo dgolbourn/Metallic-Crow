@@ -94,17 +94,30 @@ int main(int argc, char* argv[])
 
     event::pause.second();
 
-    sub.Choice("", "the quick brown fox...", "", "Such game!");
-    sub.Text("Cat: This is a test!");
-    sub.Down([&]()
+    items[0].Hysteresis([&]()
     {
-      sub.Choice("", "", "", "done");
-      sub.Right([&]()
+      sub.Choice("", "the quick brown fox...", "", "Such game!");
+      sub.Text("Cat: This is a test!");
+      sub.Down([&]()
       {
-        sub.Choice("yes!", "", "", "");
-        return false; 
+        sub.Text("Cat: The quick brown fox jumped over the lazy dog.");
+        sub.Choice("", "", "", "done");
+        sub.Right([&]()
+        {
+          sub.Text("Cat: And we're finished?");
+          sub.Choice("yes!", "", "", "");
+          items.clear();
+          return false;
+        });
+        return false;
       });
-      return false;
+      return true; 
+    }, [&]()
+    {
+      sub.Clear();
+      sub.Text("");
+      sub.Choice("", "", "", "");
+      return true;
     });
 
     std::chrono::steady_clock::time_point last = std::chrono::steady_clock::now();

@@ -18,6 +18,9 @@ public:
   game::Position Position(void) const;
   void Pause(void);
   void Resume(void);
+  void Add(event::Command const& start, event::Command const& end);
+  void Proximity(event::Command const& start, event::Command const& end);
+  void Hysteresis(event::Command const& start, event::Command const& end);
 private:
   std::shared_ptr<class ItemImpl> impl_;
 };

@@ -12,13 +12,9 @@ class ItemImpl final : public std::enable_shared_from_this<ItemImpl>
 public:
   ItemImpl(json::JSON const& json, display::Window& window, event::Queue& queue, DynamicsCollision& dcollision, dynamics::World& world);
   void Init(CommandCollision& ccollision, Scene& scene);
-  State idle_;
-  State active_;
-  State current_;
-  display::BoundingBox render_box_;
-  bool paused_;
-  dynamics::Body interaction_;
-  dynamics::Body proximity_;
+  void Add(event::Command const& start, event::Command const& end);
+  void Proximity(event::Command const& start, event::Command const& end);
+  void Hysteresis(event::Command const& start, event::Command const& end);
   void Pause(void);
   void Resume(void);
   void Position(game::Position const& position);
@@ -28,7 +24,20 @@ public:
   void Change(State& next);
   void ProximityCollideStart(void);
   void ProximityCollideEnd(void);
-  void InteractionCollide(void);
+  void Idle(void);
+  void InteractionCollideStart(void);
+  void InteractionCollideEnd(void);
+  State idle_;
+  State active_;
+  State current_;
+  display::BoundingBox render_box_;
+  bool paused_;
+  bool hysteresis_;
+  dynamics::Body interaction_;
+  dynamics::Body proximity_;
+  event::Switch interaction_event_;
+  event::Switch proximity_event_;
+  event::Switch hysteresis_event_;
 };
 
 void ItemImpl::Pause(void)
@@ -71,6 +80,7 @@ ItemImpl::ItemImpl(json::JSON const& json, display::Window& window, event::Queue
     "proximity", &proximity);
   
   paused_ = true;
+  hysteresis_ = false;
   idle_ = State(idle, window, queue);
   active_ = State(active, window, queue);
   current_ = idle_;
@@ -89,25 +99,49 @@ void ItemImpl::Init(CommandCollision& ccollision, Scene& scene)
   auto ptr = shared_from_this();
   scene.Add(event::Bind(&ItemImpl::Render, ptr), -1);
   ccollision.Add(3, proximity_, event::Bind(&ItemImpl::ProximityCollideStart, ptr), true);
-  ccollision.Add(4, interaction_, event::Bind(&ItemImpl::InteractionCollide, ptr), true);
+  ccollision.Add(3, proximity_, event::Bind(&ItemImpl::ProximityCollideEnd, ptr), false);
+  ccollision.Add(4, interaction_, event::Bind(&ItemImpl::InteractionCollideStart, ptr), true);
+  ccollision.Add(4, interaction_, event::Bind(&ItemImpl::InteractionCollideEnd, ptr), false);
   event::pause.first.Add(event::Bind(&ItemImpl::Pause, ptr));
   event::pause.second.Add(event::Bind(&ItemImpl::Resume, ptr));
-  active_.End(event::Bind(&ItemImpl::ProximityCollideEnd, ptr));
+  active_.End(event::Bind(&ItemImpl::Idle, ptr));
 }
 
 void ItemImpl::ProximityCollideStart(void)
 {
   Change(active_);
+  proximity_event_.first();
 }
 
 void ItemImpl::ProximityCollideEnd(void)
 {
-  Change(idle_);
+  proximity_event_.second();
+  if(hysteresis_)
+  {
+    hysteresis_ = false;
+    hysteresis_event_.second();
+  }
 }
 
-void ItemImpl::InteractionCollide(void)
+void ItemImpl::InteractionCollideStart(void)
 {
   Change(active_);
+  interaction_event_.first();
+  if(!hysteresis_)
+  {
+    hysteresis_ = true;
+    hysteresis_event_.first();
+  }
+}
+
+void ItemImpl::InteractionCollideEnd(void)
+{
+  interaction_event_.second();
+}
+
+void ItemImpl::Idle(void)
+{
+  Change(idle_);
 }
 
 void ItemImpl::Change(State& next)
@@ -135,6 +169,39 @@ void ItemImpl::Position(game::Position const& position)
 game::Position ItemImpl::Position(void) const
 {
   return interaction_.Position();
+}
+
+void ItemImpl::Add(event::Command const& start, event::Command const& end)
+{
+  interaction_event_.first.Add(start);
+  interaction_event_.second.Add(end);
+}
+
+void ItemImpl::Proximity(event::Command const& start, event::Command const& end)
+{
+  proximity_event_.first.Add(start);
+  proximity_event_.second.Add(end);
+}
+
+void ItemImpl::Hysteresis(event::Command const& start, event::Command const& end)
+{
+  hysteresis_event_.first.Add(start);
+  hysteresis_event_.second.Add(end);
+}
+
+void Item::Add(event::Command const& start, event::Command const& end)
+{
+  impl_->Add(start, end);
+}
+
+void Item::Proximity(event::Command const& start, event::Command const& end)
+{
+  impl_->Proximity(start, end);
+}
+
+void Item::Hysteresis(event::Command const& start, event::Command const& end)
+{
+  impl_->Hysteresis(start, end);
 }
 
 void Item::Position(game::Position const& position)

@@ -2,8 +2,7 @@
 #include <unordered_map>
 #include "SDL_mixer.h"
 #include "chunk.h"
-#include "thread.h"
-
+#include <mutex>
 namespace audio
 {
 class SoundImpl
@@ -131,37 +130,37 @@ Sound::Sound(std::string const& filename)
 
 void Sound::Play(int repeats)
 {
-  thread::Lock lock(mutex);
+  std::lock_guard<std::mutex> lock(mutex);
   impl_->Play(repeats);
 }
 
 void Sound::Pause(void) const
 {
-  thread::Lock lock(mutex);
+  std::lock_guard<std::mutex> lock(mutex);
   impl_->Pause();
 }
 
 void Sound::Resume(void) const
 {
-  thread::Lock lock(mutex);
+  std::lock_guard<std::mutex> lock(mutex);
   impl_->Resume();
 }
 
 void Sound::Stop(void) const
 {
-  thread::Lock lock(mutex);
+  std::lock_guard<std::mutex> lock(mutex);
   impl_->Stop();
 }
 
 void Sound::Fade(int ms) const
 {
-  thread::Lock lock(mutex);
+  std::lock_guard<std::mutex> lock(mutex);
   impl_->Fade(ms);
 }
 
 void Sound::Volume(int volume)
 {
-  thread::Lock lock(mutex);
+  std::lock_guard<std::mutex> lock(mutex);
   impl_->Volume(volume);
 }
 

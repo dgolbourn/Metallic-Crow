@@ -64,7 +64,7 @@ BoxImpl::BoxImpl(json::JSON const& json, display::Window& window, event::Queue& 
   state_.Pause();
   body_ = dynamics::Body(body, world);
   render_box_ = display::BoundingBox(0.f, 0.f, 0.f, 0.f);
-  dcollision.Add(1, body_);
+  dcollision.Add(dynamics::Type::Body, body_);
   Update();
 }
 

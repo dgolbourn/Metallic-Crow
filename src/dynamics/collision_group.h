@@ -11,14 +11,14 @@ template<class Channel, bool start> class CollisionGroup
 public:
   typedef std::pair<dynamics::Body::WeakPtr, Channel> Member;
   typedef std::list<Member> MemberList;
-  typedef std::map<int, MemberList> MemberMap;
-  typedef std::set<int> LinkSet;
-  typedef std::map<int, LinkSet> LinkMap;
+  typedef std::map<dynamics::Type, MemberList> MemberMap;
+  typedef std::set<dynamics::Type> LinkSet;
+  typedef std::map<dynamics::Type, LinkSet> LinkMap;
   Collision collision_;
   MemberMap members_;
   LinkMap links_;
 
-  void Link(int group_a, int group_b)
+  void Link(dynamics::Type group_a, dynamics::Type group_b)
   {
     if(group_a > group_b)
     {
@@ -55,9 +55,9 @@ public:
     }
   }
 
-  void Add(int this_group, dynamics::Body const& this_body, Channel const& channel)
+  void Add(dynamics::Type this_group, dynamics::Body const& this_body, Channel const& channel)
   {
-    for(int group : links_[this_group])
+    for(dynamics::Type group : links_[this_group])
     {
       MemberList& members = members_[group];
       for(auto iter = members.begin(); iter != members.end();)

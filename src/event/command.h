@@ -4,5 +4,6 @@
 namespace event
 {
 typedef std::function<bool(void)> Command;
+extern Command const None;
 }
 #endif

@@ -39,11 +39,11 @@ WindowImpl::WindowImpl(json::JSON const& json) : sdl_(SDL_INIT_VIDEO), img_(IMG_
       "mode", &mode);
 
     Uint32 flags = 0;
-    if(0 == std::string(mode).compare("full screen"))
+    if(std::string(mode) == "full screen")
     {
       flags |= SDL_WINDOW_FULLSCREEN;
     }
-    else if(0 == std::string(mode).compare("borderless"))
+    else if(std::string(mode) == "borderless")
     {
       flags |= SDL_WINDOW_BORDERLESS | SDL_WINDOW_MAXIMIZED;
     }

@@ -4,6 +4,7 @@
 #include "collision.h"
 #include "body.h"
 #include "command.h"
+#include "collision_type.h"
 namespace game
 {
 class CommandCollision
@@ -11,8 +12,8 @@ class CommandCollision
 public:
   CommandCollision(void) = default;
   CommandCollision(Collision const& collision);
-  void Add(int group, dynamics::Body const& body, event::Command const& command, bool start);
-  void Link(int group_a, int group_b);
+  void Add(dynamics::Type group, dynamics::Body const& body, event::Command const& command, bool start);
+  void Link(dynamics::Type group_a, dynamics::Type group_b);
 private:
   std::shared_ptr<class CommandCollisionImpl> impl_;
 };

@@ -1,34 +1,16 @@
-#include <stdio.h>
-#include <exception>
-#include <iostream>
-#include "window.h"
-#include "signal.h"
 #include "event.h"
-#include "decoder.h"
-#include "audio_format.h"
-#include "music.h"
-#include "sound.h"
-#include "timer.h"
-#include "animation.h"
 #include "scene.h"
-#include "command.h"
-#include "hero.h"
+#include "queue.h"
 #include "collision.h"
-#include "enemy.h"
-#include "bind.h"
-#include "hud.h"
-#include "rules_collision.h"
-#include <chrono>
 #include "dynamics_collision.h"
-#include <thread>
-#include "boost/exception/diagnostic_information.hpp"
-#include "ffmpeg_exception.h"
-#include "img_exception.h"
-#include "world.h"
-#include "box.h"
-#include "item.h"
 #include "command_collision.h"
+#include "world.h"
 #include "subtitle.h"
+#include "script.h"
+#include "window.h"
+#include "sync.h"
+#include "boost/exception/diagnostic_information.hpp"
+
 static bool run = true;
 static bool Quit(void)
 {
@@ -36,112 +18,36 @@ static bool Quit(void)
   return false;
 }
 
-int main(int argc, char* argv[]) 
+int main(int argc, char* argv[])
 {
   int ret;
   try
   {
-    event::Event eL;
-    event::Default();
-    event::quit.Add(Quit);
-    display::Window w(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/window.json"));
-    display::Texture S("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/black.png", w);
-    //audio::Music mixer("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/BassRockinDJJin-LeeRemix.mp3");
-    audio::Music mixer("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/Boogie_Belgique_-_01_-_Forever_and_Ever.mp3");
-    mixer.Volume(0.5);
-    mixer.Play();
-    mixer.Pause();
-    event::pause.first.Add(event::Bind(&audio::Music::Pause, mixer));
-    event::pause.second.Add(event::Bind(&audio::Music::Resume, mixer));
-    game::Scene Sc(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/scene.json"), w);
+    event::Event event(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/event.json"));
+    event.Quit(Quit);
+    display::Window window(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/window.json"));
+    game::Scene scene(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/scene.json"), window);
     event::Queue queue;
-    game::Collision col(queue);
-    game::RulesCollision rc(col);
-    game::DynamicsCollision dc(col);
-    game::CommandCollision cc(col);
-    dc.Link(0, 1);
-    dc.Link(1, 1);
-    dc.Link(0, 2);
-    cc.Link(0, 3);
-    cc.Link(0, 4);
-    dynamics::World world(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/world.json"), col);
-    game::Hero h(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/hero.json"), w, Sc, rc, dc, cc, queue, world);
-    h.End(Quit);
-    game::HUD hud(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/hud.json"), w, Sc);
-    game::Subtitle sub(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/subtitle.json"), w, Sc, queue);
-    h.Life(event::Bind(&game::HUD::Life, hud));
-    
-    std::vector<game::Box> platforms(100);
-    for(auto& platform : platforms)
-    {
-      platform = game::Box(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/platform.json"), w, Sc, queue, dc, world);
-      platform.Position(game::Position(float(200 + rand() % 10000), float(200 + rand() % 3000)));
-    }
+    game::Collision collision(queue);
+    game::DynamicsCollision dcollision(collision);
+    game::CommandCollision ccollision(collision);
+    dynamics::World world(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/world.json"), collision);
+    game::Subtitle subtitle(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/subtitle.json"), window, scene, queue, event);
+    game::Script script(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/script.json"), subtitle, window, scene, queue, dcollision, ccollision, world, event);
 
-    std::vector<game::Box> boxes(30);
-    for(auto& box : boxes)
-    {
-      box = game::Box(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/box.json"), w, Sc, queue, dc, world);
-      box.Position(game::Position(float(200 + rand() % 10000), -400.f));
-    }
+    subtitle.Resume();
+    script.Resume();
 
-    std::vector<game::Item> items(1);
-    for(auto& item : items)
-    {
-      item = game::Item(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/watering_can.json"), w, Sc, queue, dc, cc, world);
-      item.Position(game::Position(300.f, 300.f));
-    }
-
-    event::pause.second();
-
-    items[0].Hysteresis([&]()
-    {
-      sub.Choice("", "the quick brown fox...", "", "Such game!");
-      sub.Text("Cat: This is a test!");
-      sub.Down([&]()
-      {
-        sub.Text("Cat: The quick brown fox jumped over the lazy dog.");
-        sub.Choice("", "", "", "done");
-        sub.Right([&]()
-        {
-          sub.Text("Cat: And we're finished?");
-          sub.Choice("yes!", "", "", "");
-          items.clear();
-          return false;
-        });
-        return false;
-      });
-      return true; 
-    }, [&]()
-    {
-      sub.Clear();
-      sub.Text("");
-      sub.Choice("", "", "", "");
-      return true;
-    });
-
-    std::chrono::steady_clock::time_point last = std::chrono::steady_clock::now();
-    std::chrono::steady_clock::time_point tick = last;
-    int frame_rate = 60;
-    std::chrono::milliseconds frame_period_ms(1000/frame_rate);
-    float frame_period_s = 1.f/frame_rate;
+    event::Sync sync(60.f);
     while(run)
     {
-      std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-      float dt = std::chrono::duration_cast<std::chrono::duration<float>>(now - last).count();
-      last = now;
-      int current_frame_rate = int(std::round(1./dt));
-      hud.Score(current_frame_rate);
-      game::Position p = h.Position();
-      w.View(p.first, p.second, 1.f);
-      w.Clear();
-      Sc.Render();
-      w.Show();
-      event::Check();
-      queue();
+      window.Clear();
+      scene.Render();
+      window.Show();
+      event();
       world.Step();
-      tick += frame_period_ms;
-      std::this_thread::sleep_until(tick);
+      queue();
+      sync();
     }
     ret = EXIT_SUCCESS;
   }

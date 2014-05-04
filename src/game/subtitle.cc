@@ -3,7 +3,6 @@
 #include "bind.h"
 #include "position.h"
 #include "state.h"
-#include "event.h"
 #include "signal.h"
 namespace game
 {
@@ -12,7 +11,7 @@ class SubtitleImpl final : public std::enable_shared_from_this<SubtitleImpl>
 public:
   SubtitleImpl(json::JSON const& json, display::Window& window, event::Queue& queue);
   void Render(void);
-  void Init(Scene& scene);
+  void Init(Scene& scene, event::Event& event);
   void Text(std::string const& text);
   void Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right);
   void Clear(void);
@@ -151,16 +150,14 @@ SubtitleImpl::SubtitleImpl(json::JSON const& json, display::Window& window, even
   right_text_offset_ = display::BoundingBox(x + float(choice_text_offset), y, 0.f, 0.f);
 }
 
-void SubtitleImpl::Init(Scene& scene)
+void SubtitleImpl::Init(Scene& scene, event::Event& event)
 {
   auto ptr = shared_from_this();
-  scene.Add(event::Bind(&SubtitleImpl::Render, ptr), std::numeric_limits<int>().max());
-  event::button_up.first.Add(event::Bind(&SubtitleImpl::UpEvent, ptr));
-  event::button_down.first.Add(event::Bind(&SubtitleImpl::DownEvent, ptr));
-  event::button_left.first.Add(event::Bind(&SubtitleImpl::LeftEvent, ptr));
-  event::button_right.first.Add(event::Bind(&SubtitleImpl::RightEvent, ptr));
-  event::pause.first.Add(event::Bind(&SubtitleImpl::Pause, ptr));
-  event::pause.second.Add(event::Bind(&SubtitleImpl::Resume, ptr));
+  scene.Add(event::Bind(&SubtitleImpl::Render, ptr), std::numeric_limits<int>::max());
+  event.ChoiceUp(event::Bind(&SubtitleImpl::UpEvent, ptr), event::None);
+  event.ChoiceDown(event::Bind(&SubtitleImpl::DownEvent, ptr), event::None);
+  event.ChoiceLeft(event::Bind(&SubtitleImpl::LeftEvent, ptr), event::None);
+  event.ChoiceRight(event::Bind(&SubtitleImpl::RightEvent, ptr), event::None);
   up_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
   down_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
   left_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
@@ -212,7 +209,7 @@ void SubtitleImpl::Render(void)
 void SubtitleImpl::Text(std::string const& text)
 {
   subtitle_ = false;
-  if(text.compare(""))
+  if(text != "")
   {
     text_ = display::Texture(text, text_font_, length_, window_);
     subtitle_ = true;
@@ -228,7 +225,7 @@ void SubtitleImpl::Choice(std::string const& up, std::string const& down, std::s
   active_ = true;
 
   up_choice_ = false;
-  if(up.compare(""))
+  if(up != "")
   {
     up_ = display::Texture(up, choice_font_, window_);
     up_choice_ = true;
@@ -240,7 +237,7 @@ void SubtitleImpl::Choice(std::string const& up, std::string const& down, std::s
   }
 
   down_choice_ = false;
-  if(down.compare(""))
+  if(down != "")
   {
     down_ = display::Texture(down, choice_font_, window_);
     down_choice_ = true;
@@ -252,7 +249,7 @@ void SubtitleImpl::Choice(std::string const& up, std::string const& down, std::s
   }
 
   left_choice_ = false;
-  if(left.compare(""))
+  if(left != "")
   {
     left_ = display::Texture(left, choice_font_, window_);
     left_choice_ = true;
@@ -264,7 +261,7 @@ void SubtitleImpl::Choice(std::string const& up, std::string const& down, std::s
   }
 
   right_choice_ = false;
-  if(right.compare(""))
+  if(right != "")
   {
     right_ = display::Texture(right, choice_font_, window_);
     right_choice_ = true;
@@ -437,9 +434,19 @@ void Subtitle::Clear(void)
   impl_->Clear();
 }
 
-Subtitle::Subtitle(json::JSON const& json, display::Window& window, Scene& scene, event::Queue& queue)
+void Subtitle::Pause(void)
+{
+  impl_->Pause();
+}
+
+void Subtitle::Resume(void)
+{
+  impl_->Resume();
+}
+
+Subtitle::Subtitle(json::JSON const& json, display::Window& window, Scene& scene, event::Queue& queue, event::Event& event)
 {
   impl_ = std::make_shared<SubtitleImpl>(json, window, queue);
-  impl_->Init(scene);
+  impl_->Init(scene, event);
 }
 }

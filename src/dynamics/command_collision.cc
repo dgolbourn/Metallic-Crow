@@ -8,17 +8,19 @@ class CommandCollisionImpl
 {
 public:
   CommandCollisionImpl(Collision const& collision);
-  void Add(int group, dynamics::Body const& body, event::Command const& command, bool start);
-  void Link(int group_a, int group_b);
+  void Add(dynamics::Type group, dynamics::Body const& body, event::Command const& command, bool start);
+  void Link(dynamics::Type group_a, dynamics::Type group_b);
   CollisionGroup<dynamics::Channel, true> start_;
   CollisionGroup<dynamics::Channel, false> end_;
 };
 
 CommandCollisionImpl::CommandCollisionImpl(Collision const& collision) : start_(collision), end_(collision)
 {
+  Link(dynamics::Type::Hero, dynamics::Type::Interaction);
+  Link(dynamics::Type::Hero, dynamics::Type::Proximity);
 }
 
-void CommandCollisionImpl::Add(int group, dynamics::Body const& body, event::Command const& command, bool start)
+void CommandCollisionImpl::Add(dynamics::Type group, dynamics::Body const& body, event::Command const& command, bool start)
 {
   if(start)
   {
@@ -32,18 +34,18 @@ void CommandCollisionImpl::Add(int group, dynamics::Body const& body, event::Com
   }
 }
 
-void CommandCollisionImpl::Link(int group_a, int group_b)
+void CommandCollisionImpl::Link(dynamics::Type group_a, dynamics::Type group_b)
 {
   start_.Link(group_a, group_b);
   end_.Link(group_a, group_b);
 }
 
-void CommandCollision::Add(int group, dynamics::Body const& body, event::Command const& command, bool start)
+void CommandCollision::Add(dynamics::Type group, dynamics::Body const& body, event::Command const& command, bool start)
 {
   impl_->Add(group, body, command, start);
 }
 
-void CommandCollision::Link(int group_a, int group_b)
+void CommandCollision::Link(dynamics::Type group_a, dynamics::Type group_b)
 {
   impl_->Link(group_a, group_b);
 }

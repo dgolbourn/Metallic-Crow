@@ -4,13 +4,12 @@
 #include "body.h"
 #include "bind.h"
 #include "state.h"
-#include "event.h"
 namespace game
 {
 class ItemImpl final : public std::enable_shared_from_this<ItemImpl>
 {
 public:
-  ItemImpl(json::JSON const& json, display::Window& window, event::Queue& queue, DynamicsCollision& dcollision, dynamics::World& world);
+  ItemImpl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world);
   void Init(CommandCollision& ccollision, Scene& scene);
   void Add(event::Command const& start, event::Command const& end);
   void Proximity(event::Command const& start, event::Command const& end);
@@ -66,7 +65,7 @@ void ItemImpl::Render(void) const
   current_.Render(render_box_);
 }
 
-ItemImpl::ItemImpl(json::JSON const& json, display::Window& window, event::Queue& queue, DynamicsCollision& dcollision, dynamics::World& world)
+ItemImpl::ItemImpl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world)
 {
   json_t* idle;
   json_t* active;
@@ -87,9 +86,7 @@ ItemImpl::ItemImpl(json::JSON const& json, display::Window& window, event::Queue
   current_.Play();
   current_.Pause();
   interaction_ = dynamics::Body(interaction, world);
-  dcollision.Add(2, interaction_);
   proximity_ = dynamics::Body(proximity, world);
-  dcollision.Add(3, proximity_);
   render_box_ = display::BoundingBox(0.f, 0.f, 0.f, 0.f);
   Update();
 }
@@ -98,12 +95,10 @@ void ItemImpl::Init(CommandCollision& ccollision, Scene& scene)
 {
   auto ptr = shared_from_this();
   scene.Add(event::Bind(&ItemImpl::Render, ptr), -1);
-  ccollision.Add(3, proximity_, event::Bind(&ItemImpl::ProximityCollideStart, ptr), true);
-  ccollision.Add(3, proximity_, event::Bind(&ItemImpl::ProximityCollideEnd, ptr), false);
-  ccollision.Add(4, interaction_, event::Bind(&ItemImpl::InteractionCollideStart, ptr), true);
-  ccollision.Add(4, interaction_, event::Bind(&ItemImpl::InteractionCollideEnd, ptr), false);
-  event::pause.first.Add(event::Bind(&ItemImpl::Pause, ptr));
-  event::pause.second.Add(event::Bind(&ItemImpl::Resume, ptr));
+  ccollision.Add(dynamics::Type::Proximity, proximity_, event::Bind(&ItemImpl::ProximityCollideStart, ptr), true);
+  ccollision.Add(dynamics::Type::Proximity, proximity_, event::Bind(&ItemImpl::ProximityCollideEnd, ptr), false);
+  ccollision.Add(dynamics::Type::Interaction, interaction_, event::Bind(&ItemImpl::InteractionCollideStart, ptr), true);
+  ccollision.Add(dynamics::Type::Interaction, interaction_, event::Bind(&ItemImpl::InteractionCollideEnd, ptr), false);
   active_.End(event::Bind(&ItemImpl::Idle, ptr));
 }
 
@@ -224,9 +219,9 @@ void Item::Resume(void)
   impl_->Resume();
 }
 
-Item::Item(json::JSON const& json, display::Window& window, Scene& scene, event::Queue& queue, DynamicsCollision& dcollision, CommandCollision& ccollision, dynamics::World& world)
+Item::Item(json::JSON const& json, display::Window& window, Scene& scene, event::Queue& queue, CommandCollision& ccollision, dynamics::World& world)
 {
-  impl_ = std::make_shared<ItemImpl>(json, window, queue, dcollision, world);
+  impl_ = std::make_shared<ItemImpl>(json, window, queue, world);
   impl_->Init(ccollision, scene);
 }
 }

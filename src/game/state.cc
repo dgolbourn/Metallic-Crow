@@ -35,7 +35,7 @@ StateImpl::StateImpl(json::JSON const& json, display::Window& window, event::Que
 
   animation_ = Animation(animation, window, queue);
   render_box_ = display::BoundingBox(render_box);
-  if(std::string(sound_effect).compare(""))
+  if(std::string(sound_effect) != "")
   {
     sound_ = audio::Sound(sound_effect);
   }

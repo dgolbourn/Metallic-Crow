@@ -5,10 +5,11 @@ namespace event
 {
 typedef std::list<Command> CommandList;
 
-class SignalImpl
+class SignalImpl final : public std::enable_shared_from_this<SignalImpl>
 {
 public:
   void Notify(void);
+  void Queue(Queue& queue);
   void Add(Command const& comand);
   bool Empty(void) const;
   void Clear(void);
@@ -30,6 +31,11 @@ void SignalImpl::Notify(void)
   }
 }
 
+void SignalImpl::Queue(event::Queue& queue)
+{
+  queue.Add(event::Bind(&SignalImpl::Notify, shared_from_this()));
+}
+
 void SignalImpl::Add(Command const& comand)
 {
   commands_.push_back(comand);
@@ -47,7 +53,7 @@ void SignalImpl::Clear(void)
 
 void Signal::operator()(Queue& queue)
 {
-  queue.Add(event::Bind(&SignalImpl::Notify, impl_));
+  impl_->Queue(queue);
 }
 
 void Signal::operator()(void)

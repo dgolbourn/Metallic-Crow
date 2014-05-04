@@ -1,38 +1,30 @@
 #ifndef EVENT_H_
 #define EVENT_H_
-#include "SDL_scancode.h"
-#include <unordered_map>
-#include <utility>
-#include "signal.h"
-#include "sdl_library.h"
 #include "switch.h"
+#include "json.h"
 namespace event
 {
-typedef std::unordered_map<SDL_Scancode, Switch> KeyMap;
-
-extern KeyMap key_map;
-
-extern Signal quit;
-extern Switch up;
-extern Switch down;
-extern Switch left;
-extern Switch right;
-extern Switch button1;
-extern Switch button_up;
-extern Switch button_down;
-extern Switch button_left;
-extern Switch button_right;
-extern Switch pause;
-
-void Check(void);
-void Default(void);
-
 class Event
 {
 public:
-  Event(void);
+  Event(void) = default;
+  Event(json::JSON const& json);
+  void operator()(void);
+  void Up(Command const& start, Command const& end);
+  void Down(Command const& start, Command const& end);
+  void Left(Command const& start, Command const& end);
+  void Right(Command const& start, Command const& end);
+  void ChoiceUp(Command const& start, Command const& end);
+  void ChoiceDown(Command const& start, Command const& end);
+  void ChoiceLeft(Command const& start, Command const& end);
+  void ChoiceRight(Command const& start, Command const& end);
+  void Pause(Command const& command);
+  void Resume(Command const& command);
+  void Quit(Command const& command);
+  void Pause(void);
+  void Resume(void);
 private:
-  sdl::Library const sdl_;
+  std::shared_ptr<class EventImpl> impl_;
 };
 }
 #endif

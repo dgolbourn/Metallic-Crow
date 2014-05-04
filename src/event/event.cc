@@ -1,28 +1,128 @@
 #include "event.h"
 #include "SDL.h"
 #include "SDL_events.h"
+#include "SDL_scancode.h"
+#include <unordered_map>
+#include "signal.h"
+#include "sdl_library.h"
+#include "switch.h"
 namespace event
 {
-Signal quit;
-Switch up;
-Switch down;
-Switch left;
-Switch right;
-Switch button1;
-Switch button_up;
-Switch button_down;
-Switch button_left;
-Switch button_right;
-Switch pause;
+typedef std::unordered_map<SDL_Scancode, Switch> KeyMap;
 
-KeyMap key_map;
+class EventImpl
+{
+public:
+  EventImpl(json::JSON const& json);
+  void Check(void);
+  void Up(Command const& start, Command const& end);
+  void Down(Command const& start, Command const& end);
+  void Left(Command const& start, Command const& end);
+  void Right(Command const& start, Command const& end);
+  void ChoiceUp(Command const& start, Command const& end);
+  void ChoiceDown(Command const& start, Command const& end);
+  void ChoiceLeft(Command const& start, Command const& end);
+  void ChoiceRight(Command const& start, Command const& end);
+  void Pause(Command const& command);
+  void Resume(Command const& command);
+  void Quit(Command const& command);
+  void Pause(void);
+  void Resume(void);
+  void Keydown(SDL_KeyboardEvent const& keyboard_event, Uint32 type);
+  sdl::Library const sdl_;
+  Switch up_;
+  Switch down_;
+  Switch left_;
+  Switch right_;
+  Switch choice_up_;
+  Switch choice_down_;
+  Switch choice_left_;
+  Switch choice_right_;
+  Switch quit_;
+  Switch pause_;
+  Switch resume_;
+  KeyMap keys_;
+};
 
-static void KeydownEvent(SDL_KeyboardEvent const& keyboard_event, Uint32 const& type)
+void EventImpl::Up(Command const& start, Command const& end)
+{
+  up_.first.Add(start);
+  up_.second.Add(end);
+}
+
+void EventImpl::Down(Command const& start, Command const& end)
+{
+  down_.first.Add(start);
+  down_.second.Add(end);
+}
+
+void EventImpl::Left(Command const& start, Command const& end)
+{
+  left_.first.Add(start);
+  left_.second.Add(end);
+}
+
+void EventImpl::Right(Command const& start, Command const& end)
+{
+  right_.first.Add(start);
+  right_.second.Add(end);
+}
+
+void EventImpl::ChoiceUp(Command const& start, Command const& end)
+{
+  choice_up_.first.Add(start);
+  choice_up_.second.Add(end);
+}
+
+void EventImpl::ChoiceDown(Command const& start, Command const& end)
+{
+  choice_down_.first.Add(start);
+  choice_down_.second.Add(end);
+}
+
+void EventImpl::ChoiceLeft(Command const& start, Command const& end)
+{
+  choice_left_.first.Add(start);
+  choice_left_.second.Add(end);
+}
+
+void EventImpl::ChoiceRight(Command const& start, Command const& end)
+{
+  choice_right_.first.Add(start);
+  choice_right_.second.Add(end);
+}
+
+void EventImpl::Pause(Command const& command)
+{
+  pause_.first.Add(command);
+}
+
+void EventImpl::Resume(Command const& command)
+{
+  resume_.first.Add(command);
+}
+
+void EventImpl::Quit(Command const& command)
+{
+  quit_.first.Add(command);
+}
+
+void EventImpl::Pause(void)
+{
+  pause_.first();
+}
+
+void EventImpl::Resume(void)
+{
+  resume_.first();
+}
+
+void EventImpl::Keydown(SDL_KeyboardEvent const& keyboard_event, Uint32 type)
 {
   if(keyboard_event.repeat == 0)
   {
-    auto iter = key_map.find(keyboard_event.keysym.scancode);
-    if(iter != key_map.end())
+    auto iter = keys_.find(keyboard_event.keysym.scancode);
+    if(iter != keys_.end())
     {
       switch(type)
       {
@@ -37,25 +137,36 @@ static void KeydownEvent(SDL_KeyboardEvent const& keyboard_event, Uint32 const& 
   }
 }
 
-Event::Event(void) : sdl_(SDL_INIT_EVENTS)
+EventImpl::EventImpl(json::JSON const& json) : sdl_(SDL_INIT_EVENTS)
 {
+  int up, down, left, right, choice_up, choice_down, choice_left, choice_right, pause, resume, quit;
+  json.Unpack("{sisisisisisisisisisisi}",
+    "up", &up,
+    "down", &down,
+    "left", &left,
+    "right", &right,
+    "choice up", &choice_up,
+    "choice down", &choice_down,
+    "choice left", &choice_left,
+    "choice right", &choice_right,
+    "pause", &pause,
+    "resume", &resume,
+    "quit", &quit);
+
+  keys_[SDL_Scancode(up)] = up_;
+  keys_[SDL_Scancode(down)] = down_;
+  keys_[SDL_Scancode(left)] = left_;
+  keys_[SDL_Scancode(right)] = right_;
+  keys_[SDL_Scancode(choice_up)] = choice_up_;
+  keys_[SDL_Scancode(choice_down)] = choice_down_;
+  keys_[SDL_Scancode(choice_left)] = choice_left_;
+  keys_[SDL_Scancode(choice_right)] = choice_right_;
+  keys_[SDL_Scancode(pause)] = pause_;
+  keys_[SDL_Scancode(resume)] = resume_;
+  keys_[SDL_Scancode(quit)] = quit_;
 }
 
-void Default(void)
-{
-  key_map[SDL_SCANCODE_UP] = up;
-  key_map[SDL_SCANCODE_W] = button_up;
-  key_map[SDL_SCANCODE_DOWN] = down;
-  key_map[SDL_SCANCODE_S] = button_down;
-  key_map[SDL_SCANCODE_LEFT] = left;
-  key_map[SDL_SCANCODE_A] = button_left;
-  key_map[SDL_SCANCODE_RIGHT] = right;
-  key_map[SDL_SCANCODE_D] = button_right;
-  key_map[SDL_SCANCODE_SPACE] = button1;
-  key_map[SDL_SCANCODE_ESCAPE] = pause;
-}
-
-void Check(void)
+void EventImpl::Check(void)
 {
   SDL_Event event;
   while(SDL_PollEvent(&event))
@@ -63,15 +174,90 @@ void Check(void)
     switch(event.type)
     {
     case SDL_QUIT:
-      quit();
+      quit_.first();
       break;
     case SDL_KEYDOWN:
     case SDL_KEYUP:
-      KeydownEvent(event.key , event.type);
+      Keydown(event.key , event.type);
       break;
     default:
       break;
     }
   }
+}
+
+Event::Event(json::JSON const& json)
+{
+  impl_ = std::make_shared<EventImpl>(json);
+}
+
+void Event::operator()(void)
+{
+  impl_->Check();
+}
+
+void Event::Up(Command const& start, Command const& end)
+{
+  impl_->Up(start, end);
+}
+
+void Event::Down(Command const& start, Command const& end)
+{
+  impl_->Down(start, end);
+}
+
+void Event::Left(Command const& start, Command const& end)
+{
+  impl_->Left(start, end);
+}
+
+void Event::Right(Command const& start, Command const& end)
+{
+  impl_->Right(start, end);
+}
+
+void Event::ChoiceUp(Command const& start, Command const& end)
+{
+  impl_->ChoiceUp(start, end);
+}
+
+void Event::ChoiceDown(Command const& start, Command const& end)
+{
+  impl_->ChoiceDown(start, end);
+}
+
+void Event::ChoiceLeft(Command const& start, Command const& end)
+{
+  impl_->ChoiceLeft(start, end);
+}
+
+void Event::ChoiceRight(Command const& start, Command const& end)
+{
+  impl_->ChoiceRight(start, end);
+}
+
+void Event::Pause(Command const& command)
+{
+  impl_->Pause(command);
+}
+
+void Event::Resume(Command const& command)
+{
+  impl_->Resume(command);
+}
+
+void Event::Quit(Command const& command)
+{
+  impl_->Quit(command);
+}
+
+void Event::Pause(void)
+{
+  impl_->Pause();
+}
+
+void Event::Resume(void)
+{
+  impl_->Resume();
 }
 }

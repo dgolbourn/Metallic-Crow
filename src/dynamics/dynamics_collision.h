@@ -3,6 +3,7 @@
 #include <memory>
 #include "collision.h"
 #include "body.h"
+#include "collision_type.h"
 namespace game
 {
 class DynamicsCollision
@@ -10,8 +11,8 @@ class DynamicsCollision
 public:
   DynamicsCollision(void) = default;
   DynamicsCollision(Collision const& collision);
-  void Add(int group, dynamics::Body const& body);
-  void Link(int group_a, int group_b);
+  void Add(dynamics::Type group, dynamics::Body const& body);
+  void Link(dynamics::Type group_a, dynamics::Type group_b);
 private:
   std::shared_ptr<class DynamicsCollisionImpl> impl_;
 };

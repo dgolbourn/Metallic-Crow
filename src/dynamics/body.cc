@@ -1,46 +1,100 @@
 #include "world_impl.h"
 #include "body_impl.h"
 #include "units.h"
+#include <vector>
+#include "jansson.h"
 namespace dynamics
 {
 BodyImpl::BodyImpl(json::JSON const& json, World& world)
 {
-  double x, y, u, v, w, h, m, c, d, k;
-  json.Unpack("{s[ff]s[ff]sfsfsfsfsfsf}",
-    "position", &x, &y,
-    "velocity", &u, &v,
-    "width", &w,
-    "height", &h,
-    "mass", &m,
-    "restitution", &c,
-    "drag", &d,
-    "friction", &k);
-  Init((float32)x, (float32)y, (float32)u, (float32)v, (float32)w, (float32)h, (float32)m, (float32)c, (float32)d, (float32)k, world);
-}
+  json_t* shape;
+  char const* ctype;
+  double dx, dy, du, dv, dm, dc, dd, dk;
+  json.Unpack("{s[ff]s[ff]sssosfsfsfsf}",
+    "position", &dx, &dy,
+    "velocity", &du, &dv,
+    "type", &ctype,
+    "shape", &shape,
+    "mass", &dm,
+    "restitution", &dc,
+    "drag", &dd,
+    "friction", &dk);
+  float x = Metres(float(dx));
+  float y = Metres(float(dy));
+  float u = Metres(float(du));
+  float v = Metres(float(dv));
+  float mass = float(dm);
+  float c = float(dc);
+  float d = float(dd);
+  float k = float(dk);
+  std::string type(ctype);
 
-BodyImpl::BodyImpl(float x, float y, float u, float v, float w, float h, float m, float c, float d, float k, World& world)
-{
-  Init((float32)x, (float32)y, (float32)u, (float32)v, (float32)w, (float32)h, (float32)m, (float32)c, (float32)d, (float32)k, world);
-}
-
-void BodyImpl::Init(float32 x, float32 y, float32 u, float32 v, float32 w, float32 h, float32 m, float32 c, float32 d, float32 k, World& world)
-{
-  x = Metres(x);
-  y = Metres(y);
-  u = Metres(u);
-  v = Metres(v);
-  w = Metres(w);
-  h = Metres(h);
-  b2BodyDef body_def;
   b2FixtureDef fixture_def;
-  if(m > 0.f)
+  b2PolygonShape box;
+  b2CircleShape circle;
+  b2ChainShape chain;
+  float area;
+ 
+  if(type == "box")
   {
-    body_def.type = b2_dynamicBody;
-    fixture_def.density = m / (w * h);
+    double dwidth, dheight;
+    json::JSON(shape).Unpack("[ff]", &dwidth, &dheight);
+    float width = Metres(float(dwidth));
+    float height = Metres(float(dheight));
+    box.SetAsBox(.5f * width, .5f * height);
+    fixture_def.shape = &box;
+    area = width * height;
+  }
+  else if(type == "circle")
+  {
+    double dradius;
+    json::JSON(shape).Unpack("f", &dradius);
+    float radius = Metres(float(dradius));
+    circle.m_p.SetZero();
+    circle.m_radius = radius;
+    fixture_def.shape = &circle;
+    area = radius * radius * b2_pi;
+  }
+  else if(type == "chain")
+  {
+    std::vector<b2Vec2> vertices(json_array_size(shape));
+    auto vertex = vertices.begin();
+    size_t index;
+    json_t* value;
+    json_array_foreach(shape, index, value)
+    {
+      double x, y;
+      json_unpack(value, "[ff]", &x, &y);
+      vertex->Set(Metres(float(x)),Metres(float(y)));
+      ++vertex;
+    }
+
+    if(vertices.front() == vertices.back())
+    {
+      vertices.pop_back();
+      chain.CreateChain(vertices.data(), vertices.size());
+      chain.CreateLoop(vertices.data(), vertices.size());
+    }
+    else
+    {
+      chain.CreateChain(vertices.data(), vertices.size());
+    }
+    fixture_def.shape = &chain;
+    area = 0.f;
   }
   else
   {
-    if(m == 0.f)
+  }
+
+  b2BodyDef body_def;
+  if(mass > 0.f && area > 0.f)
+  {
+    body_def.type = b2_dynamicBody;
+    fixture_def.density = mass / area;
+  }
+  else
+  {
+    if(mass == 0.f)
     {
       fixture_def.isSensor = true;
     }
@@ -61,9 +115,7 @@ void BodyImpl::Init(float32 x, float32 y, float32 u, float32 v, float32 w, float
   body_def.linearDamping = d;
   body_def.angularDamping = 0.f;
   body_def.fixedRotation = true;
-  b2PolygonShape box;
-  box.SetAsBox(.5f * w, .5f * h, b2Vec2(0.f, 0.f), 0.f);
-  fixture_def.shape = &box;
+  
   fixture_def.friction = k;
   fixture_def.restitution = c;
   body_ = world.impl_->world_.CreateBody(&body_def);
@@ -130,11 +182,6 @@ BodyImpl::~BodyImpl(void)
 Body::Body(json::JSON const& json, World& world)
 {
   impl_ = std::make_shared<BodyImpl>(json, world);
-}
-
-Body::Body(float x, float y, float u, float v, float w, float h, float m, float c, float d, float k, World& world)
-{
-  impl_ = std::make_shared<BodyImpl>(x, y, u, v, w, h, m, c, d, k, world);
 }
 
 bool Body::operator<(Body const& other) const

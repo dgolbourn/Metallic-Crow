@@ -22,6 +22,7 @@ public:
   JSON(JSON const& other);
   JSON(JSON&& other);
   JSON& operator=(JSON other);
+  explicit operator bool(void) const;
 private:
   void Unpack_(std::string const& format, int dummy, ...) const;
   json_t* json_;

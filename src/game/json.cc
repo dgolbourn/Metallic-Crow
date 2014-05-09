@@ -50,6 +50,11 @@ JSON& JSON::operator=(JSON other)
   return *this;
 }
 
+JSON::operator bool(void) const
+{
+  return !json_is_null(json_);
+}
+
 void JSON::Unpack_(std::string const& format, int dummy, ...) const
 {
   json_error_t error;

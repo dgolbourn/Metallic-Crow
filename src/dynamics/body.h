@@ -12,7 +12,6 @@ class Body
 public:
   Body(void) = default;
   Body(json::JSON const& json, class World& world);
-  Body(float x, float y, float u, float v, float w, float h, float m, float c, float d, float k, class World& world);
   explicit operator bool(void) const;
   bool operator<(Body const& other) const;
   game::Position Position(void) const;

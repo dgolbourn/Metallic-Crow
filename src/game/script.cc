@@ -5,6 +5,7 @@
 #include "item.h"
 #include "bind.h"
 #include <vector>
+#include "terrain.h"
 namespace game
 {
 class ScriptImpl final : public std::enable_shared_from_this<ScriptImpl>
@@ -19,6 +20,7 @@ public:
   audio::Music music_;
   std::vector<Item> items_;
   std::vector<Box> boxes_;
+  std::vector<Terrain> terrain_;
   Hero hero_;
   display::Window window_;
 };
@@ -34,55 +36,59 @@ ScriptImpl::ScriptImpl(json::JSON const& json, Subtitle& subtitle, display::Wind
   Hero hero(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/hero.json"), window, scene, dcollision, ccollision, queue, world, event);
   hero_ = hero;
 
-  for(int i = 0; i < 100; ++i)
-  {
-    Box platform(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/platform.json"), window, scene, queue, dcollision, world);
-    platform.Position(game::Position(float(200 + rand() % 10000), float(200 + rand() % 3000)));
-    boxes_.push_back(platform);
-  }
+  //for(int i = 0; i < 100; ++i)
+  //{
+  //  Box platform(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/platform.json"), window, scene, queue, dcollision, world);
+  //  platform.Position(game::Position(float(200 + rand() % 10000), float(200 + rand() % 3000)));
+  //  boxes_.push_back(platform);
+  //}
 
-  for(int i = 0; i < 30; ++i)
-  {
-    Box box(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/box.json"), window, scene, queue, dcollision, world);
-    box.Position(game::Position(float(200 + rand() % 10000), -400.f));
-    boxes_.push_back(box);
-  }
+  //for(int i = 0; i < 30; ++i)
+  //{
+  //  Box box(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/box.json"), window, scene, queue, dcollision, world);
+  //  box.Position(game::Position(float(200 + rand() % 10000), -400.f));
+  //  boxes_.push_back(box);
+  //}
 
-  Item item(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/watering_can.json"), window, scene, queue, ccollision, world);
-  item.Position(game::Position(300.f, 300.f));
-  items_.push_back(item);
+  //Item item(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/watering_can.json"), window, scene, queue, ccollision, world);
+  //item.Position(game::Position(300.f, 300.f));
+  //items_.push_back(item);
 
-  item.Hysteresis([&]()
-  {
-    subtitle.Text("Cat: This is a test!");
-    subtitle.Choice("", "the quick brown fox...", "", "Such game!");
-    subtitle.Down([&]()
-    {
-      subtitle.Text("Cat: The quick brown fox jumped over the lazy dog.");
-      subtitle.Choice("", "", "", "done");
-      subtitle.Right([&]()
-      {
-        subtitle.Text("Cat: And we're finished?");
-        subtitle.Choice("yes!", "", "", "");
-        items_.clear();
-        return false;
-      });
-      return false;
-    });
-    return true;
-  }, [&]()
-  {
-    subtitle.Clear();
-    subtitle.Text("");
-    subtitle.Choice("", "", "", "");
-    return true;
-  });
+  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/skyline_rocky.json"), window, scene, dcollision, world));
+  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/boundary.json"), window, scene, dcollision, world));
+  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/tree1.json"), window, scene, dcollision, world));
+  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/tree2.json"), window, scene, dcollision, world));
+  //item.Hysteresis([&]()
+  //{
+  //  subtitle.Text("Cat: This is a test!");
+  //  subtitle.Choice("", "the quick brown fox...", "", "Such game!");
+  //  subtitle.Down([&]()
+  //  {
+  //    subtitle.Text("Cat: The quick brown fox jumped over the lazy dog.");
+  //    subtitle.Choice("", "", "", "done");
+  //    subtitle.Right([&]()
+  //    {
+  //      subtitle.Text("Cat: And we're finished?");
+  //      subtitle.Choice("yes!", "", "", "");
+  //      items_.clear();
+  //      return false;
+  //    });
+  //    return false;
+  //  });
+  //  return true;
+  //}, [&]()
+  //{
+  //  subtitle.Clear();
+  //  subtitle.Text("");
+  //  subtitle.Choice("", "", "", "");
+  //  return true;
+  //});
 }
 
 void ScriptImpl::View(void)
 {
   game::Position p = hero_.Position();
-  window_.View(p.first, p.second, 1.f);
+  window_.View(p.first, p.second - 200.f, 1.f);
 }
 
 void ScriptImpl::Pause(void)

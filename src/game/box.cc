@@ -1,4 +1,4 @@
-#include "Box.h"
+#include "box.h"
 #include "bounding_box.h"
 #include "event.h"
 #include "body.h"

@@ -61,3 +61,42 @@
 [submodule "lib/box2d"]
 	path = lib/box2d
 	url = https://github.com/ansman/box2d.git
+[submodule "lib/boost/graph"]
+	path = lib/boost/graph
+	url = https://github.com/boostorg/graph.git
+[submodule "lib/boost/unordered"]
+	path = lib/boost/unordered
+	url = https://github.com/boostorg/unordered.git
+[submodule "lib/boost/property_map"]
+	path = lib/boost/property_map
+	url = https://github.com/boostorg/property_map.git
+[submodule "lib/boost/typeof"]
+	path = lib/boost/typeof
+	url = https://github.com/boostorg/typeof.git
+[submodule "lib/boost/concept_check"]
+	path = lib/boost/concept_check
+	url = https://github.com/boostorg/concept_check.git
+[submodule "lib/boost/tuple"]
+	path = lib/boost/tuple
+	url = https://github.com/boostorg/tuple.git
+[submodule "lib/boost/iterator"]
+	path = lib/boost/iterator
+	url = https://github.com/boostorg/iterator.git
+[submodule "lib/boost/multi_index"]
+	path = lib/boost/multi_index
+	url = https://github.com/boostorg/multi_index.git
+[submodule "lib/boost/move"]
+	path = lib/boost/move
+	url = https://github.com/boostorg/move.git
+[submodule "lib/boost/foreach"]
+	path = lib/boost/foreach
+	url = https://github.com/boostorg/foreach.git
+[submodule "lib/boost/optional"]
+	path = lib/boost/optional
+	url = https://github.com/boostorg/optional.git
+[submodule "lib/boost/range"]
+	path = lib/boost/range
+	url = https://github.com/boostorg/range.git
+[submodule "lib/boost/serialization"]
+	path = lib/boost/serialization
+	url = https://github.com/boostorg/serialization.git

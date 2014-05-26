@@ -10,14 +10,13 @@ namespace game
 class TerrainImpl final : public std::enable_shared_from_this<TerrainImpl>
 {
 public:
-  TerrainImpl(json::JSON const& json, display::Window& window, DynamicsCollision& dcollision, dynamics::World& world);
-  void Init(Scene& scene);
+  TerrainImpl(json::JSON const& json, display::Window& window, DynamicsCollision& dcollision, dynamics::World& world, int& plane);
+  void Init(Scene& scene, int plane);
   void Render(void) const;
   dynamics::Body body_;
   typedef std::pair<display::Texture, display::BoundingBox> TexturePair;
   std::vector<TexturePair> textures_;
   float parallax_;
-  int plane_;
 };
 
 void TerrainImpl::Render(void) const
@@ -28,7 +27,7 @@ void TerrainImpl::Render(void) const
   }
 }
 
-TerrainImpl::TerrainImpl(json::JSON const& json, display::Window& window, DynamicsCollision& dcollision, dynamics::World& world)
+TerrainImpl::TerrainImpl(json::JSON const& json, display::Window& window, DynamicsCollision& dcollision, dynamics::World& world, int& plane)
 {
   json_t* textures;
   json_t* body_ptr;
@@ -37,7 +36,7 @@ TerrainImpl::TerrainImpl(json::JSON const& json, display::Window& window, Dynami
   json.Unpack("{sososisf}",
     "body", &body_ptr,
     "textures", &textures,
-    "z", &plane_,
+    "z", &plane,
     "parallax", &parallax);
  
   parallax_ = float(parallax);
@@ -63,14 +62,15 @@ TerrainImpl::TerrainImpl(json::JSON const& json, display::Window& window, Dynami
   }
 }
 
-void TerrainImpl::Init(Scene& scene)
+void TerrainImpl::Init(Scene& scene, int plane)
 {
-  scene.Add(event::Bind(&TerrainImpl::Render, shared_from_this()), plane_);
+  scene.Add(event::Bind(&TerrainImpl::Render, shared_from_this()), plane);
 }
 
 Terrain::Terrain(json::JSON const& json, display::Window& window, Scene& scene, DynamicsCollision& dcollision, dynamics::World& world)
 {
-  impl_ = std::make_shared<TerrainImpl>(json, window, dcollision, world);
-  impl_->Init(scene);
+  int plane;
+  impl_ = std::make_shared<TerrainImpl>(json, window, dcollision, world, plane);
+  impl_->Init(scene, plane);
 }
 }

@@ -100,3 +100,6 @@
 [submodule "lib/boost/serialization"]
 	path = lib/boost/serialization
 	url = https://github.com/boostorg/serialization.git
+[submodule "lib/lua"]
+	path = lib/lua
+	url = https://github.com/LuaDist/lua.git

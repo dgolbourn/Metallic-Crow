@@ -7,9 +7,9 @@
 #include <vector>
 #include "terrain.h"
 #include "timer.h"
-#include "lua.hpp"
-#include "lua_library.h"
-#include "lua_exception.h"
+#include "lua_stack.h"
+#include "exception.h"
+#include <iostream>
 namespace game
 {
 class ScriptImpl final : public std::enable_shared_from_this<ScriptImpl>
@@ -21,8 +21,9 @@ public:
   void Resume(void);
   void View(void);
   void Event(std::string const& edge);
+  void Command(void);
   bool paused_;
-  lua::Library lua_;
+  lua::Stack lua_;
   audio::Music music_;
   std::vector<Item> items_;
   std::vector<Box> boxes_;
@@ -50,9 +51,10 @@ void ScriptImpl::Init(json::JSON const& json, Subtitle& subtitle, display::Windo
   subtitle_.Down(event::Bind(&ScriptImpl::Event, ptr, "down"));
   subtitle_.Left(event::Bind(&ScriptImpl::Event, ptr, "left"));
   subtitle_.Right(event::Bind(&ScriptImpl::Event, ptr, "right"));
+  lua_.Add(event::Bind(&ScriptImpl::Command, ptr), "command");
 
-  std::string story_state("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/story.lua");
-  lua_.Load(story_state);
+  std::string story("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/story.lua");
+  lua_.Load(story);
 
   audio::Music music("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/BassRockinDJJin-LeeRemix.mp3");
   music.Volume(0.01);
@@ -89,28 +91,84 @@ void ScriptImpl::Init(json::JSON const& json, Subtitle& subtitle, display::Windo
   }
 }
 
+void ScriptImpl::Command(void)
+{
+  std::string command;
+  lua_.PopFront(command);
+  if(command == "item")
+  {
+    lua_.PopFront(command);
+    if(command == "state")
+    {
+      lua_.PopFront(command);
+      std::cout << command << std::endl;
+    }
+    else if(command == "new")
+    {
+      lua_.PopFront(command);
+      std::cout << command << std::endl;
+    }
+    else if(command == "delete")
+    {
+      lua_.PopFront(command);
+      std::cout << command << std::endl;
+    }
+    else
+    {
+      BOOST_THROW_EXCEPTION(exception::Exception());
+    }
+  }
+  else if(command == "box")
+  {
+    lua_.PopFront(command);
+    if(command == "state")
+    {
+      lua_.PopFront(command);
+      std::cout << command << std::endl;
+    }
+    else if(command == "new")
+    {
+      lua_.PopFront(command);
+      std::cout << command << std::endl;
+    }
+    else if(command == "delete")
+    {
+      lua_.PopFront(command);
+      std::cout << command << std::endl;
+    }
+    else
+    {
+      BOOST_THROW_EXCEPTION(exception::Exception());
+    }
+  }
+  else
+  {
+    BOOST_THROW_EXCEPTION(exception::Exception());
+  }
+}
+
 void ScriptImpl::Event(std::string const& event)
 {
-  lua_getglobal(lua_, "event");
-  lua_pushstring(lua_, event.c_str());
+  lua_.Get("event");
+  lua_.Push(event);
   lua_.Call(1, 11);
 
   std::string text;
-  lua_.Pop(text);
+  lua_.PopFront(text);
   subtitle_.Text(text);
 
   std::string up;
-  lua_.Pop(up);
+  lua_.PopFront(up);
   std::string down;
-  lua_.Pop(down);
+  lua_.PopFront(down);
   std::string left;
-  lua_.Pop(left);
+  lua_.PopFront(left);
   std::string right;
-  lua_.Pop(right);
+  lua_.PopFront(right);
   subtitle_.Choice(up, down, left, right);
 
   int timer;
-  lua_.Pop(timer);
+  lua_.PopFront(timer);
   if(timer > 0)
   {
     timer_ = event::Timer(timer, queue_);
@@ -122,11 +180,11 @@ void ScriptImpl::Event(std::string const& event)
     timer_ = event::Timer();
   }
 
-  lua_.Pop(focus_.first);
-  lua_.Pop(focus_.second);
-  lua_.Pop(zoom_);
-  lua_.Pop(subject_focus_);
-  lua_.Pop(subject_hero_);
+  lua_.PopFront(focus_.first);
+  lua_.PopFront(focus_.second);
+  lua_.PopFront(zoom_);
+  lua_.PopFront(subject_focus_);
+  lua_.PopFront(subject_hero_);
 }
 
 void ScriptImpl::View(void)

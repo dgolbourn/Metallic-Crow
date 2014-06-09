@@ -1,6 +1,5 @@
 #include "queue.h"
-#include <queue>
-#include <mutex>
+#include <list>
 namespace event
 {
 class QueueImpl
@@ -8,33 +7,36 @@ class QueueImpl
 public:
   void Add(Command const& command);
   void Check(void);
-  std::mutex mutex_;
-  std::queue<Command> queue_;
+  std::list<Command> commands_;
 };
 
 void QueueImpl::Add(Command const& command)
 {
-  queue_.push(command);
+  commands_.push_back(command);
 }
 
 void QueueImpl::Check(void)
 {
-  while(!queue_.empty())
+  for(auto iter = commands_.begin(); iter != commands_.end();)
   {
-    queue_.front()();
-    queue_.pop(); 
+    if(bool(*iter) && (*iter)())
+    {
+      ++iter;
+    }
+    else
+    {
+      iter = commands_.erase(iter);
+    }
   }
 }
 
 void Queue::Add(Command const& command)
 {
-  std::lock_guard<std::mutex> lock(impl_->mutex_);
   impl_->Add(command);
 }
 
 void Queue::operator()(void)
 {
-  std::lock_guard<std::mutex> lock(impl_->mutex_);
   impl_->Check();
 }
 

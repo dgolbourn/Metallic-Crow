@@ -1,220 +1,142 @@
 #include "timer.h"
-#include "SDL.h"
-#include "SDL_timer.h"
-#include "sdl_library.h"
-#include "sdl_exception.h"
 #include "signal.h"
-#include <mutex>
+#include <chrono>
 namespace event
 {
-class TimerImpl
+class TimerImpl 
 {
 public:
-  TimerImpl(int interval, event::Queue& queue);
-  void Play(int loops);
+  TimerImpl(double interval, int loops);
   void Pause(void);
   void Resume(void);
+  void Reset(double interval, int loops);
   void Add(Command const& command);
   void End(Command const& command);
-  Uint32 Interval(void);
-  Uint32 Update(void);
+  void Check(void);
+  bool Valid(void);
 
-  ~TimerImpl(void);
-
-  sdl::Library const sdl_;
-  std::mutex mutex_;
-  Uint32 const interval_;
-  Uint32 last_update_;
-  Uint32 resume_interval_;
+  std::chrono::high_resolution_clock::duration interval_;
+  std::chrono::high_resolution_clock::time_point tick_;
+  std::chrono::high_resolution_clock::duration remaining_;
   Signal signal_;
   Signal end_;
   int loops_;
-  int max_loops_;
   bool paused_;
-  SDL_TimerID timer_;
-  event::Queue queue_;
 };
 
-static SDL_TimerID const timer_null = static_cast<SDL_TimerID>(NULL);
-
-static Uint32 TimerCallback(Uint32, void* param)
+TimerImpl::TimerImpl(double interval, int loops) 
 {
-  TimerImpl* impl = static_cast<TimerImpl*>(param);
-  std::unique_lock<std::mutex> lock(impl->mutex_, std::defer_lock);
-  Uint32 interval;
-  if(-1 == std::try_lock(lock))
-  {
-    interval = impl->Update();
-  }
-  else
-  {
-    interval = 1;
-  }
-  return interval;
+  Reset(interval, loops);
 }
 
-static SDL_TimerID AddTimer(Uint32 interval, SDL_TimerCallback callback, void* param)
+void TimerImpl::Reset(double interval, int loops)
 {
-  SDL_TimerID timer = SDL_AddTimer(interval, callback, param);
-  if(!timer)
+  double scale = double(std::chrono::high_resolution_clock::period::den) / double(std::chrono::high_resolution_clock::period::num);
+  interval *= scale;
+  interval_ = std::chrono::high_resolution_clock::duration(long long(interval));
+  remaining_ = interval_;
+  paused_ = true;
+  if(loops >= 0)
   {
-    BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
+    ++loops;
   }
-  return timer;
-}
-
-static void RemoveTimer(SDL_TimerID id)
-{
-  if(!SDL_RemoveTimer(id))
-  {
-    BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
-  }
-}
-
-TimerImpl::TimerImpl(int interval, event::Queue& queue) : sdl_(SDL_INIT_TIMER), interval_(static_cast<Uint32>(interval)), queue_(queue)
-{
-  timer_ = timer_null;
-  paused_ = false;
-}
-
-TimerImpl::~TimerImpl(void)
-{
-  if(timer_)
-  {
-    RemoveTimer(timer_);
-  }
-}
-
-Uint32 TimerImpl::Interval(void)
-{
-  Uint32 interval = interval_ + last_update_ - SDL_GetTicks();
-  if(interval == 0u || interval > interval_)
-  {
-    interval = 1;
-  }
-  return interval;
+  loops_ = loops;
 }
 
 void TimerImpl::Pause(void)
 {
-  if(timer_)
+  if(!paused_)
   {
-    RemoveTimer(timer_);
-    timer_ = timer_null;
-    resume_interval_ = Interval();
+    remaining_ = interval_ + tick_ - std::chrono::high_resolution_clock::now();
     paused_ = true;
   }
-}
-
-void TimerImpl::Play(int loops)
-{
-  if(timer_)
-  {
-    RemoveTimer(timer_);
-  }
-  max_loops_ = loops;
-  loops_ = 0;
-  timer_ = AddTimer(interval_, TimerCallback, this);
-  last_update_ = SDL_GetTicks();
-  paused_ = false;
 }
 
 void TimerImpl::Resume(void)
 {
   if(paused_)
   {
-    last_update_ = SDL_GetTicks() - interval_ + resume_interval_;
-    timer_ = AddTimer(resume_interval_, TimerCallback, this);
+    tick_ = std::chrono::high_resolution_clock::now() - interval_ + remaining_;
     paused_ = false;
   }
 }
 
 void TimerImpl::Add(event::Command const& command)
 {
-  return signal_.Add(command);
+  signal_.Add(command);
 }
 
 void TimerImpl::End(event::Command const& command)
 {
-  return end_.Add(command);
+  end_.Add(command);
 }
 
-Uint32 TimerImpl::Update(void)
+bool TimerImpl::Valid(void)
 {
-  Uint32 current_time = SDL_GetTicks();
-  Uint32 update_interval = current_time - last_update_;
-  
-  bool end_flag = false;
-  while(update_interval >= interval_)
-  {
-    update_interval -= interval_;
-    if(max_loops_ < 0)
-    {
-      signal_(queue_);
-    }
-    else
-    {
-      if(loops_ <= max_loops_)
-      {
-        signal_(queue_);
-      }
-      if(loops_ >= max_loops_)
-      {
-        end_flag = true;
-        break;
-      }
-      ++loops_;
-    }
-  }
-
-  last_update_ = current_time - update_interval;
-
-  Uint32 interval;
-  if(end_flag)
-  {
-    end_(queue_);
-    timer_ = timer_null;
-    interval = 0;
-  }
-  else
-  {
-    interval = Interval();
-  }
-  return interval;
+  return loops_ != 0;
 }
 
-Timer::Timer(int interval, event::Queue& queue)
+void TimerImpl::Check(void)
 {
-  impl_ = std::make_shared<TimerImpl>(interval, queue);
+  if(!paused_ && (loops_ != 0))
+  {
+    std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
+    std::chrono::high_resolution_clock::duration elapsed = now - tick_;
+
+    while((loops_ != 0) && (elapsed >= interval_))
+    {
+      elapsed -= interval_;
+      signal_();
+      if(loops_ > 0)
+      {
+        --loops_;
+        if(loops_ == 0)
+        {
+          end_();
+        }
+      }
+    }
+    tick_ = now - elapsed;
+  }
+}
+
+Timer::Timer(double interval, int loops)
+{
+  impl_ = std::make_shared<TimerImpl>(interval, loops);
 }
 
 void Timer::Pause(void)
 {
-  std::lock_guard<std::mutex> lock(impl_->mutex_);
   impl_->Pause();
 }
 
 void Timer::Resume(void)
 {
-  std::lock_guard<std::mutex> lock(impl_->mutex_);
   impl_->Resume();
 }
 
 void Timer::Add(event::Command const& command)
 {
-  std::lock_guard<std::mutex> lock(impl_->mutex_);
-  return impl_->Add(command);
+  impl_->Add(command);
 }
 
 void Timer::End(event::Command const& command)
 {
-  std::lock_guard<std::mutex> lock(impl_->mutex_);
   impl_->End(command);
 }
 
-void Timer::Play(int loops)
+void Timer::operator()(void)
 {
-  std::lock_guard<std::mutex> lock(impl_->mutex_);
-  impl_->Play(loops);
+  impl_->Check();
+}
+
+void Timer::Reset(double interval, int loops)
+{
+  impl_->Reset(interval, loops);
+}
+
+Timer::operator bool(void) const
+{
+  return bool(impl_) && impl_->Valid();
 }
 }

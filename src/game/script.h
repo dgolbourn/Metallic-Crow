@@ -2,21 +2,18 @@
 #define SCRIPT_H_
 #include <memory>
 #include <json.h>
-#include "subtitle.h"
-#include "scene.h"
-#include "dynamics_collision.h"
-#include "command_collision.h"
-#include "world.h"
 #include "event.h"
+#include "window.h"
 namespace game
 {
 class Script
 {
 public:
   Script(void) = default;
-  Script(json::JSON const& json, Subtitle& subtitle, display::Window& window, Scene& scene, event::Queue& queue, DynamicsCollision& dcollision, CommandCollision& ccollision, dynamics::World& world, event::Event& event);
+  Script(json::JSON const& json, display::Window& window, event::Queue& queue, event::Event& event);
   void Pause(void);
   void Resume(void);
+  void Render(void);
 private:
   std::shared_ptr<class ScriptImpl> impl_;
 };

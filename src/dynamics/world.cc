@@ -2,6 +2,7 @@
 #include "world_impl.h"
 #include "body_impl.h"
 #include "units.h"
+#include "bind.h"
 namespace dynamics
 {
 bool WorldImpl::ShouldCollide(b2Fixture* fixtureA, b2Fixture* fixtureB)
@@ -21,16 +22,22 @@ void WorldImpl::EndContact(b2Contact* contact)
 
 void WorldImpl::Step(void)
 {
-  world_.Step(t_, velocity_iterations_, position_iterations_);
-  signal_();
+  begin_();
+  world_.Step(interval_, velocity_iterations_, position_iterations_);
+  end_();
 }
 
-void WorldImpl::Add(event::Command const& command)
+void WorldImpl::Begin(event::Command const& command)
 {
-  signal_.Add(command);
+  begin_.Add(command);
 }
 
-WorldImpl::WorldImpl(json::JSON const& json, game::Collision& collision) : world_(b2Vec2(0, 0)), t_(1.f / 60.f), velocity_iterations_(8), position_iterations_(3), collision_(collision)
+void WorldImpl::End(event::Command const& command)
+{
+  end_.Add(command);
+}
+
+WorldImpl::WorldImpl(json::JSON const& json, game::Collision& collision, double& interval) : world_(b2Vec2(0, 0)), velocity_iterations_(8), position_iterations_(3), collision_(collision)
 {
   double x;
   double y;
@@ -38,29 +45,61 @@ WorldImpl::WorldImpl(json::JSON const& json, game::Collision& collision) : world
   json.Unpack("{s[ff]}",
     "gravity", &x, &y);
 
+  interval = 1. / 60.;
+  interval_ = float32(interval);
+
   world_.SetGravity(b2Vec2(Metres(float32(x)),Metres(float32(y))));
   world_.SetAutoClearForces(true);
   world_.SetContactListener(this);
   world_.SetContactFilter(this);
 }
 
-World::World(json::JSON const& json, game::Collision& collision)
+void WorldImpl::Init(event::Queue& queue, double interval)
 {
-  impl_ = std::make_shared<WorldImpl>(json, collision);
+  timer_ = event::Timer(interval, -1);
+  timer_.Add(event::Bind(&WorldImpl::Step, shared_from_this()));
+  queue.Add(event::Bind(&event::Timer::operator(), timer_));
 }
 
-void World::Step(void)
+void WorldImpl::Pause(void)
 {
-  impl_->Step();
+  timer_.Pause();
 }
 
-void World::Add(event::Command const& command)
+void WorldImpl::Resume(void)
 {
-  impl_->Add(command);
+  timer_.Resume();
+}
+
+World::World(json::JSON const& json, game::Collision& collision, event::Queue& queue)
+{
+  double interval;
+  impl_ = std::make_shared<WorldImpl>(json, collision, interval);
+  impl_->Init(queue, interval);
+}
+
+void World::Begin(event::Command const& command)
+{
+  impl_->Begin(command);
+}
+
+void World::End(event::Command const& command)
+{
+  impl_->End(command);
 }
 
 World::operator bool(void) const
 {
   return bool(impl_);
+}
+
+void World::Pause(void)
+{
+  impl_->Pause();
+}
+
+void World::Resume(void)
+{
+  impl_->Resume();
 }
 }

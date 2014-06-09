@@ -8,32 +8,51 @@ typedef std::list<Command> CommandList;
 class SignalImpl final : public std::enable_shared_from_this<SignalImpl>
 {
 public:
+  SignalImpl(void);
   void Notify(void);
   void Queue(Queue& queue);
   void Add(Command const& comand);
   bool Empty(void) const;
   void Clear(void);
   CommandList commands_;
+  bool active_;
+  bool clear_;
 };
+
+SignalImpl::SignalImpl(void) : active_(false), clear_(false)
+{
+}
 
 void SignalImpl::Notify(void)
 {
-  for(auto iter = commands_.begin(); iter != commands_.end();)
+  if(!active_)
   {
-    if((*iter)())
+    active_ = true;
+    for(auto iter = commands_.begin(); iter != commands_.end();)
     {
-      ++iter;
+      if(bool(*iter) && (*iter)())
+      {
+        ++iter;
+      }
+      else
+      {
+        iter = commands_.erase(iter);
+      }
     }
-    else
+    active_ = false;
+
+    if(clear_)
     {
-      iter = commands_.erase(iter);
+      clear_ = false;
+      commands_.clear();
     }
   }
 }
 
 void SignalImpl::Queue(event::Queue& queue)
 {
-  queue.Add(event::Bind(&SignalImpl::Notify, shared_from_this()));
+  auto command = event::Bind(&SignalImpl::Notify, shared_from_this());
+  queue.Add([=](){command(); return false;});
 }
 
 void SignalImpl::Add(Command const& comand)
@@ -48,7 +67,14 @@ bool SignalImpl::Empty(void) const
 
 void SignalImpl::Clear(void)
 {
-  commands_.clear();
+  if(active_)
+  {
+    clear_ = true;
+  }
+  else
+  {
+    commands_.clear();
+  }
 }
 
 void Signal::operator()(Queue& queue)

@@ -5,7 +5,7 @@ class Sync
 {
 public:
   Sync(void) = default;
-  Sync(float frame_rate);
+  Sync(double frame_rate);
   void operator()(void);
 private:
   std::shared_ptr<class SyncImpl> impl_;

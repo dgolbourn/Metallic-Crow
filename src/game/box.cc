@@ -71,7 +71,7 @@ BoxImpl::BoxImpl(json::JSON const& json, display::Window& window, event::Queue& 
 void BoxImpl::Init(dynamics::World& world, Scene& scene)
 {
   auto ptr = shared_from_this();
-  world.Add(event::Bind(&BoxImpl::Update, ptr));
+  world.End(event::Bind(&BoxImpl::Update, ptr));
   scene.Add(event::Bind(&BoxImpl::Render, ptr), -1);
 }
 

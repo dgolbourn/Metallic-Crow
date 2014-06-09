@@ -6,25 +6,27 @@ namespace event
 class SyncImpl
 {
 public:
-  SyncImpl(float frame_rate);
+  SyncImpl(double frame_rate);
   void Synchronise(void);
-  std::chrono::milliseconds frame_period_;
-  std::chrono::steady_clock::time_point tick_;
+  std::chrono::high_resolution_clock::duration interval_;
+  std::chrono::high_resolution_clock::time_point tick_;
 };
 
-SyncImpl::SyncImpl(float frame_rate)
+SyncImpl::SyncImpl(double frame_rate)
 {
-  frame_period_ = std::chrono::milliseconds(int(1000.f / frame_rate));
-  std::chrono::steady_clock::time_point tick = std::chrono::steady_clock::now();
+  double scale = double(std::chrono::high_resolution_clock::period::den) / double(std::chrono::high_resolution_clock::period::num);
+  double interval = scale / frame_rate;
+  interval_ = std::chrono::high_resolution_clock::duration(long long(interval));
+  tick_ = std::chrono::high_resolution_clock::now();
 }
 
 void SyncImpl::Synchronise(void)
 {
-  tick_ += frame_period_;
+  tick_ += interval_;
   std::this_thread::sleep_until(tick_);
 }
 
-Sync::Sync(float frame_rate)
+Sync::Sync(double frame_rate)
 {
   impl_ = std::make_shared<SyncImpl>(frame_rate);
 }

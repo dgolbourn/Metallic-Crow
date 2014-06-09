@@ -41,8 +41,8 @@ template<class Method, class Impl, class... Args> event::Command Bind(Method&& m
     bool locked = false;
     if(auto shared_locked = weak.lock())
     {
-      Impl* ptr = shared_locked.get();
-      (void)(ptr->*method)(args...);
+      Impl& ptr = *shared_locked.get();
+      (void)(ptr.*method)(args...);
       locked = true;
     }
     return locked;

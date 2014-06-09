@@ -9,16 +9,17 @@
 #include "timer.h"
 #include "lua_stack.h"
 #include "exception.h"
-#include <iostream>
+#include "subtitle.h"
 namespace game
 {
 class ScriptImpl final : public std::enable_shared_from_this<ScriptImpl>
 {
 public:
-  ScriptImpl(display::Window& window, Subtitle& subtitle, event::Queue& queue);
-  void Init(json::JSON const& json, Subtitle& subtitle, display::Window& window, Scene& scene, event::Queue& queue, DynamicsCollision& dcollision, CommandCollision& ccollision, dynamics::World& world, event::Event& event);
+  ScriptImpl(display::Window& window, event::Queue& queue);
+  void Init(json::JSON const& json, display::Window& window, event::Queue& queue, event::Event& event);
   void Pause(void);
   void Resume(void);
+  void Render(void);
   void View(void);
   void Event(std::string const& edge);
   void Command(void);
@@ -34,19 +35,31 @@ public:
   event::Timer timer_;
   event::Queue queue_;
   Position focus_;
+  game::Collision collision_;
+  game::DynamicsCollision dcollision_;
+  game::CommandCollision ccollision_;
+  game::Scene scene_;
+  dynamics::World world_;
   bool subject_focus_;
   bool subject_hero_;
   float zoom_;
 };
 
-ScriptImpl::ScriptImpl(display::Window& window, Subtitle& subtitle, event::Queue& queue) : paused_(true), window_(window), subtitle_(subtitle), queue_(queue), zoom_(1.f), focus_(0.f, 0.f), subject_hero_(false), subject_focus_(false)
+ScriptImpl::ScriptImpl(display::Window& window, event::Queue& queue) : paused_(true), window_(window), zoom_(1.f), focus_(0.f, 0.f), subject_hero_(false), subject_focus_(false), queue_(queue)
 {
+  collision_ = game::Collision(queue);
+  dcollision_ = game::DynamicsCollision(collision_);
+  ccollision_ = game::CommandCollision(collision_);
+  scene_ = game::Scene(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/scene.json"), window);
+  world_ = dynamics::World(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/world.json"), collision_, queue);
 }
 
-void ScriptImpl::Init(json::JSON const& json, Subtitle& subtitle, display::Window& window, Scene& scene, event::Queue& queue, DynamicsCollision& dcollision, CommandCollision& ccollision, dynamics::World& world, event::Event& event)
+void ScriptImpl::Init(json::JSON const& json, display::Window& window, event::Queue& queue, event::Event& event)
 {
+  subtitle_ = game::Subtitle(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/subtitle.json"), window, queue, event);
+
   auto ptr = shared_from_this();
-  world.Add(event::Bind(&ScriptImpl::View, ptr));
+  world_.End(event::Bind(&ScriptImpl::View, ptr));
   subtitle_.Up(event::Bind(&ScriptImpl::Event, ptr, "up"));
   subtitle_.Down(event::Bind(&ScriptImpl::Event, ptr, "down"));
   subtitle_.Left(event::Bind(&ScriptImpl::Event, ptr, "left"));
@@ -62,30 +75,30 @@ void ScriptImpl::Init(json::JSON const& json, Subtitle& subtitle, display::Windo
   music.Pause();
   music_ = music;
 
-  Hero hero(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/hero.json"), window, scene, dcollision, ccollision, queue, world, event);
+  Hero hero(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/hero.json"), window, scene_, dcollision_, ccollision_, queue, world_, event);
   hero_ = hero;
 
-  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/skyline.json"), window, scene, dcollision, world));
-  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/boundary.json"), window, scene, dcollision, world));
-  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/bushes.json"), window, scene, dcollision, world));
-  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/grass.json"), window, scene, dcollision, world));
-  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/tree1.json"), window, scene, dcollision, world));
-  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/tree2.json"), window, scene, dcollision, world));
+  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/skyline.json"), window, scene_, dcollision_, world_));
+  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/boundary.json"), window, scene_, dcollision_, world_));
+  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/bushes.json"), window, scene_, dcollision_, world_));
+  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/grass.json"), window, scene_, dcollision_, world_));
+  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/tree1.json"), window, scene_, dcollision_, world_));
+  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/tree2.json"), window, scene_, dcollision_, world_));
 
   {
-    Item crow(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/crow.json"), window, scene, queue, ccollision, world);
+    Item crow(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/crow.json"), window, scene_, queue, ccollision_, world_);
     crow.Hysteresis(event::Bind(&ScriptImpl::Event, ptr, "crow"), event::Bind(&ScriptImpl::Event, ptr, "exit"));
     items_.push_back(crow);
   }
 
   {
-    Item house(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/house.json"), window, scene, queue, ccollision, world);
+    Item house(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/house.json"), window, scene_, queue, ccollision_, world_);
     house.Hysteresis(event::Bind(&ScriptImpl::Event, ptr, "house"), event::Bind(&ScriptImpl::Event, ptr, "exit"));
     items_.push_back(house);
   }
 
   {
-    Item rooster(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/rooster.json"), window, scene, queue, ccollision, world);
+    Item rooster(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/rooster.json"), window, scene_, queue, ccollision_, world_);
     rooster.Hysteresis(event::Bind(&ScriptImpl::Event, ptr, "rooster"), event::Bind(&ScriptImpl::Event, ptr, "exit"));
     items_.push_back(rooster);
   }
@@ -167,13 +180,14 @@ void ScriptImpl::Event(std::string const& event)
   lua_.PopFront(right);
   subtitle_.Choice(up, down, left, right);
 
-  int timer;
+  double timer;
   lua_.PopFront(timer);
-  if(timer > 0)
+  if(timer > 0.)
   {
-    timer_ = event::Timer(timer, queue_);
+    timer_ = event::Timer(timer, 0);
+    queue_.Add(event::Bind(&event::Timer::operator(), timer_));
     timer_.Add(event::Bind(&ScriptImpl::Event, shared_from_this(), "timer"));
-    timer_.Play(0);
+    timer_.Resume();
   }
   else
   {
@@ -232,6 +246,8 @@ void ScriptImpl::Pause(void)
     {
       timer_.Pause();
     }
+    subtitle_.Pause();
+    world_.Pause();
   }
 }
 
@@ -254,7 +270,15 @@ void ScriptImpl::Resume(void)
     {
       timer_.Resume();
     }
+    subtitle_.Resume();
+    world_.Resume();
   }
+}
+
+void ScriptImpl::Render(void)
+{
+  scene_.Render();
+  subtitle_.Render();
 }
 
 void Script::Pause(void)
@@ -267,9 +291,14 @@ void Script::Resume(void)
   impl_->Resume();
 }
 
-Script::Script(json::JSON const& json, Subtitle& subtitle, display::Window& window, Scene& scene, event::Queue& queue, DynamicsCollision& dcollision, CommandCollision& ccollision, dynamics::World& world, event::Event& event)
+void Script::Render(void)
 {
-  impl_ = std::make_shared<ScriptImpl>(window, subtitle, queue);
-  impl_->Init(json, subtitle, window, scene, queue, dcollision, ccollision, world, event);
+  impl_->Render();
+}
+
+Script::Script(json::JSON const& json, display::Window& window, event::Queue& queue, event::Event& event)
+{
+  impl_ = std::make_shared<ScriptImpl>(window, queue);
+  impl_->Init(json, window, queue, event);
 }
 }

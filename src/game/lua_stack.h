@@ -11,10 +11,12 @@ public:
   void Call(int in, int out);
   void PopBack(int& out);
   void PopBack(float& out);
+  void PopBack(double& out);
   void PopBack(std::string& out);
   void PopBack(bool& out);
   void PopFront(int& out);
   void PopFront(float& out);
+  void PopFront(double& out);
   void PopFront(std::string& out);
   void PopFront(bool& out);
   void Get(std::string const& global);

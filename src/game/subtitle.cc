@@ -11,10 +11,9 @@ class SubtitleImpl final : public std::enable_shared_from_this<SubtitleImpl>
 public:
   SubtitleImpl(json::JSON const& json, display::Window& window, event::Queue& queue);
   void Render(void);
-  void Init(Scene& scene, event::Event& event);
+  void Init(event::Event& event);
   void Text(std::string const& text);
   void Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right);
-  void Clear(void);
   void UpEvent(void);
   void DownEvent(void);
   void LeftEvent(void);
@@ -150,10 +149,9 @@ SubtitleImpl::SubtitleImpl(json::JSON const& json, display::Window& window, even
   right_text_offset_ = display::BoundingBox(x + float(choice_text_offset), y, 0.f, 0.f);
 }
 
-void SubtitleImpl::Init(Scene& scene, event::Event& event)
+void SubtitleImpl::Init(event::Event& event)
 {
   auto ptr = shared_from_this();
-  scene.Add(event::Bind(&SubtitleImpl::Render, ptr), std::numeric_limits<int>::max());
   event.ChoiceUp(event::Bind(&SubtitleImpl::UpEvent, ptr), event::None);
   event.ChoiceDown(event::Bind(&SubtitleImpl::DownEvent, ptr), event::None);
   event.ChoiceLeft(event::Bind(&SubtitleImpl::LeftEvent, ptr), event::None);
@@ -386,19 +384,6 @@ void SubtitleImpl::Right(event::Command const& command)
   right_signal_.Add(command);
 }
 
-void SubtitleImpl::Clear(void)
-{
-  up_signal_.Clear();
-  down_signal_.Clear();
-  left_signal_.Clear();
-  right_signal_.Clear();
-  auto ptr = shared_from_this();
-  up_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
-  down_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
-  left_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
-  right_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
-}
-
 void Subtitle::Text(std::string const& text)
 {
   impl_->Text(text);
@@ -429,11 +414,6 @@ void Subtitle::Choice(std::string const& up, std::string const& down, std::strin
   impl_->Choice(up, down, left, right);
 }
 
-void Subtitle::Clear(void)
-{
-  impl_->Clear();
-}
-
 void Subtitle::Pause(void)
 {
   impl_->Pause();
@@ -444,9 +424,14 @@ void Subtitle::Resume(void)
   impl_->Resume();
 }
 
-Subtitle::Subtitle(json::JSON const& json, display::Window& window, Scene& scene, event::Queue& queue, event::Event& event)
+void Subtitle::Render(void)
+{
+  impl_->Render();
+}
+
+Subtitle::Subtitle(json::JSON const& json, display::Window& window, event::Queue& queue, event::Event& event)
 {
   impl_ = std::make_shared<SubtitleImpl>(json, window, queue);
-  impl_->Init(scene, event);
+  impl_->Init(event);
 }
 }

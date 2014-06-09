@@ -9,6 +9,7 @@ namespace game
 class Collision
 {
 public:
+  Collision(void) = default;
   Collision(event::Queue& queue);
   void Add(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c, bool start);
   bool Check(dynamics::Body const& a, dynamics::Body const& b) const;

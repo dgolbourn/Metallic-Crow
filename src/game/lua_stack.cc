@@ -15,6 +15,7 @@ public:
   void Call(int in, int out);
   void Pop(int& out, bool front);
   void Pop(float& out, bool front);
+  void Pop(double& out, bool front);
   void Pop(std::string& out, bool front);
   void Pop(bool& out, bool front);
   void Add(event::Command const& command, std::string const& name, int out);
@@ -100,6 +101,18 @@ void StackImpl::Pop(float& out, bool front)
   out = (float)lua_tonumberx(state_, index, &ret);
   lua_remove(state_, index);
   if(!ret)
+  {
+    BOOST_THROW_EXCEPTION(Exception());
+  }
+}
+
+void StackImpl::Pop(double& out, bool front)
+{
+  int ret;
+  int index = Index(front);
+  out = lua_tonumberx(state_, index, &ret);
+  lua_remove(state_, index);
+  if (!ret)
   {
     BOOST_THROW_EXCEPTION(Exception());
   }
@@ -209,6 +222,11 @@ void Stack::PopBack(float& out)
   impl_->Pop(out, false);
 }
 
+void Stack::PopBack(double& out)
+{
+  impl_->Pop(out, false);
+}
+
 void Stack::PopBack(std::string& out)
 {
   impl_->Pop(out, false);
@@ -225,6 +243,11 @@ void Stack::PopFront(int& out)
 }
 
 void Stack::PopFront(float& out)
+{
+  impl_->Pop(out, true);
+}
+
+void Stack::PopFront(double& out)
 {
   impl_->Pop(out, true);
 }
@@ -264,9 +287,9 @@ void Stack::Push(bool in)
   lua_pushboolean(impl_->state_, int(in));
 }
 
-void Stack::Add(event::Command const& command, std::string const& name, int outs)
+void Stack::Add(event::Command const& command, std::string const& name, int out)
 {
-  impl_->Add(command, name, outs);
+  impl_->Add(command, name, out);
 }
 
 Stack::Stack(void)

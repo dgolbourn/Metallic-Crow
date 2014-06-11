@@ -122,6 +122,8 @@ BodyImpl::BodyImpl(json::JSON const& json, World& world)
   body_->SetUserData(this);
   fixture_ = body_->CreateFixture(&fixture_def);
   world_ = world;
+  position_ = body_->GetPosition();
+  velocity_ = body_->GetLinearVelocity();
 }
 
 Body BodyImpl::MakeBody(b2Body* body_ptr)
@@ -140,8 +142,7 @@ Body BodyImpl::MakeBody(b2Body* body_ptr)
 
 game::Position BodyImpl::Position(void) const
 {
-  b2Vec2 position = body_->GetPosition();
-  return game::Position(Pixels(position.x), Pixels(position.y));
+  return game::Position(Pixels(position_.x), Pixels(position_.y));
 }
 
 void BodyImpl::Position(float x, float y)
@@ -151,8 +152,7 @@ void BodyImpl::Position(float x, float y)
 
 game::Position BodyImpl::Velocity(void) const
 {
-  b2Vec2 velocity = body_->GetLinearVelocity();
-  return game::Position(Pixels(velocity.x), Pixels(velocity.y));
+  return game::Position(Pixels(velocity_.x), Pixels(velocity_.y));
 }
 
 void BodyImpl::Velocity(float x, float y)
@@ -168,6 +168,28 @@ void BodyImpl::Force(float x, float y)
 void BodyImpl::Impulse(float x, float y)
 {
   body_->ApplyLinearImpulse(b2Vec2(Metres(x), Metres(y)), body_->GetWorldCenter(), true);
+}
+
+void BodyImpl::Begin(void)
+{
+  position_ = body_->GetPosition();
+  velocity_ = body_->GetLinearVelocity();
+}
+
+void BodyImpl::End(float32 dt)
+{
+  b2Vec2 v = body_->GetLinearVelocity() + velocity_;
+  b2Vec2 dx = body_->GetPosition() - position_;
+  cubic_[3] = dt * v - 2.f * dx;
+  cubic_[2] = -dt * (v + velocity_) + 3.f * dx;
+  cubic_[1] = dt * velocity_;
+  cubic_[0] = position_;
+}
+
+void BodyImpl::Update(float32 ds)
+{
+  position_ = ds * (ds * (ds * cubic_[3] + cubic_[2]) + cubic_[1]) + cubic_[0];
+  velocity_ = ds * (ds * 3.f * cubic_[3] + 2.f * cubic_[2]) + cubic_[1];
 }
 
 BodyImpl::~BodyImpl(void)

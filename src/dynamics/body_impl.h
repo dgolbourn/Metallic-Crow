@@ -5,8 +5,11 @@
 #include "world.h"
 #include "position.h"
 #include "body.h"
+#include <array>
 namespace dynamics
 {
+typedef std::array<b2Vec2, 4> Cubic;
+
 class BodyImpl final : public std::enable_shared_from_this<BodyImpl>
 {
 public:
@@ -18,10 +21,20 @@ public:
   void Velocity(float x, float y);
   void Force(float x, float y);
   void Impulse(float x, float y);
+  void Begin(void);
+  void End(float32 dt);
+  void Update(float32 ds);
+
   static Body MakeBody(b2Body* body);
   World::WeakPtr world_;
   b2Body* body_;
   b2Fixture* fixture_;
+  b2Vec2 position_;
+  b2Vec2 velocity_;
+  Cubic cubic_;
+
+  class Iterator;
+  class Range;
 };
 }
 #endif

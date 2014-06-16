@@ -33,8 +33,8 @@ StateImpl::StateImpl(json::JSON const& json, display::Window& window, event::Que
     "sound effect", &sound_effect,
     "loops", &loops_);
 
-  animation_ = Animation(animation, window, queue);
-  render_box_ = display::BoundingBox(render_box);
+  animation_ = Animation(json::JSON(animation), window, queue);
+  render_box_ = display::BoundingBox(json::JSON(render_box));
   if(std::string(sound_effect) != "")
   {
     sound_ = audio::Sound(sound_effect);
@@ -137,6 +137,11 @@ void State::Render(display::BoundingBox const& bounding_box, float parallax, boo
 bool State::operator==(State const& other) const
 {
   return impl_ == other.impl_;
+}
+
+State::operator bool(void) const
+{
+  return bool(impl_);
 }
 
 State::State(json::JSON const& json, display::Window& window, event::Queue& queue)

@@ -31,7 +31,7 @@ JSON::JSON(std::string const& filename)
 
 JSON::~JSON(void)
 {
-  json_object_clear(json_);
+  json_decref(json_);
 }
 
 JSON::JSON(JSON const& other)
@@ -55,6 +55,11 @@ JSON::operator bool(void) const
   return !json_is_null(json_);
 }
 
+bool JSON::operator==(JSON const& other) const
+{
+  return json_equal(json_, other.json_) != 0;
+}
+
 void JSON::Unpack_(std::string const& format, int dummy, ...) const
 {
   json_error_t error;
@@ -67,5 +72,61 @@ void JSON::Unpack_(std::string const& format, int dummy, ...) const
       << Exception::Column(error.column)
       << Exception::Position(error.position));
   }
+}
+
+int JSON::Size(void) const
+{
+  int ret = 0;
+  if(json_is_array(json_))
+  {
+    ret = (int)json_array_size(json_);
+  }
+  return ret;
+}
+
+JSON JSON::operator[](int index)
+{
+  JSON ret;
+  if(json_is_array(json_))
+  {
+    if((index >= 0) && (index < (int)json_array_size(json_)))
+    {
+      ret = JSON(json_array_get(json_, (size_t)index));
+    }
+  }
+  return ret;
+}
+
+JSON::Iterator JSON::begin(void) 
+{
+  return JSON::Iterator(JSON(json_));
+}
+
+JSON::Iterator JSON::end(void) const
+{
+  return JSON::Iterator();
+}
+
+JSON::Iterator::Iterator(void) : index_(0)
+{
+}
+
+JSON::Iterator::Iterator(JSON& json) : json_(json), value_(json_[0]), index_(0)
+{
+}
+
+void JSON::Iterator::increment(void)
+{
+  value_ = json_[++index_];
+}
+
+bool JSON::Iterator::equal(Iterator const& other) const
+{
+  return (!json_ && !other.json_) || (!value_ && !other.value_) || ((json_ == other.json_) && (value_ == other.value_));
+}
+
+JSON const& JSON::Iterator::dereference(void) const
+{
+  return value_;
 }
 }

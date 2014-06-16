@@ -3,21 +3,23 @@
 #include <thread>
 namespace event
 {
+typedef std::chrono::high_resolution_clock Clock;
+
 class SyncImpl
 {
 public:
   SyncImpl(double frame_rate);
   void Synchronise(void);
-  std::chrono::high_resolution_clock::duration interval_;
-  std::chrono::high_resolution_clock::time_point tick_;
+  Clock::duration interval_;
+  Clock::time_point tick_;
 };
 
 SyncImpl::SyncImpl(double frame_rate)
 {
-  double scale = double(std::chrono::high_resolution_clock::period::den) / double(std::chrono::high_resolution_clock::period::num);
+  static const double scale = double(Clock::period::den) / double(Clock::period::num);
   double interval = scale / frame_rate;
-  interval_ = std::chrono::high_resolution_clock::duration(long long(interval));
-  tick_ = std::chrono::high_resolution_clock::now();
+  interval_ = Clock::duration(Clock::rep(interval));
+  tick_ = Clock::now();
 }
 
 void SyncImpl::Synchronise(void)

@@ -30,7 +30,9 @@ void GraphImpl::operator()(void)
   int ret = avfilter_graph_config(graph_, nullptr);
   if(ret < 0)
   {
-    BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error(ret)));
+    BOOST_THROW_EXCEPTION(Exception() 
+      << Exception::What(Error(ret))
+      << Exception::Code(ret));
   }
 }
 

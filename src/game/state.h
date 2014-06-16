@@ -22,6 +22,7 @@ public:
   void Add(event::Command const& command);
   display::BoundingBox const& Shape(void);
   void Render(display::BoundingBox const& bounding_box, float parallax = 1.f, bool tile = false, double angle = 0.) const;
+  explicit operator bool(void) const;
 private:
   std::shared_ptr<class StateImpl> impl_;
 };

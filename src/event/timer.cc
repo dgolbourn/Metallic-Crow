@@ -3,6 +3,8 @@
 #include <chrono>
 namespace event
 {
+typedef std::chrono::high_resolution_clock Clock;
+
 class TimerImpl 
 {
 public:
@@ -15,9 +17,9 @@ public:
   void Check(void);
   bool Valid(void);
 
-  std::chrono::high_resolution_clock::duration interval_;
-  std::chrono::high_resolution_clock::time_point tick_;
-  std::chrono::high_resolution_clock::duration remaining_;
+  Clock::duration interval_;
+  Clock::time_point tick_;
+  Clock::duration remaining_;
   Signal signal_;
   Signal end_;
   int loops_;
@@ -31,9 +33,9 @@ TimerImpl::TimerImpl(double interval, int loops)
 
 void TimerImpl::Reset(double interval, int loops)
 {
-  double scale = double(std::chrono::high_resolution_clock::period::den) / double(std::chrono::high_resolution_clock::period::num);
+  static const double scale = double(Clock::period::den) / double(Clock::period::num);
   interval *= scale;
-  interval_ = std::chrono::high_resolution_clock::duration(long long(interval));
+  interval_ = Clock::duration(Clock::rep(interval));
   remaining_ = interval_;
   paused_ = true;
   if(loops >= 0)
@@ -47,7 +49,7 @@ void TimerImpl::Pause(void)
 {
   if(!paused_)
   {
-    remaining_ = interval_ + tick_ - std::chrono::high_resolution_clock::now();
+    remaining_ = interval_ + tick_ - Clock::now();
     paused_ = true;
   }
 }
@@ -56,7 +58,7 @@ void TimerImpl::Resume(void)
 {
   if(paused_)
   {
-    tick_ = std::chrono::high_resolution_clock::now() - interval_ + remaining_;
+    tick_ = Clock::now() - interval_ + remaining_;
     paused_ = false;
   }
 }
@@ -80,12 +82,13 @@ void TimerImpl::Check(void)
 {
   if(!paused_ && (loops_ != 0))
   {
-    std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
-    std::chrono::high_resolution_clock::duration elapsed = now - tick_;
+    Clock::time_point now = Clock::now();
+    Clock::duration elapsed = now - tick_;
 
     while((loops_ != 0) && (elapsed >= interval_))
     {
       elapsed -= interval_;
+      tick_ += interval_;
       signal_();
       if(loops_ > 0)
       {
@@ -96,7 +99,6 @@ void TimerImpl::Check(void)
         }
       }
     }
-    tick_ = now - elapsed;
   }
 }
 

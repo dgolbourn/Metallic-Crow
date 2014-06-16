@@ -2,6 +2,7 @@
 #define EVENT_H_
 #include "switch.h"
 #include "json.h"
+#include "weak_ptr.h"
 namespace event
 {
 class Event
@@ -23,8 +24,11 @@ public:
   void Quit(Command const& command);
   void Pause(void);
   void Resume(void);
+  explicit operator bool(void) const;
+  typedef memory::WeakPtr<Event, class EventImpl> WeakPtr;
 private:
   std::shared_ptr<class EventImpl> impl_;
+  friend WeakPtr;
 };
 }
 #endif

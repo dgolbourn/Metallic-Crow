@@ -5,7 +5,6 @@
 namespace game
 {
 typedef std::multimap<int, event::Command> LayerMap;
-typedef std::pair<int, event::Command> LayerPair;
 
 class SceneImpl
 {
@@ -33,23 +32,21 @@ void SceneImpl::Render(void)
 
 void SceneImpl::Add(event::Command const& layer, int z)
 {
-  layers_.insert(LayerPair(z, layer));
+  layers_.emplace(z, layer);
 }
 
 SceneImpl::SceneImpl(json::JSON const& json, display::Window& window)
 {
   json_t* layers;
   json.Unpack("{so}", "layers", &layers);
-  size_t index;
-  json_t* layer;
-  json_array_foreach(layers, index, layer)
+  for(json::JSON const& value : json::JSON(layers))
   {
     char const* image;
     int plane;
     double parallax;
     json_t* render_box;
     double angle;
-    json_unpack(layer, "{sssisfsosf}", 
+    value.Unpack("{sssisfsosf}", 
       "image", &image,
       "z", &plane,
       "parallax", &parallax,
@@ -59,7 +56,7 @@ SceneImpl::SceneImpl(json::JSON const& json, display::Window& window)
     event::Command bind = std::bind(
       display::Texture(image, window),
       display::BoundingBox(),
-      display::BoundingBox(render_box),
+      display::BoundingBox(json::JSON(render_box)),
       float(parallax),
       true,
       angle);

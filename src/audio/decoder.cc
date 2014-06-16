@@ -21,9 +21,10 @@ public:
 
 static void Link(AVFilterContext* out, AVFilterContext* in)
 {
-  if(avfilter_link(out, 0, in, 0))
+  int ret = avfilter_link(out, 0, in, 0);
+  if(ret)
   {
-    BOOST_THROW_EXCEPTION(Exception());
+    BOOST_THROW_EXCEPTION(Exception() << Exception::Code(ret));
   }
 }
 

@@ -260,4 +260,9 @@ void Event::Resume(void)
 {
   impl_->Resume();
 }
+
+Event::operator bool(void) const
+{
+  return bool(impl_);
+}
 }

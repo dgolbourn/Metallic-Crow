@@ -3,26 +3,26 @@
 #include "dynamics.h"
 #include "bind.h"
 #include "state.h"
+#include <map>
+#include "jansson.h"
+#include <iostream>
 namespace game
 {
+typedef std::map<std::string, State> StateMap;
+
 class HeroImpl final : public std::enable_shared_from_this<HeroImpl>
 {
 public:
-  HeroImpl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world);
-  void Init(Scene& scene, DynamicsCollision& dcollision, CommandCollision& ccollision, dynamics::World& world, event::Event& event);
-  State moving_;
-  State destroyed_;
-  State spawn_;
-  State idle_;
-  State hit_;
-  State current_;
+  HeroImpl(void);
+  void Init(json::JSON const& json, display::Window& window, event::Queue& queue, Scene& scene, DynamicsCollision& dcollision, CommandCollision& ccollision, dynamics::World& world);
+  State state_;
+  StateMap states_;
   display::BoundingBox render_box_;
   bool paused_;
   dynamics::Body body_;
   int x_sign_;
-  int x_facing_;
+  int facing_;
   int y_sign_;
-  int y_facing_;
   game::Position force_;
   void Render(void) const;
   void Pause(void);
@@ -32,24 +32,24 @@ public:
   void Left(void);
   void Right(void);
   void Update(void);
-  void Reset(void);
-  void Change(State& next);
+  void Change(std::string const& next);
   void Position(game::Position const& position);
   game::Position Position(void);
-  void BodyUpdate(void);
-  void ItemCollide(void);
+  void Begin(void);
+  void End(void);
+  void Collide(void);
 };
 
 void HeroImpl::Pause(void)
 {
   paused_ = true;
-  current_.Pause();
+  state_.Pause();
 }
 
 void HeroImpl::Resume(void)
 {
   paused_ = false;
-  current_.Resume();
+  state_.Resume();
 }
 
 void HeroImpl::Up(void)
@@ -60,7 +60,7 @@ void HeroImpl::Up(void)
 
 void HeroImpl::Down(void)
 {
-  ++y_sign_;
+  ++y_sign_; 
   Update();
 }
 
@@ -81,132 +81,136 @@ static float const sqrt1_2 = std::sqrt(0.5f);
 
 void HeroImpl::Update(void)
 {
-  float f = df;
-  if(x_sign_ && y_sign_)
+  if(!paused_)
   {
-    f *= sqrt1_2;
-  }
-  if(x_sign_)
-  {
-    x_facing_ = x_sign_;
-  }
-
-  force_ = game::Position(float(x_sign_) * f, float(y_sign_) * f);
-
-  if(x_sign_ || y_sign_)
-  {
-    if(current_ == idle_)
+    float f = df;
+    if(x_sign_ && y_sign_)
     {
-      Change(moving_);
+      f *= sqrt1_2;
     }
-  }
-  else
-  {
-    if(current_ == moving_)
+    if(x_sign_)
     {
-      Change(idle_);
+      facing_ = x_sign_;
     }
-  }
-}
 
-void HeroImpl::ItemCollide(void)
-{
-}
+    force_ = game::Position(float(x_sign_) * f, float(y_sign_) * f);
 
-void HeroImpl::Change(State& next)
-{
-  if(!(current_ == next))
-  {
-    current_.Stop();
-    current_ = next;
-    current_.Play();
-    if(paused_)
+    if(x_sign_ || y_sign_)
     {
-      current_.Pause();
+      auto iter = states_.find("idle");
+      if(iter != states_.end())
+      {
+        if(state_ == iter->second)
+        {
+          Change("active");
+        }
+      }
+    }
+    else
+    {
+      auto iter = states_.find("active");
+      if(iter != states_.end())
+      {
+        if(state_ == iter->second)
+        {
+          Change("idle");
+        }
+      }
     }
   }
 }
 
-static void BoxUpdate(display::BoundingBox const& source, display::BoundingBox& destination, Position const& position, int x_facing)
+void HeroImpl::Change(std::string const& next)
 {
-  display::BoundingBox temp = source.Copy();
+  auto iter = states_.find(next);
+  if(iter != states_.end())
+  {
+    if(!(state_ == iter->second))
+    {
+      if(state_)
+      {
+        state_.Stop();
+      }
+      state_ = iter->second;
+      state_.Play();
+      if(paused_)
+      {
+        state_.Pause();
+      }
+    }
+  }
+}
+
+void HeroImpl::Begin(void)
+{
+  body_.Force(force_.first, force_.second);
+}
+
+void HeroImpl::End(void)
+{
+  display::BoundingBox temp = state_.Shape().Copy();
+  game::Position position = body_.Position();
   float sourcex = temp.x();
   temp.x(sourcex + position.first);
   temp.y(temp.y() + position.second);
-  if(x_facing < 0)
+  if(facing_ < 0)
   {
     temp.x(temp.x() - 2.f * sourcex);
     temp.w(-temp.w());
   }
-  destination.Copy(temp);
-}
-
-void HeroImpl::BodyUpdate(void)
-{
-  BoxUpdate(current_.Shape(), render_box_, Position(), x_facing_);
-  body_.Force(force_.first, force_.second);
+  render_box_.Copy(temp);
 }
 
 void HeroImpl::Render(void) const
 {
-  current_.Render(render_box_);
+  state_.Render(render_box_);
 }
 
-void HeroImpl::Reset(void)
+HeroImpl::HeroImpl(void) : paused_(true), x_sign_(0), y_sign_(0), facing_(0), force_(game::Position(0.f, 0.f)), render_box_(display::BoundingBox(0.f, 0.f, 0.f, 0.f))
 {
-  Change(idle_); 
-  Update();
 }
 
-HeroImpl::HeroImpl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world)
-{
-  json_t* moving;
-  json_t* destroyed;
-  json_t* spawn;
-  json_t* idle;
-  json_t* hit;
-  json_t* body;
-
-  json.Unpack("{sosososososo}",
-    "moving", &moving,
-    "destroyed", &destroyed,
-    "spawn", &spawn,
-    "idle", &idle,
-    "hit", &hit,
-    "body", &body);
-  
-  paused_ = true;
-  moving_ = State(moving, window, queue);
-  destroyed_ = State(destroyed, window, queue);
-  idle_ = State(idle, window, queue);
-  hit_ = State(hit, window, queue);
-  spawn_ = State(spawn, window, queue);
-  current_ = spawn_;
-  current_.Play();
-  current_.Pause();
-  body_ = dynamics::Body(body, world);
-  x_sign_ = 0;
-  y_sign_ = 0;
-  x_facing_ = 0;
-  y_facing_ = 0;
-  force_ = game::Position(0.f, 0.f);
-  render_box_ = display::BoundingBox(0.f, 0.f, 0.f, 0.f);
-  BodyUpdate();
-}
-
-void HeroImpl::Init(Scene& scene, DynamicsCollision& dcollision, CommandCollision& ccollision, dynamics::World& world, event::Event& event)
+void HeroImpl::Init(json::JSON const& json, display::Window& window, event::Queue& queue, Scene& scene, DynamicsCollision& dcollision, CommandCollision& ccollision, dynamics::World& world)
 {
   auto ptr = shared_from_this();
-  world.Add(event::Bind(&HeroImpl::BodyUpdate, ptr));
-  hit_.End(event::Bind(&HeroImpl::Reset, ptr));
-  spawn_.End(event::Bind(&HeroImpl::Reset, ptr));
+  world.Begin(event::Bind(&HeroImpl::Begin, ptr));
+  world.End(event::Bind(&HeroImpl::End, ptr));
   scene.Add(event::Bind(&HeroImpl::Render, ptr), 0);
-  event.Up(event::Bind(&HeroImpl::Up, ptr), event::Bind(&HeroImpl::Down, ptr));
-  event.Down(event::Bind(&HeroImpl::Down, ptr), event::Bind(&HeroImpl::Up, ptr));
-  event.Left(event::Bind(&HeroImpl::Left, ptr), event::Bind(&HeroImpl::Right, ptr));
-  event.Right(event::Bind(&HeroImpl::Right, ptr), event::Bind(&HeroImpl::Left, ptr));
+  
+  json_t* states;
+  json_t* body;
+  json.Unpack("{soso}",
+    "body", &body,
+    "states", &states);
+  body_ = dynamics::Body(json::JSON(body), world);
   dcollision.Add(dynamics::Type::Hero, body_);
-  ccollision.Add(dynamics::Type::Hero, body_, event::Bind(&HeroImpl::ItemCollide, ptr), true);
+  ccollision.Add(dynamics::Type::Hero, body_, event::Bind(&HeroImpl::Collide, ptr), true);
+
+  for(json::JSON const& value : json::JSON(states))
+  {
+    char const* name;
+    json_t* state;
+    char const* next;
+    value.Unpack("{sssoss}",
+      "name", &name,
+      "state", &state,
+      "next", &next);
+    auto valid = states_.emplace(name, State(json::JSON(state), window, queue));
+    if(valid.second)
+    {
+      std::string next_str(next);
+      if(next_str != "")
+      {
+        valid.first->second.End(event::Bind(&HeroImpl::Change, ptr, next_str));
+      }
+    }
+  }
+
+  Change("spawn");
+}
+
+void HeroImpl::Collide(void)
+{
 }
 
 void HeroImpl::Position(game::Position const& position)
@@ -239,9 +243,34 @@ void Hero::Resume(void)
   impl_->Resume();
 }
 
-Hero::Hero(json::JSON const& json, display::Window& window, Scene& scene, DynamicsCollision& dcollision, CommandCollision& ccollision, event::Queue& queue, dynamics::World& world, event::Event& event)
+void Hero::Up(void)
 {
-  impl_ = std::make_shared<HeroImpl>(json, window, queue, world);
-  impl_->Init(scene, dcollision, ccollision, world, event);
+  impl_->Up();
+}
+
+void Hero::Down(void)
+{
+  impl_->Down();
+}
+
+void Hero::Left(void)
+{
+  impl_->Left();
+}
+
+void Hero::Right(void)
+{
+  impl_->Right();
+}
+
+Hero::operator bool(void) const
+{
+  return bool(impl_);
+}
+
+Hero::Hero(json::JSON const& json, display::Window& window, Scene& scene, DynamicsCollision& dcollision, CommandCollision& ccollision, event::Queue& queue, dynamics::World& world)
+{
+  impl_ = std::make_shared<HeroImpl>();
+  impl_->Init(json, window, queue, scene, dcollision, ccollision, world);
 }
 }

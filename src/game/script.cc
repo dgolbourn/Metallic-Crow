@@ -10,98 +10,92 @@
 #include "lua_stack.h"
 #include "exception.h"
 #include "subtitle.h"
+#include <map>
 namespace game
 {
+typedef std::multimap<std::string, Item> ItemMap;
+typedef std::multimap<std::string, Box> BoxMap;
+typedef std::multimap<std::string, Terrain> TerrainMap;
+
+struct Stage
+{
+  audio::Music music_;
+  Hero hero_;
+  game::Scene scene_;
+  dynamics::World world_;
+  ItemMap items_;
+  BoxMap boxes_;
+  TerrainMap terrain_;
+};
+
+typedef std::shared_ptr<Stage> StagePtr;
+typedef std::map<std::string, StagePtr> StageMap;
+
 class ScriptImpl final : public std::enable_shared_from_this<ScriptImpl>
 {
 public:
   ScriptImpl(display::Window& window, event::Queue& queue);
-  void Init(json::JSON const& json, display::Window& window, event::Queue& queue, event::Event& event);
+  void Init(json::JSON const& json);
   void Pause(void);
   void Resume(void);
   void Render(void);
+  void ChoiceUp(void);
+  void ChoiceDown(void);
+  void ChoiceLeft(void);
+  void ChoiceRight(void);
+  void Up(void);
+  void Down(void);
+  void Left(void);
+  void Right(void);
   void View(void);
-  void Event(std::string const& edge);
+  void Event(std::string const& event);
   void Command(void);
   bool paused_;
   lua::Stack lua_;
-  audio::Music music_;
-  std::vector<Item> items_;
-  std::vector<Box> boxes_;
-  std::vector<Terrain> terrain_;
-  Hero hero_;
   display::Window window_;
   Subtitle subtitle_;
   event::Timer timer_;
   event::Queue queue_;
   Position focus_;
-  game::Collision collision_;
-  game::DynamicsCollision dcollision_;
-  game::CommandCollision ccollision_;
-  game::Scene scene_;
-  dynamics::World world_;
   bool subject_focus_;
   bool subject_hero_;
   float zoom_;
+  game::Collision collision_;
+  game::DynamicsCollision dcollision_;
+  game::CommandCollision ccollision_;
+  StageMap stages_;
+  StagePtr stage_;
 };
 
 ScriptImpl::ScriptImpl(display::Window& window, event::Queue& queue) : paused_(true), window_(window), zoom_(1.f), focus_(0.f, 0.f), subject_hero_(false), subject_focus_(false), queue_(queue)
 {
-  collision_ = game::Collision(queue);
+  collision_ = game::Collision(queue_);
   dcollision_ = game::DynamicsCollision(collision_);
   ccollision_ = game::CommandCollision(collision_);
-  scene_ = game::Scene(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/scene.json"), window);
-  world_ = dynamics::World(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/world.json"), collision_, queue);
 }
 
-void ScriptImpl::Init(json::JSON const& json, display::Window& window, event::Queue& queue, event::Event& event)
+void ScriptImpl::Init(json::JSON const& json)
 {
-  subtitle_ = game::Subtitle(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/subtitle.json"), window, queue, event);
+  json_t* subtitle;
+  char const* story;
+
+  json.Unpack("{soss}",
+    "subtitle", &subtitle,
+    "story", &story);
+
+  subtitle_ = game::Subtitle(json::JSON(subtitle), window_, queue_);
 
   auto ptr = shared_from_this();
-  world_.End(event::Bind(&ScriptImpl::View, ptr));
   subtitle_.Up(event::Bind(&ScriptImpl::Event, ptr, "up"));
   subtitle_.Down(event::Bind(&ScriptImpl::Event, ptr, "down"));
   subtitle_.Left(event::Bind(&ScriptImpl::Event, ptr, "left"));
   subtitle_.Right(event::Bind(&ScriptImpl::Event, ptr, "right"));
+
   lua_.Add(event::Bind(&ScriptImpl::Command, ptr), "command");
 
-  std::string story("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/story.lua");
   lua_.Load(story);
-
-  audio::Music music("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/BassRockinDJJin-LeeRemix.mp3");
-  music.Volume(0.01);
-  music.Play();
-  music.Pause();
-  music_ = music;
-
-  Hero hero(json::JSON("C:/Users/golbo_000/Documents/Visual Studio 2012/Projects/ReBassInvaders/resource/hero.json"), window, scene_, dcollision_, ccollision_, queue, world_, event);
-  hero_ = hero;
-
-  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/skyline.json"), window, scene_, dcollision_, world_));
-  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/boundary.json"), window, scene_, dcollision_, world_));
-  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/bushes.json"), window, scene_, dcollision_, world_));
-  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/grass.json"), window, scene_, dcollision_, world_));
-  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/tree1.json"), window, scene_, dcollision_, world_));
-  terrain_.push_back(Terrain(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/tree2.json"), window, scene_, dcollision_, world_));
-
-  {
-    Item crow(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/crow.json"), window, scene_, queue, ccollision_, world_);
-    crow.Hysteresis(event::Bind(&ScriptImpl::Event, ptr, "crow"), event::Bind(&ScriptImpl::Event, ptr, "exit"));
-    items_.push_back(crow);
-  }
-
-  {
-    Item house(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/house.json"), window, scene_, queue, ccollision_, world_);
-    house.Hysteresis(event::Bind(&ScriptImpl::Event, ptr, "house"), event::Bind(&ScriptImpl::Event, ptr, "exit"));
-    items_.push_back(house);
-  }
-
-  {
-    Item rooster(json::JSON("C:/Users/golbo_000/Documents/GitHub/Metallic-Crow/res/rooster.json"), window, scene_, queue, ccollision_, world_);
-    rooster.Hysteresis(event::Bind(&ScriptImpl::Event, ptr, "rooster"), event::Bind(&ScriptImpl::Event, ptr, "exit"));
-    items_.push_back(rooster);
-  }
+  lua_.Get("begin");
+  lua_.Call(0, 0);
 }
 
 void ScriptImpl::Command(void)
@@ -113,18 +107,27 @@ void ScriptImpl::Command(void)
     lua_.PopFront(command);
     if(command == "state")
     {
-      lua_.PopFront(command);
-      std::cout << command << std::endl;
     }
     else if(command == "new")
     {
-      lua_.PopFront(command);
-      std::cout << command << std::endl;
+      std::string name;
+      std::string json;
+      lua_.PopFront(name);
+      lua_.PopFront(json);
+      Item item(json::JSON(json), window_, stage_->scene_, queue_, ccollision_, stage_->world_);
+      auto ptr = shared_from_this();
+      item.Hysteresis(event::Bind(&ScriptImpl::Event, ptr, name), event::Bind(&ScriptImpl::Event, ptr, "exit"));
+      if(!paused_)
+      {
+        item.Resume();
+      }
+      stage_->items_.emplace(name, item);
     }
     else if(command == "delete")
     {
-      lua_.PopFront(command);
-      std::cout << command << std::endl;
+      std::string name;
+      lua_.PopFront(name);
+      stage_->items_.erase(name);
     }
     else
     {
@@ -134,20 +137,168 @@ void ScriptImpl::Command(void)
   else if(command == "box")
   {
     lua_.PopFront(command);
-    if(command == "state")
+    if(command == "new")
     {
-      lua_.PopFront(command);
-      std::cout << command << std::endl;
-    }
-    else if(command == "new")
-    {
-      lua_.PopFront(command);
-      std::cout << command << std::endl;
+      std::string name;
+      std::string json;
+      lua_.PopFront(name);
+      lua_.PopFront(json);
+      Box box(json::JSON(json), window_, stage_->scene_, queue_, dcollision_, stage_->world_);
+      if(!paused_)
+      {
+        box.Resume();
+      }
+      stage_->boxes_.emplace(name, box);
     }
     else if(command == "delete")
     {
-      lua_.PopFront(command);
-      std::cout << command << std::endl;
+      std::string name;
+      lua_.PopFront(name);
+      stage_->items_.erase(name);
+    }
+    else
+    {
+      BOOST_THROW_EXCEPTION(exception::Exception());
+    }
+  }
+  else if(command == "stage")
+  {
+    lua_.PopFront(command);
+    if(command == "change")
+    {
+      std::string name;
+      lua_.PopFront(name);
+      bool paused = paused_;
+      Pause();
+      stage_ = stages_.at(name);
+      if(!paused)
+      {
+        Resume();
+      }
+    }
+    else if(command == "new")
+    {
+      std::string name;
+      lua_.PopFront(name);
+      bool paused = paused_;
+      Pause();
+      stage_ = stages_.emplace(name, std::make_shared<Stage>()).first->second;
+      if(!paused)
+      {
+        Resume();
+      }
+    }
+    else if(command == "delete")
+    {
+      std::string name;
+      lua_.PopFront(name);
+      stages_.erase(name);
+    }
+    else
+    {
+      BOOST_THROW_EXCEPTION(exception::Exception());
+    }
+  }
+  else if(command == "terrain")
+  {
+    lua_.PopFront(command);
+    if(command == "new")
+    {
+      std::string name;
+      std::string json;
+      lua_.PopFront(name);
+      lua_.PopFront(json);
+      stage_->terrain_.emplace(name, Terrain(json::JSON(json), window_, stage_->scene_, dcollision_, stage_->world_));
+    }
+    else if(command == "delete")
+    {
+      std::string name;
+      lua_.PopFront(name);
+      stage_->terrain_.erase(name);
+    }
+    else
+    {
+      BOOST_THROW_EXCEPTION(exception::Exception());
+    }
+  }
+  else if(command == "scene")
+  {
+    lua_.PopFront(command);
+    if(command == "new")
+    {
+      std::string json;
+      lua_.PopFront(json);
+      stage_->scene_ = game::Scene(json::JSON(json), window_);
+    }
+    else
+    {
+      BOOST_THROW_EXCEPTION(exception::Exception());
+    }
+  }
+  else if(command == "world")
+  {
+    lua_.PopFront(command);
+    if(command == "new")
+    {
+      std::string json;
+      lua_.PopFront(json);
+      dynamics::World world(json::JSON(json), collision_, queue_);
+      world.End(event::Bind(&ScriptImpl::View, shared_from_this()));
+      if(!paused_)
+      {
+        world.Resume();
+      }
+      stage_->world_ = world;
+    }
+    else
+    {
+      BOOST_THROW_EXCEPTION(exception::Exception());
+    }
+  }
+  else if(command == "hero")
+  {
+    lua_.PopFront(command);
+    if(command == "new")
+    {
+      std::string json;
+      lua_.PopFront(json);
+      Hero hero(json::JSON(json), window_, stage_->scene_, dcollision_, ccollision_, queue_, stage_->world_);
+      if(!paused_)
+      {
+        hero.Resume();
+      }
+      stage_->hero_ = hero;
+    }
+    else if(command == "state")
+    {
+    }
+    else if(command == "position")
+    {
+      Position position;
+      lua_.PopFront(position.first);
+      lua_.PopFront(position.second);
+      stage_->hero_.Position(position);
+    }
+    else
+    {
+      BOOST_THROW_EXCEPTION(exception::Exception());
+    }
+  }
+  else if(command == "music")
+  {
+    lua_.PopFront(command);
+    if(command == "new")
+    {
+      std::string json;
+      lua_.PopFront(json);
+      audio::Music music(json);
+      music.Volume(0.01);
+      music.Play();
+      if(paused_)
+      {
+        music.Pause();
+      }
+      stage_->music_ = music;
     }
     else
     {
@@ -206,7 +357,7 @@ void ScriptImpl::View(void)
   game::Position p;
   if(subject_hero_)
   {
-    p = hero_.Position();
+    p = stage_->hero_.Position();
     if(subject_focus_)
     {
       p.first += focus_.first;
@@ -221,7 +372,7 @@ void ScriptImpl::View(void)
   }
   else
   {
-    p = hero_.Position();
+    p = stage_->hero_.Position();
     p.second -= 200.f;
   }
   window_.View(p.first, p.second, zoom_);
@@ -232,22 +383,22 @@ void ScriptImpl::Pause(void)
   if(!paused_)
   {
     paused_ = true;
-    music_.Pause();
-    for(auto& item : items_)
+    stage_->music_.Pause();
+    for(auto& item : stage_->items_)
     {
-      item.Pause();
+      item.second.Pause();
     }
-    for(auto& box : boxes_)
+    for(auto& box : stage_->boxes_)
     {
-      box.Pause();
+      box.second.Pause();
     }
-    hero_.Pause();
+    stage_->hero_.Pause();
     if(timer_)
     {
       timer_.Pause();
     }
     subtitle_.Pause();
-    world_.Pause();
+    stage_->world_.Pause();
   }
 }
 
@@ -256,29 +407,69 @@ void ScriptImpl::Resume(void)
   if(paused_)
   {
     paused_ = false;
-    music_.Resume();
-    for(auto& item : items_)
+    stage_->music_.Resume();
+    for(auto& item : stage_->items_)
     {
-      item.Resume();
+      item.second.Resume();
     }
-    for(auto& box : boxes_)
+    for(auto& box : stage_->boxes_)
     {
-      box.Resume();
+      box.second.Resume();
     }
-    hero_.Resume();
+    stage_->hero_.Resume();
     if(timer_)
     {
       timer_.Resume();
     }
     subtitle_.Resume();
-    world_.Resume();
+    stage_->world_.Resume();
   }
 }
 
 void ScriptImpl::Render(void)
 {
-  scene_.Render();
+  stage_->scene_.Render();
   subtitle_.Render();
+}
+
+void ScriptImpl::ChoiceUp(void)
+{
+  subtitle_.Up();
+}
+
+void ScriptImpl::ChoiceDown(void)
+{
+  subtitle_.Down();
+}
+
+void ScriptImpl::ChoiceLeft(void)
+{
+  subtitle_.Left();
+}
+
+void ScriptImpl::ChoiceRight(void)
+{
+  subtitle_.Right();
+}
+
+void ScriptImpl::Up(void)
+{
+  stage_->hero_.Up();
+}
+
+void ScriptImpl::Down(void)
+{
+  stage_->hero_.Down();
+}
+
+void ScriptImpl::Left(void)
+{
+  stage_->hero_.Left();
+}
+
+void ScriptImpl::Right(void)
+{
+  stage_->hero_.Right();
 }
 
 void Script::Pause(void)
@@ -296,9 +487,54 @@ void Script::Render(void)
   impl_->Render();
 }
 
-Script::Script(json::JSON const& json, display::Window& window, event::Queue& queue, event::Event& event)
+void Script::ChoiceUp(void)
+{
+  impl_->ChoiceUp();
+}
+
+void Script::ChoiceDown(void)
+{
+  impl_->ChoiceDown();
+}
+
+void Script::ChoiceLeft(void)
+{
+  impl_->ChoiceLeft();
+}
+
+void Script::ChoiceRight(void)
+{
+  impl_->ChoiceRight();
+}
+
+void Script::Up(void)
+{
+  impl_->Up();
+}
+
+void Script::Down(void)
+{
+  impl_->Down();
+}
+
+void Script::Left(void)
+{
+  impl_->Left();
+}
+
+void Script::Right(void)
+{
+  impl_->Right();
+}
+
+Script::operator bool(void) const
+{
+  return bool(impl_);
+}
+
+Script::Script(json::JSON const& json, display::Window& window, event::Queue& queue)
 {
   impl_ = std::make_shared<ScriptImpl>(window, queue);
-  impl_->Init(json, window, queue, event);
+  impl_->Init(json);
 }
 }

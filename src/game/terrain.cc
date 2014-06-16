@@ -49,16 +49,14 @@ TerrainImpl::TerrainImpl(json::JSON const& json, display::Window& window, Dynami
 
   textures_ = std::vector<TexturePair>(json_array_size(textures));
   auto texture_iter = textures_.begin();
-  size_t index;
-  json_t* texture;
-  json_array_foreach(textures, index, texture)
+  for(json::JSON const& value : json::JSON(textures))
   {
     char const* image;
     json_t* render_box;
-    json_unpack(texture, "{ssso}",
+    value.Unpack("{ssso}",
       "image", &image,
       "render box", &render_box);
-    *texture_iter++ = TexturePair(display::Texture(image, window), display::BoundingBox(render_box));
+    *texture_iter++ = TexturePair(display::Texture(image, window), display::BoundingBox(json::JSON(render_box)));
   }
 }
 

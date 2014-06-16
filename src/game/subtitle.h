@@ -5,14 +5,14 @@
 #include "scene.h"
 #include <memory>
 #include "queue.h"
-#include "event.h"
+#include "weak_ptr.h"
 namespace game
 {
 class Subtitle
 {
 public:
   Subtitle(void) = default;
-  Subtitle(json::JSON const& json, display::Window& window, event::Queue& queue, event::Event& event);
+  Subtitle(json::JSON const& json, display::Window& window, event::Queue& queue);
   void Text(std::string const& text);
   void Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right);
   void Up(event::Command const& command);
@@ -22,8 +22,15 @@ public:
   void Pause(void);
   void Resume(void);
   void Render(void);
+  void Up(void);
+  void Down(void);
+  void Left(void);
+  void Right(void);
+  explicit operator bool(void) const;
+  typedef memory::WeakPtr<Subtitle, class SubtitleImpl> WeakPtr;
 private:
   std::shared_ptr<class SubtitleImpl> impl_;
+  friend WeakPtr;
 };
 }
 #endif

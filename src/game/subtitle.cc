@@ -11,13 +11,13 @@ class SubtitleImpl final : public std::enable_shared_from_this<SubtitleImpl>
 public:
   SubtitleImpl(json::JSON const& json, display::Window& window, event::Queue& queue);
   void Render(void);
-  void Init(event::Event& event);
+  void Init(void);
   void Text(std::string const& text);
   void Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right);
-  void UpEvent(void);
-  void DownEvent(void);
-  void LeftEvent(void);
-  void RightEvent(void);
+  void Up(void);
+  void Down(void);
+  void Left(void);
+  void Right(void);
   void Pause(void);
   void Resume(void);
   void Change(display::BoundingBox& box, State& current, State& next, display::BoundingBox& offset);
@@ -109,16 +109,16 @@ SubtitleImpl::SubtitleImpl(json::JSON const& json, display::Window& window, even
     "down active", &down_active,
     "left active", &left_active,
     "right active", &right_active);
-  text_font_ = sdl::Font(text_font);
-  choice_font_ = sdl::Font(choice_font);
-  up_idle_ = State(up_idle, window_, queue);
-  down_idle_ = State(down_idle, window_, queue);
-  left_idle_ = State(left_idle, window_, queue);
-  right_idle_ = State(right_idle, window_, queue);
-  up_active_ = State(up_active, window_, queue);
-  down_active_ = State(down_active, window_, queue);
-  left_active_ = State(left_active, window_, queue);
-  right_active_ = State(right_active, window_, queue);
+  text_font_ = sdl::Font(json::JSON(text_font));
+  choice_font_ = sdl::Font(json::JSON(choice_font));
+  up_idle_ = State(json::JSON(up_idle), window_, queue);
+  down_idle_ = State(json::JSON(down_idle), window_, queue);
+  left_idle_ = State(json::JSON(left_idle), window_, queue);
+  right_idle_ = State(json::JSON(right_idle), window_, queue);
+  up_active_ = State(json::JSON(up_active), window_, queue);
+  down_active_ = State(json::JSON(down_active), window_, queue);
+  left_active_ = State(json::JSON(left_active), window_, queue);
+  right_active_ = State(json::JSON(right_active), window_, queue);
   up_current_ = up_idle_;
   down_current_ = down_idle_;
   left_current_ = left_idle_;
@@ -149,13 +149,9 @@ SubtitleImpl::SubtitleImpl(json::JSON const& json, display::Window& window, even
   right_text_offset_ = display::BoundingBox(x + float(choice_text_offset), y, 0.f, 0.f);
 }
 
-void SubtitleImpl::Init(event::Event& event)
+void SubtitleImpl::Init(void)
 {
   auto ptr = shared_from_this();
-  event.ChoiceUp(event::Bind(&SubtitleImpl::UpEvent, ptr), event::None);
-  event.ChoiceDown(event::Bind(&SubtitleImpl::DownEvent, ptr), event::None);
-  event.ChoiceLeft(event::Bind(&SubtitleImpl::LeftEvent, ptr), event::None);
-  event.ChoiceRight(event::Bind(&SubtitleImpl::RightEvent, ptr), event::None);
   up_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
   down_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
   left_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
@@ -294,7 +290,7 @@ display::BoundingBox SubtitleImpl::Update(State& state, display::BoundingBox& of
   return temp;
 }
 
-void SubtitleImpl::UpEvent(void)
+void SubtitleImpl::Up(void)
 {
   if(up_choice_ && active_)
   {
@@ -307,7 +303,7 @@ void SubtitleImpl::UpEvent(void)
   }
 }
 
-void SubtitleImpl::DownEvent(void)
+void SubtitleImpl::Down(void)
 {
   if(down_choice_ && active_)
   {
@@ -320,7 +316,7 @@ void SubtitleImpl::DownEvent(void)
   }
 }
 
-void SubtitleImpl::LeftEvent(void)
+void SubtitleImpl::Left(void)
 {
   if(left_choice_ && active_)
   {
@@ -333,7 +329,7 @@ void SubtitleImpl::LeftEvent(void)
   }
 }
 
-void SubtitleImpl::RightEvent(void)
+void SubtitleImpl::Right(void)
 {
   if(right_choice_ && active_)
   {
@@ -429,9 +425,34 @@ void Subtitle::Render(void)
   impl_->Render();
 }
 
-Subtitle::Subtitle(json::JSON const& json, display::Window& window, event::Queue& queue, event::Event& event)
+void Subtitle::Up(void)
+{
+  impl_->Up();
+}
+
+void Subtitle::Down(void)
+{
+  impl_->Down();
+}
+
+void Subtitle::Left(void)
+{
+  impl_->Left();
+}
+
+void Subtitle::Right(void)
+{
+  impl_->Right();
+}
+
+Subtitle::operator bool(void) const
+{
+  return bool(impl_);
+}
+
+Subtitle::Subtitle(json::JSON const& json, display::Window& window, event::Queue& queue)
 {
   impl_ = std::make_shared<SubtitleImpl>(json, window, queue);
-  impl_->Init(event);
+  impl_->Init();
 }
 }

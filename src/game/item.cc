@@ -80,13 +80,13 @@ ItemImpl::ItemImpl(json::JSON const& json, display::Window& window, event::Queue
   
   paused_ = true;
   hysteresis_ = false;
-  idle_ = State(idle, window, queue);
-  active_ = State(active, window, queue);
+  idle_ = State(json::JSON(idle), window, queue);
+  active_ = State(json::JSON(active), window, queue);
   current_ = idle_;
   current_.Play();
   current_.Pause();
-  interaction_ = dynamics::Body(interaction, world);
-  proximity_ = dynamics::Body(proximity, world);
+  interaction_ = dynamics::Body(json::JSON(interaction), world);
+  proximity_ = dynamics::Body(json::JSON(proximity), world);
   render_box_ = display::BoundingBox(0.f, 0.f, 0.f, 0.f);
   Update();
 }

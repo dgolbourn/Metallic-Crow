@@ -112,7 +112,7 @@ void StackImpl::Pop(double& out, bool front)
   int index = Index(front);
   out = lua_tonumberx(state_, index, &ret);
   lua_remove(state_, index);
-  if (!ret)
+  if(!ret)
   {
     BOOST_THROW_EXCEPTION(Exception());
   }
@@ -199,7 +199,10 @@ void StackImpl::Add(event::Command const& command, std::string const& name, int 
   lua_pushinteger(state_, (lua_Integer)out);
   lua_pushcclosure(state_, Event, 3);
   lua_setglobal(state_, name.c_str());
-  map_[name] = command;
+  if(!map_.emplace(name, command).second)
+  {
+    BOOST_THROW_EXCEPTION(Exception());
+  }
 }
 
 void Stack::Load(std::string const& file)
@@ -273,6 +276,11 @@ void Stack::Push(int in)
 }
 
 void Stack::Push(float in)
+{
+  lua_pushnumber(impl_->state_, lua_Number(in));
+}
+
+void Stack::Push(double in)
 {
   lua_pushnumber(impl_->state_, lua_Number(in));
 }

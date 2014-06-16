@@ -61,7 +61,7 @@ private:
     return this->impl_ == other.impl_;
   }
 
-  BodyImpl& dereference() const 
+  BodyImpl& dereference(void) const 
   { 
     return *impl_; 
   }
@@ -102,37 +102,40 @@ public:
 
 void WorldImpl::Update(void)
 {
-  Clock::duration elapsed = Clock::now() - tick_;
-
-  while(elapsed >= interval_)
+  if(!paused_)
   {
-    elapsed -= interval_;
-    tick_ += interval_;
+    Clock::duration elapsed = Clock::now() - tick_;
 
-    begin_();
+    while(elapsed >= interval_)
+    {
+      elapsed -= interval_;
+      tick_ += interval_;
+
+      begin_();
+
+      for(auto& body : BodyImpl::Range(world_))
+      {
+        body.Begin();
+      }
+
+      world_.Step(dt_, velocity_iterations_, position_iterations_);
+
+      for(auto& body : BodyImpl::Range(world_))
+      {
+         body.End(dt_);
+      }
+    }
+
+    static const float32 scale = float32(Clock::period::num) / float32(Clock::period::den);
+    float32 ds = (float32)elapsed.count() * scale / dt_;
 
     for(auto& body : BodyImpl::Range(world_))
     {
-      body.Begin();
+      body.Update(ds);
     }
 
-    world_.Step(dt_, velocity_iterations_, position_iterations_);
-
-    for(auto& body : BodyImpl::Range(world_))
-    {
-       body.End(dt_);
-    }
+    end_();
   }
-
-  static const float32 scale = float32(Clock::period::num) / float32(Clock::period::den);
-  float32 ds = (float32)elapsed.count() * scale / dt_;
-
-  for(auto& body : BodyImpl::Range(world_))
-  {
-    body.Update(ds);
-  }
-
-  end_();
 }
 
 void WorldImpl::Begin(event::Command const& command)

@@ -59,12 +59,10 @@ BodyImpl::BodyImpl(json::JSON const& json, World& world)
   {
     std::vector<b2Vec2> vertices(json_array_size(shape));
     auto vertex = vertices.begin();
-    size_t index;
-    json_t* value;
-    json_array_foreach(shape, index, value)
+    for(json::JSON const& value : json::JSON(shape))
     {
       double x, y;
-      json_unpack(value, "[ff]", &x, &y);
+      value.Unpack("[ff]", &x, &y);
       vertex->Set(Metres(float(x)),Metres(float(y)));
       ++vertex;
     }

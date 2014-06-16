@@ -22,6 +22,7 @@ public:
   void Get(std::string const& global);
   void Push(int in);
   void Push(float in);
+  void Push(double in);
   void Push(std::string const& in);
   void Push(bool in);
   void Add(event::Command const& command, std::string const& name, int out = 0);

@@ -2,7 +2,6 @@
 #include "body_impl.h"
 #include "units.h"
 #include <vector>
-#include "jansson.h"
 namespace dynamics
 {
 BodyImpl::BodyImpl(json::JSON const& json, World& world)
@@ -57,7 +56,7 @@ BodyImpl::BodyImpl(json::JSON const& json, World& world)
   }
   else if(type == "chain")
   {
-    std::vector<b2Vec2> vertices(json_array_size(shape));
+    std::vector<b2Vec2> vertices(json::JSON(shape).Size());
     auto vertex = vertices.begin();
     for(json::JSON const& value : json::JSON(shape))
     {

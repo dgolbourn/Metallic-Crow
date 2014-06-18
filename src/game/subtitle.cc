@@ -10,7 +10,7 @@ class SubtitleImpl final : public std::enable_shared_from_this<SubtitleImpl>
 {
 public:
   SubtitleImpl(json::JSON const& json, display::Window& window, event::Queue& queue);
-  void Render(void);
+  void Render(void) const;
   void Init(void);
   void Text(std::string const& text);
   void Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right);
@@ -168,7 +168,7 @@ void SubtitleImpl::Active(void)
   Change(right_icon_box_, right_current_, right_idle_, right_offset_);
 }
 
-void SubtitleImpl::Render(void)
+void SubtitleImpl::Render(void) const
 {
   if(subtitle_)
   {
@@ -420,7 +420,7 @@ void Subtitle::Resume(void)
   impl_->Resume();
 }
 
-void Subtitle::Render(void)
+void Subtitle::Render(void) const
 {
   impl_->Render();
 }

@@ -107,6 +107,15 @@ void ScriptImpl::Command(void)
     lua_.PopFront(command);
     if(command == "state")
     {
+      std::string name;
+      std::string state;
+      lua_.PopFront(name);
+      lua_.PopFront(state);
+      auto range = stage_->items_.equal_range(state);
+      for(auto item = range.first; item != range.second; ++item)
+      {
+        item->second.State(state);
+      }
     }
     else if(command == "new")
     {
@@ -271,6 +280,9 @@ void ScriptImpl::Command(void)
     }
     else if(command == "state")
     {
+      std::string state;
+      lua_.PopFront(state);
+      stage_->hero_.State(state);
     }
     else if(command == "position")
     {

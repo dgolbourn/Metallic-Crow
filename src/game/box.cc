@@ -49,7 +49,7 @@ void BoxImpl::Render(void) const
   state_.Render(render_box_);
 }
 
-BoxImpl::BoxImpl(json::JSON const& json, display::Window& window, event::Queue& queue, DynamicsCollision& dcollision, dynamics::World& world)
+BoxImpl::BoxImpl(json::JSON const& json, display::Window& window, event::Queue& queue, DynamicsCollision& dcollision, dynamics::World& world) : paused_(true), render_box_(display::BoundingBox(0.f, 0.f, 0.f, 0.f))
 {
   json_t* state;
   json_t* body;
@@ -58,12 +58,10 @@ BoxImpl::BoxImpl(json::JSON const& json, display::Window& window, event::Queue& 
     "state", &state,
     "body", &body);
   
-  paused_ = true;
   state_ = State(json::JSON(state), window, queue);
   state_.Play();
   state_.Pause();
   body_ = dynamics::Body(json::JSON(body), world);
-  render_box_ = display::BoundingBox(0.f, 0.f, 0.f, 0.f);
   dcollision.Add(dynamics::Type::Body, body_);
   Update();
 }

@@ -26,6 +26,7 @@ public:
   void Down(void);
   void Left(void);
   void Right(void);
+  void State(std::string const& state);
   explicit operator bool(void) const;
   typedef memory::WeakPtr<Hero, class HeroImpl> WeakPtr;
 private:

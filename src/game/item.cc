@@ -4,13 +4,16 @@
 #include "body.h"
 #include "bind.h"
 #include "state.h"
+#include <map>
 namespace game
 {
+typedef std::map<std::string, State> StateMap;
+
 class ItemImpl final : public std::enable_shared_from_this<ItemImpl>
 {
 public:
-  ItemImpl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world);
-  void Init(CommandCollision& ccollision, Scene& scene);
+  ItemImpl(void);
+  void Init(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world, CommandCollision& ccollision, Scene& scene);
   void Add(event::Command const& start, event::Command const& end);
   void Proximity(event::Command const& start, event::Command const& end);
   void Hysteresis(event::Command const& start, event::Command const& end);
@@ -20,15 +23,13 @@ public:
   game::Position Position(void) const;
   void Update(void);
   void Render(void) const;
-  void Change(State& next);
+  void Change(std::string const& state);
   void ProximityCollideStart(void);
   void ProximityCollideEnd(void);
-  void Idle(void);
   void InteractionCollideStart(void);
   void InteractionCollideEnd(void);
-  State idle_;
-  State active_;
-  State current_;
+  StateMap states_;
+  State state_;
   display::BoundingBox render_box_;
   bool paused_;
   bool hysteresis_;
@@ -42,19 +43,19 @@ public:
 void ItemImpl::Pause(void)
 {
   paused_ = true;
-  current_.Pause();
+  state_.Pause();
 }
 
 void ItemImpl::Resume(void)
 {
   paused_ = false;
-  current_.Resume();
+  state_.Resume();
 }
 
 void ItemImpl::Update(void)
 {
   game::Position position = Position();
-  display::BoundingBox temp = current_.Shape().Copy();
+  display::BoundingBox temp = state_.Shape().Copy();
   temp.x(temp.x() + position.first);
   temp.y(temp.y() + position.second);
   render_box_.Copy(temp);
@@ -62,54 +63,66 @@ void ItemImpl::Update(void)
 
 void ItemImpl::Render(void) const
 {
-  current_.Render(render_box_);
+  state_.Render(render_box_);
 }
 
-ItemImpl::ItemImpl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world)
+ItemImpl::ItemImpl(void) : paused_(true), hysteresis_(false), render_box_(display::BoundingBox(0.f, 0.f, 0.f, 0.f))
 {
-  json_t* idle;
-  json_t* active;
-  json_t* interaction;
-  json_t* proximity;
-
-  json.Unpack("{sosososo}",
-    "idle", &idle,
-    "active", &active,
-    "interaction", &interaction,
-    "proximity", &proximity);
-  
-  paused_ = true;
-  hysteresis_ = false;
-  idle_ = State(json::JSON(idle), window, queue);
-  active_ = State(json::JSON(active), window, queue);
-  current_ = idle_;
-  current_.Play();
-  current_.Pause();
-  interaction_ = dynamics::Body(json::JSON(interaction), world);
-  proximity_ = dynamics::Body(json::JSON(proximity), world);
-  render_box_ = display::BoundingBox(0.f, 0.f, 0.f, 0.f);
-  Update();
 }
 
-void ItemImpl::Init(CommandCollision& ccollision, Scene& scene)
+void ItemImpl::Init(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world, CommandCollision& ccollision, Scene& scene)
 {
   auto ptr = shared_from_this();
   scene.Add(event::Bind(&ItemImpl::Render, ptr), -1);
+
+  json_t* interaction;
+  json_t* proximity;
+  json_t* states;
+
+  json.Unpack("{sososo}",
+    "interaction", &interaction,
+    "proximity", &proximity,
+    "states", &states);
+  interaction_ = dynamics::Body(json::JSON(interaction), world);
+  proximity_ = dynamics::Body(json::JSON(proximity), world);
+
   ccollision.Add(dynamics::Type::Proximity, proximity_, event::Bind(&ItemImpl::ProximityCollideStart, ptr), true);
   ccollision.Add(dynamics::Type::Proximity, proximity_, event::Bind(&ItemImpl::ProximityCollideEnd, ptr), false);
   ccollision.Add(dynamics::Type::Interaction, interaction_, event::Bind(&ItemImpl::InteractionCollideStart, ptr), true);
   ccollision.Add(dynamics::Type::Interaction, interaction_, event::Bind(&ItemImpl::InteractionCollideEnd, ptr), false);
-  active_.End(event::Bind(&ItemImpl::Idle, ptr));
+
+  for(json::JSON const& value : json::JSON(states))
+  {
+    char const* name;
+    json_t* state;
+    char const* next;
+    value.Unpack("{sssoss}",
+      "name", &name,
+      "state", &state,
+      "next", &next);
+    auto valid = states_.emplace(name, State(json::JSON(state), window, queue));
+    if(valid.second)
+    {
+      std::string next_str(next);
+      if(next_str != "")
+      {
+        valid.first->second.End(event::Bind(&ItemImpl::Change, ptr, next_str));
+      }
+    }
+  }
+
+  Change("idle");
 }
 
 void ItemImpl::ProximityCollideStart(void)
 {
-  Change(active_);
+  Change("active");
   proximity_event_.first();
 }
 
 void ItemImpl::ProximityCollideEnd(void)
 {
+  Change("idle");
   proximity_event_.second();
   if(hysteresis_)
   {
@@ -120,7 +133,6 @@ void ItemImpl::ProximityCollideEnd(void)
 
 void ItemImpl::InteractionCollideStart(void)
 {
-  Change(active_);
   interaction_event_.first();
   if(!hysteresis_)
   {
@@ -134,24 +146,26 @@ void ItemImpl::InteractionCollideEnd(void)
   interaction_event_.second();
 }
 
-void ItemImpl::Idle(void)
+void ItemImpl::Change(std::string const& next)
 {
-  Change(idle_);
-}
-
-void ItemImpl::Change(State& next)
-{
-  if(!(current_ == next))
+  auto iter = states_.find(next);
+  if(iter != states_.end())
   {
-    current_.Stop();
-    current_ = next;
-    current_.Play();
-    if(paused_)
+    if(!(state_ == iter->second))
     {
-      current_.Pause();
+      if(state_)
+      {
+        state_.Stop();
+      }
+      state_ = iter->second;
+      state_.Play();
+      if(paused_)
+      {
+        state_.Pause();
+      }
     }
-    Update();
   }
+  Update();
 }
 
 void ItemImpl::Position(game::Position const& position)
@@ -219,9 +233,14 @@ void Item::Resume(void)
   impl_->Resume();
 }
 
+void Item::State(std::string const& state)
+{
+  impl_->Change(state);
+}
+
 Item::Item(json::JSON const& json, display::Window& window, Scene& scene, event::Queue& queue, CommandCollision& ccollision, dynamics::World& world)
 {
-  impl_ = std::make_shared<ItemImpl>(json, window, queue, world);
-  impl_->Init(ccollision, scene);
+  impl_ = std::make_shared<ItemImpl>();
+  impl_->Init(json, window, queue, world, ccollision, scene);
 }
 }

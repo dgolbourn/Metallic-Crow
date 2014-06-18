@@ -4,7 +4,6 @@
 #include "bind.h"
 #include <vector>
 #include "texture.h"
-#include "jansson.h"
 namespace game
 {
 class TerrainImpl final : public std::enable_shared_from_this<TerrainImpl>
@@ -47,7 +46,7 @@ TerrainImpl::TerrainImpl(json::JSON const& json, display::Window& window, Dynami
     dcollision.Add(dynamics::Type::Body, body_);
   }
 
-  textures_ = std::vector<TexturePair>(json_array_size(textures));
+  textures_ = std::vector<TexturePair>(json::JSON(textures).Size());
   auto texture_iter = textures_.begin();
   for(json::JSON const& value : json::JSON(textures))
   {

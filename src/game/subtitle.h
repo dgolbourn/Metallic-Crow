@@ -21,7 +21,7 @@ public:
   void Right(event::Command const& command);
   void Pause(void);
   void Resume(void);
-  void Render(void);
+  void Render(void) const;
   void Up(void);
   void Down(void);
   void Left(void);

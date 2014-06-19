@@ -34,7 +34,6 @@ public:
   Cubic cubic_;
 
   class Iterator;
-  class Range;
 };
 }
 #endif

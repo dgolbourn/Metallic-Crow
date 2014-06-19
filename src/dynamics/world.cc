@@ -3,7 +3,7 @@
 #include "body_impl.h"
 #include "units.h"
 #include "bind.h"
-#include <boost/iterator/iterator_facade.hpp>
+#include "body_impl_iterator.h"
 namespace dynamics
 {
 bool WorldImpl::ShouldCollide(b2Fixture* fixtureA, b2Fixture* fixtureB)
@@ -21,85 +21,6 @@ void WorldImpl::EndContact(b2Contact* contact)
   return collision_(BodyImpl::MakeBody(contact->GetFixtureA()->GetBody()), BodyImpl::MakeBody(contact->GetFixtureB()->GetBody()), false);
 }
 
-class BodyImpl::Iterator : public boost::iterator_facade<Iterator, BodyImpl, boost::forward_traversal_tag>
-{ 
-public:
-  Iterator(void) : impl_(nullptr) 
-  {
-  }
-
-  explicit Iterator(BodyImpl* impl) : impl_(impl) 
-  {
-  }
-
-private:
-  friend class boost::iterator_core_access;
-
-  void increment(void)
-  {
-    if(impl_)
-    {
-      if(b2Body* body = impl_->body_)
-      {
-        while((body = body->GetNext()) && (body->GetType() == b2_staticBody))
-        {
-        }
-        if(body)
-        {
-          impl_ = (BodyImpl*)body->GetUserData();
-        }
-        else
-        {
-          impl_ = nullptr;
-        }
-      }
-    }
-  }
-
-  bool equal(Iterator const& other) const
-  {
-    return this->impl_ == other.impl_;
-  }
-
-  BodyImpl& dereference(void) const 
-  { 
-    return *impl_; 
-  }
-
-  BodyImpl* impl_;
-};
-
-class BodyImpl::Range
-{
-private:
-  b2World& world_;
-
-public:
-  Range(b2World& world) : world_(world) 
-  {
-  };
-
-  Iterator begin(void)
-  {
-    BodyImpl* impl = nullptr;
-    b2Body* body = world_.GetBodyList();
-    while(body && (body->GetType() == b2_staticBody))
-    {
-      body = body->GetNext();
-    }
-    if(body)
-    {
-      impl = (BodyImpl*)body->GetUserData();
-    }
-    return Iterator(impl);
-  }
-
-  Iterator end(void)
-  {
-    return Iterator();
-  }
-};
-
 void WorldImpl::Update(void)
 {
   if(!paused_)
@@ -113,14 +34,14 @@ void WorldImpl::Update(void)
 
       begin_();
 
-      for(auto& body : BodyImpl::Range(world_))
+      for(auto& body : world_)
       {
         body.Begin();
       }
 
       world_.Step(dt_, velocity_iterations_, position_iterations_);
 
-      for(auto& body : BodyImpl::Range(world_))
+      for(auto& body : world_)
       {
          body.End(dt_);
       }
@@ -129,7 +50,7 @@ void WorldImpl::Update(void)
     static const float32 scale = float32(Clock::period::num) / float32(Clock::period::den);
     float32 ds = (float32)elapsed.count() * scale / dt_;
 
-    for(auto& body : BodyImpl::Range(world_))
+    for(auto& body : world_)
     {
       body.Update(ds);
     }

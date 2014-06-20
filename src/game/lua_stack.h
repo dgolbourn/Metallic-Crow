@@ -1,3 +1,5 @@
+#ifndef LUA_STACK_H_
+#define LUA_STACK_H_
 #include <memory>
 #include <string>
 #include "command.h"
@@ -30,3 +32,4 @@ private:
   std::shared_ptr<class StackImpl> impl_;
 };
 }
+#endif

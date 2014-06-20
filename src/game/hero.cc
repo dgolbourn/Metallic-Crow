@@ -4,8 +4,7 @@
 #include "bind.h"
 #include "state.h"
 #include <map>
-#include "jansson.h"
-#include <iostream>
+#include "json_iterator.h"
 namespace game
 {
 typedef std::map<std::string, State> StateMap;
@@ -261,6 +260,11 @@ void Hero::Left(void)
 void Hero::Right(void)
 {
   impl_->Right();
+}
+
+void Hero::State(std::string const& state)
+{
+  impl_->Change(state);
 }
 
 Hero::operator bool(void) const

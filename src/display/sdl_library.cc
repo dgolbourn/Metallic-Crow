@@ -55,7 +55,7 @@ Library::~Library(void)
 
         if(reference_count[index] == 0)
         {
-          quit_flags |= (static_cast<Uint32>(0x01u) << index);
+          quit_flags |= (Uint32)0x01u << index;
         }
       }
     }

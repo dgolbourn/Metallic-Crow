@@ -1,10 +1,7 @@
 #ifndef JSON_H_
 #define JSON_H_
-
 #include <string>
-#include <boost/iterator/iterator_facade.hpp>
 struct json_t;
-
 namespace json
 {
 class JSON
@@ -26,27 +23,10 @@ public:
   bool operator==(JSON const& other) const;
   JSON operator[](int index);
   class Iterator;
-  Iterator begin(void);
-  Iterator end(void) const;
   int Size(void) const;
 private:
   void Unpack_(std::string const& format, int dummy, ...) const;
   json_t* json_;
-};
-
-class JSON::Iterator : public boost::iterator_facade<Iterator, JSON const, boost::forward_traversal_tag>
-{
-public:
-  Iterator(void);
-  explicit Iterator(JSON& json);
-private:
-  friend class boost::iterator_core_access;
-  void increment(void);
-  bool equal(Iterator const& other) const;
-  JSON const& dereference(void) const;
-  JSON json_;
-  JSON value_;
-  int index_;
 };
 }
 #endif

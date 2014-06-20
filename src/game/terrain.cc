@@ -4,6 +4,7 @@
 #include "bind.h"
 #include <vector>
 #include "texture.h"
+#include "json_iterator.h"
 namespace game
 {
 class TerrainImpl final : public std::enable_shared_from_this<TerrainImpl>

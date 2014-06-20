@@ -29,7 +29,7 @@ Library::Library(void) : sdl_(SDL_INIT_AUDIO)
       BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
     }
 
-    static int const samples = static_cast<int>(1) << 10;
+    static int const samples = (int)1 << 10;
     if(Mix_OpenAudio(MIX_SAMPLE_RATE, MIX_FORMAT, MIX_CHANNEL_LAYOUT, samples) == -1)
     {
       MixQuit();

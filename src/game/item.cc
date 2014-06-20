@@ -5,6 +5,7 @@
 #include "bind.h"
 #include "state.h"
 #include <map>
+#include "json_iterator.h"
 namespace game
 {
 typedef std::map<std::string, State> StateMap;

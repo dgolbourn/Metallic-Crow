@@ -19,7 +19,7 @@ void QueueImpl::Check(void)
 {
   for(auto iter = commands_.begin(); iter != commands_.end();)
   {
-    if(bool(*iter) && (*iter)())
+    if((*iter)())
     {
       ++iter;
     }

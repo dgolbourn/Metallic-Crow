@@ -2,6 +2,7 @@
 #include "body_impl.h"
 #include "units.h"
 #include <vector>
+#include "json_iterator.h"
 namespace dynamics
 {
 BodyImpl::BodyImpl(json::JSON const& json, World& world)

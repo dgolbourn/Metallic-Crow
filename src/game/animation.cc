@@ -1,11 +1,11 @@
 #include "animation.h"
 #include "timer.h"
-#include "jansson.h"
 #include "json_exception.h"
 #include "bounding_box.h"
 #include "bind.h"
 #include "signal.h"
 #include <vector>
+#include "json_iterator.h"
 namespace game
 {
 class AnimationImpl : public std::enable_shared_from_this<AnimationImpl>
@@ -47,7 +47,7 @@ AnimationImpl::AnimationImpl(json::JSON const& json, display::Window& window, ev
     "frames", &frames);
 
   texture_ = display::Texture(sprite_sheet, window);
-  frames_ = std::vector<display::BoundingBox>(json_array_size(frames));
+  frames_ = std::vector<display::BoundingBox>(json::JSON(frames).Size());
   frame_ = frames_.begin();
   interval_ = double(interval) / 1000.;
 

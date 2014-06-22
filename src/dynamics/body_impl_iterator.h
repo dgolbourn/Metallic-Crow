@@ -1,7 +1,7 @@
 #ifndef BODY_IMPL_ITERATOR_H_
 #define BODY_IMPL_ITERATOR_H_
 #include "body_impl.h"
-#include <boost/iterator/iterator_facade.hpp>
+#include "boost/iterator/iterator_facade.hpp"
 namespace dynamics
 {
 class BodyImpl::Iterator : public boost::iterator_facade<Iterator, BodyImpl, boost::forward_traversal_tag>

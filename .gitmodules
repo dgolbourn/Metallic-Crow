@@ -103,3 +103,36 @@
 [submodule "lib/lua"]
 	path = lib/lua
 	url = https://github.com/LuaDist/lua.git
+[submodule "lib/boost/program_optins"]
+	path = lib/boost/program_optins
+	url = https://github.com/boostorg/program_options.git
+[submodule "lib/boost/program_options"]
+	path = lib/boost/program_options
+	url = https://github.com/boostorg/program_options.git
+[submodule "lib/boost/any"]
+	path = lib/boost/any
+	url = https://github.com/boostorg/any.git
+[submodule "lib/boost/function"]
+	path = lib/boost/function
+	url = https://github.com/boostorg/function.git
+[submodule "lib/boost/lexical_cast"]
+	path = lib/boost/lexical_cast
+	url = https://github.com/boostorg/lexical_cast.git
+[submodule "lib/boost/math"]
+	path = lib/boost/math
+	url = https://github.com/boostorg/math.git
+[submodule "lib/boost/array"]
+	path = lib/boost/array
+	url = https://github.com/boostorg/array.git
+[submodule "lib/boost/bind"]
+	path = lib/boost/bind
+	url = https://github.com/boostorg/bind.git
+[submodule "lib/boost/container"]
+	path = lib/boost/container
+	url = https://github.com/boostorg/container.git
+[submodule "lib/boost/numeric_conversion"]
+	path = lib/boost/numeric_conversion
+	url = https://github.com/boostorg/numeric_conversion.git
+[submodule "lib/boost/predef"]
+	path = lib/boost/predef
+	url = https://github.com/boostorg/predef.git

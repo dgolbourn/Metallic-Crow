@@ -1,31 +1,11 @@
-#include "config.h"
+#include "parse.h"
 #include "boost/program_options.hpp"
 #include <iostream>
 #include <fstream>
 #include "exception.h"
+#include "version.h"
 namespace config
 {
-static std::string Version(void)
-{
-  static const int major = 0;
-  static const int minor = 1;
-  static const int patch = 0;
-  static const std::string pre("");
-  static const std::string build("");
-
-  std::stringstream stream;
-  stream << major << "." << minor << "." << patch;
-  if(pre != "")
-  {
-    stream << "-" << pre;
-  }
-  if(build != "")
-  {
-    stream << "+" << build;
-  }
-  return stream.str();
-}
-
 bool Parse(int argc, char* argv[], event::Event& event, display::Window& window, game::Script& script, event::Queue& queue)
 {
   namespace options = boost::program_options;

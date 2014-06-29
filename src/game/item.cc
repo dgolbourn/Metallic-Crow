@@ -64,7 +64,7 @@ void ItemImpl::Update(void)
 
 void ItemImpl::Render(void) const
 {
-  state_.Render(render_box_);
+  state_.Render(render_box_, 1.f, false, 0., interaction_.Modulation());
 }
 
 ItemImpl::ItemImpl(void) : paused_(true), hysteresis_(false), render_box_(display::BoundingBox(0.f, 0.f, 0.f, 0.f))

@@ -13,7 +13,7 @@ class AnimationImpl : public std::enable_shared_from_this<AnimationImpl>
 public:
   AnimationImpl(json::JSON const& json, display::Window& window, event::Queue& queue);
   void Next(void);
-  void Render(display::BoundingBox const& destination, float parallax, bool tile, double angle) const;
+  void Render(display::BoundingBox const& destination, float parallax, bool tile, double angle, display::Modulation const& modulation) const;
   void Pause(void);
   void Resume(void);
   void Play(int loops, bool end_on_first);
@@ -70,9 +70,9 @@ void AnimationImpl::Next(void)
   }
 }
 
-void AnimationImpl::Render(display::BoundingBox const& destination, float parallax, bool tile, double angle) const
+void AnimationImpl::Render(display::BoundingBox const& destination, float parallax, bool tile, double angle, display::Modulation const& modulation) const
 {
-  texture_(*frame_, destination, parallax, tile, angle);
+  texture_(*frame_, destination, parallax, tile, angle, modulation);
 }
 
 void AnimationImpl::Pause(void)
@@ -129,9 +129,9 @@ Animation::Animation(json::JSON const& json, display::Window& window, event::Que
   impl_ = std::make_shared<AnimationImpl>(json, window, queue);
 }
 
-void Animation::Render(display::BoundingBox const& destination, float parallax, bool tile, double angle) const
+void Animation::Render(display::BoundingBox const& destination, float parallax, bool tile, double angle, display::Modulation const& modulation) const
 {
-  impl_->Render(destination, parallax, tile, angle);
+  impl_->Render(destination, parallax, tile, angle, modulation);
 }
 
 void Animation::Pause(void)

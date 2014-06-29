@@ -25,10 +25,9 @@ public:
   bool ShouldCollide(b2Fixture* fixtureA, b2Fixture* fixtureB);
   void Begin(event::Command const& command);
   void End(event::Command const& command);
+  void Light(void);
   float32 Elapsed(void) const;
   float32 dt_;
-  int32 velocity_iterations_;
-  int32 position_iterations_;
   game::Collision collision_;
   event::Signal begin_;
   event::Signal end_;
@@ -37,6 +36,7 @@ public:
   Clock::time_point tick_;
   Clock::duration remaining_;
   bool paused_;
+  b2Vec3 ambient_;
 };
 }
 #endif

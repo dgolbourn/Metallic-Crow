@@ -8,9 +8,10 @@ namespace dynamics
 BodyImpl::BodyImpl(json::JSON const& json, World& world)
 {
   json_t* shape;
+  json_t* light;
   char const* ctype;
   double dx, dy, du, dv, dm, dc, dd, dk;
-  json.Unpack("{s[ff]s[ff]sssosfsfsfsf}",
+  json.Unpack("{s[ff]s[ff]sssosfsfsfsfso}",
     "position", &dx, &dy,
     "velocity", &du, &dv,
     "type", &ctype,
@@ -18,7 +19,8 @@ BodyImpl::BodyImpl(json::JSON const& json, World& world)
     "mass", &dm,
     "restitution", &dc,
     "drag", &dd,
-    "friction", &dk);
+    "friction", &dk,
+    "light", &light);
   float x = Metres(float(dx));
   float y = Metres(float(dy));
   float u = Metres(float(du));
@@ -122,6 +124,11 @@ BodyImpl::BodyImpl(json::JSON const& json, World& world)
   world_ = world;
   position_ = body_->GetPosition();
   velocity_ = body_->GetLinearVelocity();
+
+  if(json::JSON temp = json::JSON(light))
+  {
+    light_ = Light(temp);
+  }
 }
 
 Body BodyImpl::MakeBody(b2Body* body_ptr)
@@ -170,24 +177,38 @@ void BodyImpl::Impulse(float x, float y)
 
 void BodyImpl::Begin(void)
 {
-  position_ = body_->GetPosition();
-  velocity_ = body_->GetLinearVelocity();
+  if(body_->GetType() != b2_staticBody)
+  {
+    position_ = body_->GetPosition();
+    velocity_ = body_->GetLinearVelocity();
+  }
 }
 
 void BodyImpl::End(float32 dt)
 {
-  b2Vec2 v = body_->GetLinearVelocity() + velocity_;
-  b2Vec2 dx = body_->GetPosition() - position_;
-  cubic_[3] = dt * v - 2.f * dx;
-  cubic_[2] = -dt * (v + velocity_) + 3.f * dx;
-  cubic_[1] = dt * velocity_;
-  cubic_[0] = position_;
+  if(body_->GetType() != b2_staticBody)
+  {
+    b2Vec2 v = body_->GetLinearVelocity() + velocity_;
+    b2Vec2 dx = body_->GetPosition() - position_;
+    cubic_[3] = dt * v - 2.f * dx;
+    cubic_[2] = -dt * (v + velocity_) + 3.f * dx;
+    cubic_[1] = dt * velocity_;
+    cubic_[0] = position_;
+  }
 }
 
 void BodyImpl::Update(float32 ds)
 {
-  position_ = ds * (ds * (ds * cubic_[3] + cubic_[2]) + cubic_[1]) + cubic_[0];
-  velocity_ = ds * (ds * 3.f * cubic_[3] + 2.f * cubic_[2]) + cubic_[1];
+  if(body_->GetType() != b2_staticBody)
+  {
+    position_ = ds * (ds * (ds * cubic_[3] + cubic_[2]) + cubic_[1]) + cubic_[0];
+    velocity_ = ds * (ds * 3.f * cubic_[3] + 2.f * cubic_[2]) + cubic_[1];
+  }
+}
+
+display::Modulation BodyImpl::Modulation(void) const
+{
+  return display::Modulation(light_.illumination.x, light_.illumination.y, light_.illumination.z, 1.f);
 }
 
 BodyImpl::~BodyImpl(void)
@@ -242,5 +263,10 @@ void Body::Force(float x, float y)
 void Body::Impulse(float x, float y)
 {
   impl_->Impulse(x, y);
+}
+
+display::Modulation Body::Modulation(void) const
+{
+  return impl_->Modulation();
 }
 }

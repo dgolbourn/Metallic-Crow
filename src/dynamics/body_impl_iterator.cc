@@ -15,10 +15,7 @@ void BodyImpl::Iterator::increment(void)
   {
     if(b2Body* body = impl_->body_)
     {
-      while((body = body->GetNext()) && (body->GetType() == b2_staticBody))
-      {
-      }
-      if(body)
+      if(body = body->GetNext())
       {
         impl_ = (BodyImpl*)body->GetUserData();
       }
@@ -44,12 +41,7 @@ BodyImpl& BodyImpl::Iterator::dereference(void) const
 dynamics::BodyImpl::Iterator begin(b2World const& world)
 {
   dynamics::BodyImpl* impl = nullptr;
-  b2Body const* body = world.GetBodyList();
-  while(body && (body->GetType() == b2_staticBody))
-  {
-    body = body->GetNext();
-  }
-  if(body)
+  if(b2Body const* body = world.GetBodyList())
   {
     impl = (dynamics::BodyImpl*)body->GetUserData();
   }

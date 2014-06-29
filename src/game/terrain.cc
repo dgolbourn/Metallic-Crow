@@ -13,18 +13,25 @@ public:
   TerrainImpl(json::JSON const& json, display::Window& window, DynamicsCollision& dcollision, dynamics::World& world, int& plane);
   void Init(Scene& scene, int plane);
   void Render(void) const;
+  void Modulation(float r, float g, float b);
   dynamics::Body body_;
   typedef std::pair<display::Texture, display::BoundingBox> TexturePair;
   std::vector<TexturePair> textures_;
   float parallax_;
+  display::Modulation modulation_;
 };
 
 void TerrainImpl::Render(void) const
 {
   for(auto& texture : textures_)
   {
-    texture.first(display::BoundingBox(), texture.second, parallax_, false, 0.);
+    texture.first(display::BoundingBox(), texture.second, parallax_, false, 0., modulation_);
   }
+}
+
+void TerrainImpl::Modulation(float r, float g, float b)
+{
+  modulation_ = display::Modulation(r, g, b, 1.f);
 }
 
 TerrainImpl::TerrainImpl(json::JSON const& json, display::Window& window, DynamicsCollision& dcollision, dynamics::World& world, int& plane)
@@ -70,5 +77,10 @@ Terrain::Terrain(json::JSON const& json, display::Window& window, Scene& scene, 
   int plane;
   impl_ = std::make_shared<TerrainImpl>(json, window, dcollision, world, plane);
   impl_->Init(scene, plane);
+}
+
+void Terrain::Modulation(float r, float g, float b)
+{
+  impl_->Modulation(r, g, b);
 }
 }

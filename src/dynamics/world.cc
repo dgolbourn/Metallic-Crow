@@ -21,30 +21,41 @@ void WorldImpl::EndContact(b2Contact* contact)
   return collision_(BodyImpl::MakeBody(contact->GetFixtureA()->GetBody()), BodyImpl::MakeBody(contact->GetFixtureB()->GetBody()), false);
 }
 
+static const int32 velocity_iterations = 8;
+static const int32 position_iterations = 3;
+
 void WorldImpl::Update(void)
 {
   if(!paused_)
   {
     Clock::duration elapsed = Clock::now() - tick_;
-
-    while(elapsed >= interval_)
+    
+    if(elapsed >= interval_)
     {
-      elapsed -= interval_;
-      tick_ += interval_;
-
       begin_();
 
-      for(auto& body : world_)
+      do
       {
-        body.Begin();
-      }
+        for(auto& body : world_)
+        {
+          body.Begin();
+        }
 
-      world_.Step(dt_, velocity_iterations_, position_iterations_);
+        world_.Step(dt_, velocity_iterations, position_iterations);
 
-      for(auto& body : world_)
-      {
-         body.End(dt_);
-      }
+        for(auto& body : world_)
+        {
+          body.End(dt_);
+        }
+
+        elapsed -= interval_;
+        tick_ += interval_;
+      } 
+      while(elapsed >= interval_);
+
+      world_.ClearForces();
+
+      Light();
     }
 
     static const float32 scale = float32(Clock::period::num) / float32(Clock::period::den);
@@ -69,13 +80,15 @@ void WorldImpl::End(event::Command const& command)
   end_.Add(command);
 }
 
-WorldImpl::WorldImpl(json::JSON const& json, game::Collision& collision) : world_(b2Vec2(0, 0)), velocity_iterations_(8), position_iterations_(3), collision_(collision), paused_(true)
+WorldImpl::WorldImpl(json::JSON const& json, game::Collision& collision) : world_(b2Vec2(0, 0)), collision_(collision), paused_(true)
 {
-  double x;
-  double y;
+  double x, y, r, g, b;
 
-  json.Unpack("{s[ff]}",
-    "gravity", &x, &y);
+  json.Unpack("{s[ff]s[fff]}",
+    "gravity", &x, &y,
+    "ambient", &r, &g, &b);
+
+  ambient_.Set(float32(r), float32(g), float32(b));
 
   double interval = 1. / 60.;
 
@@ -86,7 +99,7 @@ WorldImpl::WorldImpl(json::JSON const& json, game::Collision& collision) : world
   remaining_ = interval_;
 
   world_.SetGravity(b2Vec2(Metres(float32(x)),Metres(float32(y))));
-  world_.SetAutoClearForces(true);
+  world_.SetAutoClearForces(false);
   world_.SetContactListener(this);
   world_.SetContactFilter(this);
 }

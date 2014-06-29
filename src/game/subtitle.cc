@@ -172,31 +172,31 @@ void SubtitleImpl::Render(void) const
 {
   if(subtitle_)
   {
-    text_(display::BoundingBox(), text_box_, 0.f, false, 0.);
+    text_(display::BoundingBox(), text_box_, 0.f, false, 0., display::Modulation());
   }
 
   if(up_choice_)
   {
-    up_(display::BoundingBox(), up_box_, 0.f, false, 0.);
-    up_current_.Render(up_icon_box_, 0.f, false, 0.);
+    up_(display::BoundingBox(), up_box_, 0.f, false, 0., display::Modulation());
+    up_current_.Render(up_icon_box_, 0.f, false, 0., display::Modulation());
   }
 
   if(down_choice_)
   {
-    down_(display::BoundingBox(), down_box_, 0.f, false, 0.);
-    down_current_.Render(down_icon_box_, 0.f, false, 0.);
+    down_(display::BoundingBox(), down_box_, 0.f, false, 0., display::Modulation());
+    down_current_.Render(down_icon_box_, 0.f, false, 0., display::Modulation());
   }
 
   if(left_choice_)
   {
-    left_(display::BoundingBox(), left_box_, 0.f, false, 0.);
-    left_current_.Render(left_icon_box_, 0.f, false, 0.);
+    left_(display::BoundingBox(), left_box_, 0.f, false, 0., display::Modulation());
+    left_current_.Render(left_icon_box_, 0.f, false, 0., display::Modulation());
   }
 
   if(right_choice_)
   {
-    right_(display::BoundingBox(), right_box_, 0.f, false, 0.);
-    right_current_.Render(right_icon_box_, 0.f, false, 0.);
+    right_(display::BoundingBox(), right_box_, 0.f, false, 0., display::Modulation());
+    right_current_.Render(right_icon_box_, 0.f, false, 0., display::Modulation());
   }
 }
 

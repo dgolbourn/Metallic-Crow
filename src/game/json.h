@@ -9,7 +9,7 @@ class JSON
 public:
   JSON(void);
   explicit JSON(json_t* json);
-  explicit JSON(std::string const& filename);
+  explicit JSON(std::string const& file);
   template<class... Args> void Unpack(std::string const& format, Args... args) const
   {
     Unpack_(format, 0, args...);

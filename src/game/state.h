@@ -21,7 +21,7 @@ public:
   void End(event::Command const& command);
   void Add(event::Command const& command);
   display::BoundingBox const& Shape(void);
-  void Render(display::BoundingBox const& bounding_box, float parallax = 1.f, bool tile = false, double angle = 0.) const;
+  void Render(display::BoundingBox const& bounding_box, float parallax, bool tile, double angle, display::Modulation const& modulation) const;
   explicit operator bool(void) const;
 private:
   std::shared_ptr<class StateImpl> impl_;

@@ -5,6 +5,7 @@
 #include "weak_ptr.h"
 #include "position.h"
 #include "command.h"
+#include "modulation.h"
 namespace dynamics
 {
 class Body
@@ -20,6 +21,7 @@ public:
   void Velocity(float x, float y);
   void Force(float x, float y);
   void Impulse(float x, float y);
+  display::Modulation Modulation(void) const;
   typedef memory::WeakPtr<Body, class BodyImpl> WeakPtr;
 private:
   std::shared_ptr<class BodyImpl> impl_;

@@ -4,18 +4,67 @@
 #include "painter.h"
 namespace sdl
 {
-void Render(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, double angle)
+class Modulator
+{
+  SDL_Color const* modulation_;
+  SDL_Color original_;
+  SDL_Texture* texture_;
+public:
+  Modulator(SDL_Texture* texture, SDL_Color const* modulation) : modulation_(nullptr)
+  {
+    if(modulation)
+    {
+      texture_ = texture; 
+      modulation_ = modulation;
+      if(SDL_GetTextureColorMod(texture_, &original_.r, &original_.g, &original_.b))
+      {
+        BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
+      }
+      if(SDL_GetTextureAlphaMod(texture_, &original_.a))
+      {
+        BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
+      }
+      if(SDL_SetTextureColorMod(texture_, modulation->r, modulation->g, modulation->b))
+      {
+        BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
+      }
+      if(SDL_SetTextureAlphaMod(texture_, modulation->a))
+      {
+        BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
+      }
+    }
+  }
+
+  ~Modulator(void)
+  {
+    if(modulation_)
+    {
+      if(SDL_SetTextureColorMod(texture_, original_.r, original_.g, original_.b))
+      {
+        BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
+      }
+      if(SDL_SetTextureAlphaMod(texture_, original_.a))
+      {
+        BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
+      }
+    }
+  }
+};
+
+void Render(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, double angle, SDL_Color const* modulation)
 {
   SDL_FPoint centre;
   centre.x = .5f * destination->w;
   centre.y = .5f * destination->h;
 
+  Modulator mod(texture, modulation);
+  
   if(texture->native) 
   {
     texture = texture->native;
   }
 
-  if(renderer->hidden == SDL_FALSE)
+  //if(renderer->hidden == SDL_FALSE)
   {
     if(renderer->RenderCopyEx(renderer, texture, source, destination, angle, &centre, SDL_FLIP_NONE))
     {
@@ -34,7 +83,7 @@ static float Transform(float x, float new_origin, float width, float zoom, float
   return x;
 }
 
-void Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source_ptr, SDL_FRect const* destination_ptr, SDL_FPoint const* view, float zoom, float parallax, bool tile, double angle)
+void Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source_ptr, SDL_FRect const* destination_ptr, SDL_FPoint const* view, float zoom, float parallax, bool tile, double angle, SDL_Color const* modulation)
 {
   bool render = true;
   SDL_Rect source = {0, 0, texture->w, texture->h};
@@ -86,11 +135,11 @@ void Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
 
     if(tile)
     {
-      algorithm::FloodFill<Painter>()(Painter(window, renderer, texture, &source, &destination, angle));
+      algorithm::FloodFill<Painter>()(Painter(window, renderer, texture, &source, &destination, angle, modulation));
     }
     else
     {
-      Render(renderer, texture, &source, &destination, angle);
+      Render(renderer, texture, &source, &destination, angle, modulation);
     }
   }
 }

@@ -46,7 +46,7 @@ void BoxImpl::Update(void)
 
 void BoxImpl::Render(void) const
 {
-  state_.Render(render_box_);
+  state_.Render(render_box_, 1.f, false, 0., body_.Modulation());
 }
 
 BoxImpl::BoxImpl(json::JSON const& json, display::Window& window, event::Queue& queue, DynamicsCollision& dcollision, dynamics::World& world) : paused_(true), render_box_(display::BoundingBox(0.f, 0.f, 0.f, 0.f))

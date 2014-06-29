@@ -12,6 +12,7 @@ class Terrain
 public:
   Terrain() = default;
   Terrain(json::JSON const& json, display::Window& window, Scene& scene, DynamicsCollision& dcollision, dynamics::World& world);
+  void Modulation(float r, float g, float b);
 private:
   std::shared_ptr<class TerrainImpl> impl_;
 };

@@ -10,7 +10,7 @@ public:
   TextureImpl(std::string const& file, Window& window);
   TextureImpl(std::string const& text, sdl::Font const& font, int length, Window& window);
   TextureImpl(std::string const& text, sdl::Font const& font, Window& window);
-  bool Render(display::BoundingBox const& source, display::BoundingBox const& destination, float parallax, bool tile, double angle) const;
+  bool Render(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const;
   bool Check(void) const;
   Shape Shape(void) const;
   Window::WeakPtr window_;
@@ -35,14 +35,14 @@ TextureImpl::TextureImpl(std::string const& text, sdl::Font const& font, Window&
   texture_ptr_ = texture_;
 }
 
-bool TextureImpl::Render(display::BoundingBox const& source, display::BoundingBox const& destination, float parallax, bool tile, double angle) const
+bool TextureImpl::Render(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const
 {
   bool locked = false;
   if(auto window = window_.Lock())
   {
     if(auto texture = texture_ptr_.Lock())
     {
-      window.impl_->Render(texture, source, destination, parallax, tile, angle);
+      window.impl_->Render(texture, source, destination, parallax, tile, angle, modulation);
       locked = true;
     }
   }
@@ -66,9 +66,9 @@ Shape TextureImpl::Shape(void) const
   return display::Shape(width, height);
 }
 
-bool Texture::operator()(display::BoundingBox const& source, display::BoundingBox const& destination, float parallax, bool tile, double angle) const
+bool Texture::operator()(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const
 {
-  return bool(impl_) && impl_->Render(source, destination, parallax, tile, angle);
+  return bool(impl_) && impl_->Render(source, destination, parallax, tile, angle, modulation);
 }
 
 Texture::operator bool(void) const

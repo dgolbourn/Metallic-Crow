@@ -140,9 +140,18 @@ Shape WindowImpl::Shape(void) const
   return display::Shape(float(w), float(h));
 }
 
-void WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle) const
+static Uint8 Colour(float colour)
 {
-  SDL_Rect* source_ptr = nullptr;
+  colour *= 255.f;
+  colour = std::round(colour);
+  colour = std::min(colour, 255.f);
+  colour = std::max(colour, 0.f);
+  return Uint8(colour);
+}
+
+void WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const
+{
+  SDL_Rect const* source_ptr = nullptr;
   SDL_Rect source_copy;
   if(source)
   {
@@ -153,7 +162,7 @@ void WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, 
     source_ptr = &source_copy;
   }
 
-  SDL_FRect* destination_ptr = nullptr;
+  SDL_FRect const* destination_ptr = nullptr;
   SDL_FRect destination_copy;
   if(destination)
   {
@@ -164,7 +173,18 @@ void WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, 
     destination_ptr = &destination_copy;
   }
 
-  sdl::Render(window_, renderer_, texture, source_ptr, destination_ptr, &view_, zoom_, parallax, tile, angle);
+  SDL_Color const* modulation_ptr = nullptr;
+  SDL_Color modulation_copy;
+  if(modulation)
+  {
+    modulation_copy.r = Colour(modulation.r());
+    modulation_copy.g = Colour(modulation.g());
+    modulation_copy.b = Colour(modulation.b());
+    modulation_copy.a = Colour(modulation.a());
+    modulation_ptr = &modulation_copy;
+  }
+
+  sdl::Render(window_, renderer_, texture, source_ptr, destination_ptr, &view_, zoom_, parallax, tile, angle, modulation_ptr);
 }
 
 

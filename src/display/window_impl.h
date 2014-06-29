@@ -26,7 +26,7 @@ public:
   void Show(void) const;
   void Destroy(void);
   void View(float x, float y, float zoom);
-  void Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle) const;
+  void Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const;
   Shape Shape(void) const;
   ~WindowImpl(void);
   sdl::Library const sdl_;

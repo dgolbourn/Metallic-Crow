@@ -1,7 +1,6 @@
 #include "scene.h"
 #include <map>
-#include "jansson.h"
-
+#include "json_iterator.h"
 namespace game
 {
 typedef std::multimap<int, event::Command> LayerMap;
@@ -12,7 +11,9 @@ public:
   SceneImpl(json::JSON const& json, display::Window& window);
   void Add(event::Command const& layer, int z);
   void Render(void);
+  void Modulation(float r, float g, float b);
   LayerMap layers_;
+  display::Modulation modulation_;
 };
 
 void SceneImpl::Render(void)
@@ -28,6 +29,11 @@ void SceneImpl::Render(void)
       iter = layers_.erase(iter);
     }
   }
+}
+
+void SceneImpl::Modulation(float r, float g, float b)
+{
+  modulation_ = display::Modulation(r, g, b, 1.f);
 }
 
 void SceneImpl::Add(event::Command const& layer, int z)
@@ -59,7 +65,8 @@ SceneImpl::SceneImpl(json::JSON const& json, display::Window& window)
       display::BoundingBox(json::JSON(render_box)),
       float(parallax),
       true,
-      angle);
+      angle,
+      modulation_);
     
     Add(bind, plane);
   }
@@ -78,5 +85,10 @@ void Scene::Add(event::Command const& layer, int z)
 Scene::Scene(json::JSON const& json, display::Window& window)
 {
   impl_ = std::make_shared<SceneImpl>(json, window);
+}
+
+void Scene::Modulation(float r, float g, float b)
+{
+  impl_->Modulation(r, g, b);
 }
 }

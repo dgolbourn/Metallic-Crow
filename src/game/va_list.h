@@ -1,7 +1,6 @@
 #ifndef VA_LIST_H_
 #define VA_LIST_H_
 #include <cstdarg>
-
 namespace cstd
 {
 template<class T> class VAList

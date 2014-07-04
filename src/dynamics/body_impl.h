@@ -31,7 +31,6 @@ public:
   static Body MakeBody(b2Body* body);
   World::WeakPtr world_;
   b2Body* body_;
-  b2Fixture* fixture_;
   b2Vec2 position_;
   b2Vec2 velocity_;
   Cubic cubic_;

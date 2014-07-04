@@ -225,6 +225,24 @@ void ScriptImpl::Command(void)
       lua_.PopFront(name);
       stage_->terrain_.erase(name);
     }
+    else if(command == "modulate")
+    {
+      std::string name;
+      float r, g, b;
+      lua_.PopFront(name);
+      lua_.PopFront(r);
+      lua_.PopFront(g);
+      lua_.PopFront(b);
+      auto iter = stage_->terrain_.find(name);
+      if(iter != stage_->terrain_.end())
+      {
+        iter->second.Modulation(r, g, b);
+      }
+      else
+      {
+        BOOST_THROW_EXCEPTION(exception::Exception());
+      }
+    }
     else
     {
       BOOST_THROW_EXCEPTION(exception::Exception());
@@ -238,6 +256,14 @@ void ScriptImpl::Command(void)
       std::string json;
       lua_.PopFront(json);
       stage_->scene_ = game::Scene(json::JSON(json), window_);
+    }
+    else if(command == "modulate")
+    {
+      float r, g, b;
+      lua_.PopFront(r);
+      lua_.PopFront(g);
+      lua_.PopFront(b);
+      stage_->scene_.Modulation(r, g, b);
     }
     else
     {
@@ -258,6 +284,14 @@ void ScriptImpl::Command(void)
         world.Resume();
       }
       stage_->world_ = world;
+    }
+    else if(command == "ambient")
+    {
+      float r, g, b;
+      lua_.PopFront(r);
+      lua_.PopFront(g);
+      lua_.PopFront(b);
+      stage_->world_.Ambient(r, g, b);
     }
     else
     {

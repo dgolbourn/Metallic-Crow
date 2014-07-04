@@ -8,9 +8,12 @@
 #include "timer.h"
 #include <memory>
 #include <chrono>
+#include <map>
+#include "body_impl_pair.h"
 namespace dynamics
 {
 typedef std::chrono::high_resolution_clock Clock;
+typedef std::map<BodyImplPair, int> BodyImplCount;
 
 class WorldImpl final : public b2ContactFilter, public b2ContactListener, public std::enable_shared_from_this<WorldImpl>
 {
@@ -26,7 +29,7 @@ public:
   void Begin(event::Command const& command);
   void End(event::Command const& command);
   void Light(void);
-  float32 Elapsed(void) const;
+  void Ambient(float r, float g, float b);
   float32 dt_;
   game::Collision collision_;
   event::Signal begin_;
@@ -37,6 +40,7 @@ public:
   Clock::duration remaining_;
   bool paused_;
   b2Vec3 ambient_;
+  BodyImplCount contact_;
 };
 }
 #endif

@@ -39,13 +39,15 @@ TerrainImpl::TerrainImpl(json::JSON const& json, display::Window& window, Dynami
   json_t* textures;
   json_t* body_ptr;
   double parallax;
-  
-  json.Unpack("{sososisf}",
+  double r, g, b;
+  json.Unpack("{sososisfs[fff]}",
     "body", &body_ptr,
     "textures", &textures,
     "z", &plane,
-    "parallax", &parallax);
+    "parallax", &parallax,
+    "modulation" , &r, &g, &b);
  
+  modulation_ = display::Modulation(float(r), float(g), float(b), 1.f);
   parallax_ = float(parallax);
 
   if(auto body = json::JSON(body_ptr))

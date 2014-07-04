@@ -11,14 +11,51 @@ bool WorldImpl::ShouldCollide(b2Fixture* fixtureA, b2Fixture* fixtureB)
   return collision_.Check(BodyImpl::MakeBody(fixtureA->GetBody()), BodyImpl::MakeBody(fixtureB->GetBody()));
 }
 
+static bool ToggleContact(b2Contact* contact, BodyImplCount& contacts, bool begin)
+{
+  BodyImpl* body_a = (BodyImpl*)contact->GetFixtureA()->GetBody()->GetUserData();
+  BodyImpl* body_b = (BodyImpl*)contact->GetFixtureB()->GetBody()->GetUserData();
+  BodyImplPair pair = Make(body_a, body_b);
+  bool trigger = false;
+  auto iter = contacts.find(pair);
+  if(begin)
+  {
+    if(iter == contacts.end())
+    {
+      contacts.emplace(pair, 0);
+      trigger = true;
+    }
+    else
+    {
+      ++iter->second;
+    }
+  }
+  else
+  {
+    --iter->second;
+    if(iter->second <= 0)
+    {
+      contacts.erase(iter);
+      trigger = true;
+    }
+  }
+  return trigger;
+}
+
 void WorldImpl::BeginContact(b2Contact* contact)
 {
-  return collision_(BodyImpl::MakeBody(contact->GetFixtureA()->GetBody()), BodyImpl::MakeBody(contact->GetFixtureB()->GetBody()), true);
+  if(ToggleContact(contact, contact_, true))
+  {
+    collision_(BodyImpl::MakeBody(contact->GetFixtureA()->GetBody()), BodyImpl::MakeBody(contact->GetFixtureB()->GetBody()), true);
+  }
 }
 
 void WorldImpl::EndContact(b2Contact* contact)
 {
-  return collision_(BodyImpl::MakeBody(contact->GetFixtureA()->GetBody()), BodyImpl::MakeBody(contact->GetFixtureB()->GetBody()), false);
+  if(ToggleContact(contact, contact_, false))
+  {
+    collision_(BodyImpl::MakeBody(contact->GetFixtureA()->GetBody()), BodyImpl::MakeBody(contact->GetFixtureB()->GetBody()), false);
+  }
 }
 
 static const int32 velocity_iterations = 8;
@@ -127,6 +164,11 @@ void WorldImpl::Resume(void)
   }
 }
 
+void WorldImpl::Ambient(float r, float g, float b)
+{
+  ambient_.Set(float32(r), float32(g), float32(b));
+}
+
 World::World(json::JSON const& json, game::Collision& collision, event::Queue& queue)
 {
   impl_ = std::make_shared<WorldImpl>(json, collision);
@@ -156,5 +198,10 @@ void World::Pause(void)
 void World::Resume(void)
 {
   impl_->Resume();
+}
+
+void World::Ambient(float r, float g, float b)
+{
+  impl_->Ambient(r, g, b);
 }
 }

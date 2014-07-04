@@ -6,6 +6,7 @@
 #include "ray_search.h"
 #include "box_search.h"
 #include "body_impl_iterator.h"
+#include "body_impl_pair.h"
 
 static void operator*=(b2Vec3& a, b2Vec3 const& b)
 {
@@ -16,8 +17,7 @@ static void operator*=(b2Vec3& a, b2Vec3 const& b)
 
 namespace dynamics
 {
-typedef std::pair<BodyImpl*, BodyImpl*> BodyPair;
-typedef std::map<BodyPair, b2Vec3> AttenuationMap;
+typedef std::map<BodyImplPair, b2Vec3> AttenuationMap;
 
 struct LightPoint
 {
@@ -44,20 +44,6 @@ static b2AABB LightBox(b2Vec3 const& emission, BodyImpl const& body)
   return box;
 }
 
-static BodyPair Make(BodyImpl* body_a, BodyImpl* body_b)
-{
-  BodyPair ret;
-  if(body_a < body_b)
-  {
-    ret = BodyPair(body_a, body_b);
-  }
-  else
-  {
-    ret = BodyPair(body_b, body_a);
-  }
-  return ret;
-}
-
 static float32 Distance2(b2Vec2 const& body_a, b2Vec2 const& body_b)
 {
   b2Vec2 distance = body_a;
@@ -74,7 +60,7 @@ static b2Vec3 Attenuation(b2Vec2 const& body_a, b2Vec2 const& body_b)
 static b2Vec3 Attenuation(BodyImpl& source, BodyImpl& target, AttenuationMap& map, b2World const& world)
 {
   b2Vec3 attenuation;
-  BodyPair pair = Make(&source, &target);
+  BodyImplPair pair = Make(&source, &target);
   auto iter = map.find(pair);
   if(iter == map.end())
   {
@@ -99,7 +85,6 @@ static b2Vec3 Attenuation(BodyImpl& source, BodyImpl& target, AttenuationMap& ma
 
 static const int max_hops = 3;
 
-//#pragma optimize( "", off )
 void WorldImpl::Light(void)
 { 
   AttenuationMap attenuations;

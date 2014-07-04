@@ -18,6 +18,7 @@ public:
   void End(event::Command const& command);
   void Pause(void);
   void Resume(void);
+  void Ambient(float r, float g, float b);
   typedef memory::WeakPtr<World, class WorldImpl> WeakPtr;
 private:
   std::shared_ptr<class WorldImpl> impl_;

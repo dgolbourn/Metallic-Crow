@@ -33,7 +33,9 @@ void SceneImpl::Render(void)
 
 void SceneImpl::Modulation(float r, float g, float b)
 {
-  modulation_ = display::Modulation(r, g, b, 1.f);
+  modulation_.r(r);
+  modulation_.g(g);
+  modulation_.b(b);
 }
 
 void SceneImpl::Add(event::Command const& layer, int z)
@@ -44,7 +46,12 @@ void SceneImpl::Add(event::Command const& layer, int z)
 SceneImpl::SceneImpl(json::JSON const& json, display::Window& window)
 {
   json_t* layers;
-  json.Unpack("{so}", "layers", &layers);
+  double r, g, b;
+  json.Unpack("{sos[fff]}", 
+    "layers", &layers,
+    "modulation", &r, &g, &b);
+  modulation_ = display::Modulation(float(r), float(g), float(b), 1.f);
+
   for(json::JSON const& value : json::JSON(layers))
   {
     char const* image;
@@ -52,6 +59,7 @@ SceneImpl::SceneImpl(json::JSON const& json, display::Window& window)
     double parallax;
     json_t* render_box;
     double angle;
+
     value.Unpack("{sssisfsosf}", 
       "image", &image,
       "z", &plane,

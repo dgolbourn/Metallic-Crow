@@ -165,7 +165,7 @@ void HeroImpl::Render(void) const
   state_.Render(render_box_, 1.f, false, 0., body_.Modulation());
 }
 
-HeroImpl::HeroImpl(void) : paused_(true), x_sign_(0), y_sign_(0), facing_(0), force_(game::Position(0.f, 0.f)), render_box_(display::BoundingBox(0.f, 0.f, 0.f, 0.f))
+HeroImpl::HeroImpl(void) : paused_(true), x_sign_(0), y_sign_(0), facing_(0), force_(0.f, 0.f), render_box_(0.f, 0.f, 0.f, 0.f)
 {
 }
 

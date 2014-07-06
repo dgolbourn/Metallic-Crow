@@ -24,6 +24,7 @@ private:
   std::shared_ptr<class WorldImpl> impl_;
   friend WeakPtr;
   friend class BodyImpl;
+  friend class JointImpl;
 };
 }
 #endif

@@ -1,66 +1,60 @@
 #include "world_impl.h"
 #include "body_impl.h"
-#include "units.h"
 #include <vector>
 #include "json_iterator.h"
 #include "exception.h"
 namespace dynamics
 {
-static float32 Metres(double pixels)
-{
-  return float32(Metres(float(pixels)));
-}
-
 typedef std::unique_ptr<b2Shape> Shape;
 typedef std::pair<Shape, float32> ShapePair;
 
-static ShapePair Box(json::JSON& json)
+static ShapePair Box(WorldImpl const& world, json::JSON& json)
 {
   double x, y, w, h;
   json.Unpack("[ffff]", &x, &y, &w, &h);
 
-  float32 width = Metres(w);
-  float32 height = Metres(h);
+  float32 width = world.Metres(w);
+  float32 height = world.Metres(h);
 
   ShapePair shape;
   shape.first = Shape(new b2PolygonShape);
-  b2PolygonShape& box = dynamic_cast<b2PolygonShape&>(*shape.first.get());
-  box.SetAsBox(.5f * width, .5f * height, b2Vec2(Metres(x), Metres(y)), 0.f);
+  b2PolygonShape& box = *(b2PolygonShape*)shape.first.get();
+  box.SetAsBox(.5f * width, .5f * height, b2Vec2(world.Metres(x), world.Metres(y)), 0.f);
 
   shape.second = width * height;
   return shape;
 }
 
-static ShapePair Circle(json::JSON& json)
+static ShapePair Circle(WorldImpl const& world, json::JSON& json)
 {
   double x, y, radius;
   json.Unpack("[fff]", &x, &y, &radius);
 
   ShapePair shape;
   shape.first = Shape(new b2CircleShape);
-  b2CircleShape& circle = dynamic_cast<b2CircleShape&>(*shape.first.get());
-  circle.m_p.Set(Metres(x), Metres(y));
-  circle.m_radius = Metres(radius);
+  b2CircleShape& circle = *(b2CircleShape*)shape.first.get();
+  circle.m_p.Set(world.Metres(x), world.Metres(y));
+  circle.m_radius = world.Metres(radius);
 
   shape.second = circle.m_radius * circle.m_radius * b2_pi;
   return shape;
 }
 
-static ShapePair Chain(json::JSON& json)
+static ShapePair Chain(WorldImpl const& world, json::JSON& json)
 {
   std::vector<b2Vec2> vertices(json.Size());
   auto vertex = vertices.begin();
-  for (json::JSON const& value : json)
+  for(json::JSON const& value : json)
   {
     double x, y;
     value.Unpack("[ff]", &x, &y);
-    vertex->Set(Metres(x), Metres(y));
+    vertex->Set(world.Metres(x), world.Metres(y));
     ++vertex;
   }
 
   ShapePair shape;
   shape.first = Shape(new b2ChainShape);
-  b2ChainShape& chain = dynamic_cast<b2ChainShape&>(*shape.first.get());
+  b2ChainShape& chain = *(b2ChainShape*)shape.first.get();
 
   if(vertices.front() == vertices.back())
   {
@@ -76,7 +70,7 @@ static ShapePair Chain(json::JSON& json)
   return shape;
 }
 
-static b2BodyDef BodyDefinition(json::JSON& velocity, float32 damping, float32 x, float32 y)
+static b2BodyDef BodyDefinition(WorldImpl const& world, json::JSON& velocity, float32 damping, float32 x, float32 y)
 {
   b2BodyDef body_def;
   if(velocity)
@@ -84,7 +78,7 @@ static b2BodyDef BodyDefinition(json::JSON& velocity, float32 damping, float32 x
     body_def.type = b2_dynamicBody;
     double u, v;
     velocity.Unpack("[ff]", &u, &v);
-    body_def.linearVelocity.Set(Metres(u), Metres(v));
+    body_def.linearVelocity.Set(world.Metres(u), world.Metres(v));
   }
   else
   {
@@ -156,19 +150,19 @@ BodyImpl::BodyImpl(json::JSON const& json, World& world)
     if(type == "box")
     {
       float32 temp;
-      std::tie(*shape, temp) = Box(json::JSON(shape_ref));
+      std::tie(*shape, temp) = Box(*world.impl_, json::JSON(shape_ref));
       area += temp;
     }
     else if(type == "circle")
     {
       float32 temp;
-      std::tie(*shape, temp) = Circle(json::JSON(shape_ref));
+      std::tie(*shape, temp) = Circle(*world.impl_, json::JSON(shape_ref));
       area += temp;
     }
     else if(type == "chain")
     {
       float32 temp;
-      std::tie(*shape, temp) = Chain(json::JSON(shape_ref));
+      std::tie(*shape, temp) = Chain(*world.impl_, json::JSON(shape_ref));
       area += temp;
     }
     else
@@ -178,7 +172,7 @@ BodyImpl::BodyImpl(json::JSON const& json, World& world)
     ++shape;
   }
 
-  b2BodyDef body_def = BodyDefinition(json::JSON(velocity), float32(d), Metres(x), Metres(y));
+  b2BodyDef body_def = BodyDefinition(*world.impl_, json::JSON(velocity), float32(d), world.impl_->Metres(x), world.impl_->Metres(y));
   body_ = world.impl_->world_.CreateBody(&body_def);
   body_->SetUserData(this);
 
@@ -218,32 +212,38 @@ Body BodyImpl::MakeBody(b2Body* body_ptr)
 
 game::Position BodyImpl::Position(void) const
 {
-  return game::Position(Pixels(position_.x), Pixels(position_.y));
+  auto world = world_.Lock().impl_;
+  return game::Position(world->Pixels(position_.x), world->Pixels(position_.y));
 }
 
 void BodyImpl::Position(float x, float y)
 {
-  body_->SetTransform(b2Vec2(Metres(x), Metres(y)), 0.f);
+  auto world = world_.Lock().impl_;
+  body_->SetTransform(b2Vec2(world->Metres(x), world->Metres(y)), 0.f);
 }
 
 game::Position BodyImpl::Velocity(void) const
 {
-  return game::Position(Pixels(velocity_.x), Pixels(velocity_.y));
+  auto world = world_.Lock().impl_;
+  return game::Position(world->Pixels(velocity_.x), world->Pixels(velocity_.y));
 }
 
 void BodyImpl::Velocity(float x, float y)
 {
-  body_->SetLinearVelocity(b2Vec2(Metres(x), Metres(y)));
+  auto world = world_.Lock().impl_;
+  body_->SetLinearVelocity(b2Vec2(world->Metres(x), world->Metres(y)));
 }
 
 void BodyImpl::Force(float x, float y)
 {
-  body_->ApplyForceToCenter(b2Vec2(Metres(x), Metres(y)), true);
+  auto world = world_.Lock().impl_;
+  body_->ApplyForceToCenter(b2Vec2(world->Metres(x), world->Metres(y)), true);
 }
 
 void BodyImpl::Impulse(float x, float y)
 {
-  body_->ApplyLinearImpulse(b2Vec2(Metres(x), Metres(y)), body_->GetWorldCenter(), true);
+  auto world = world_.Lock().impl_;
+  body_->ApplyLinearImpulse(b2Vec2(world->Metres(x), world->Metres(y)), body_->GetWorldCenter(), true);
 }
 
 void BodyImpl::Begin(void)
@@ -284,7 +284,7 @@ display::Modulation BodyImpl::Modulation(void) const
 
 BodyImpl::~BodyImpl(void)
 {
-  if(auto world = world_.Lock())
+  if(world_.Lock())
   {
     body_->SetUserData(nullptr);
     body_->GetWorld()->DestroyBody(body_);

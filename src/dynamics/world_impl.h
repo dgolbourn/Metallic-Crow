@@ -15,7 +15,7 @@ namespace dynamics
 typedef std::chrono::high_resolution_clock Clock;
 typedef std::map<BodyImplPair, int> BodyImplCount;
 
-class WorldImpl final : public b2ContactFilter, public b2ContactListener, public std::enable_shared_from_this<WorldImpl>
+class WorldImpl final : public b2DestructionListener, public b2ContactFilter, public b2ContactListener, public std::enable_shared_from_this<WorldImpl>
 {
 public:
   WorldImpl(json::JSON const& json, game::Collision& collision);
@@ -30,6 +30,11 @@ public:
   void End(event::Command const& command);
   void Light(void);
   void Ambient(float r, float g, float b);
+  void SayGoodbye(b2Joint* joint);
+  void SayGoodbye(b2Fixture* fixture);
+  float32 Metres(double pixels) const;
+  float Pixels(float32 metres) const;
+  float32 f_;
   float32 dt_;
   game::Collision collision_;
   event::Signal begin_;
@@ -41,6 +46,7 @@ public:
   bool paused_;
   b2Vec3 ambient_;
   BodyImplCount contact_;
+  float32 scale_;
 };
 }
 #endif

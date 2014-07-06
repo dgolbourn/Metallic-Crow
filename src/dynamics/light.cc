@@ -21,12 +21,12 @@ typedef std::map<BodyImplPair, b2Vec3> AttenuationMap;
 
 struct LightPoint
 {
+  BodyImpl* source;
   b2Vec3 emission;
   int hops;
 };
 
-typedef std::pair<BodyImpl*, LightPoint> BodyLight;
-typedef std::queue<BodyLight> LightQueue;
+typedef std::queue<LightPoint> LightQueue;
 
 static const float32 min_illumination = .01f;
 
@@ -101,26 +101,27 @@ void WorldImpl::Light(void)
     if(body.light_.emit)
     {
       LightPoint temp;
+      temp.source = &body;
       temp.emission = body.light_.emission;
       temp.hops = max_hops;
-      sources.emplace(&body, temp);
+      sources.emplace(temp);
     }
   }
 
   while(!sources.empty())
   {
-    BodyLight source = sources.front();
+    LightPoint source = sources.front();
     sources.pop();
  
-    for(BodyImpl* target : BoxSearch(LightBox(source.second.emission, *source.first), world_))
+    for(BodyImpl* target : BoxSearch(LightBox(source.emission, *source.source), world_))
     {
-      if(source.first != target)
+      if(source.source != target)
       {
-        bool diffuse = (target->light_.diffuse) && (source.second.hops > 0);
+        bool diffuse = (target->light_.diffuse) && (source.hops > 0);
         if(target->light_.illuminate || diffuse)
         {
-          b2Vec3 incoming = Attenuation(*source.first, *target, attenuations, world_);
-          incoming *= source.second.emission;
+          b2Vec3 incoming = Attenuation(*source.source, *target, attenuations, world_);
+          incoming *= source.emission;
 
           if(target->light_.illuminate)
           {
@@ -132,10 +133,11 @@ void WorldImpl::Light(void)
           if(diffuse)
           {
             LightPoint temp;
+            temp.source = target;
             temp.emission = incoming;
             temp.emission *= target->light_.diffusion;
-            temp.hops = source.second.hops - 1;
-            sources.emplace(target, temp);
+            temp.hops = source.hops - 1;
+            sources.emplace(temp);
           }
         }
       }

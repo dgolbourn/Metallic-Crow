@@ -12,6 +12,7 @@ public:
   typedef boost::error_info<class Line, int> Line;
   typedef boost::error_info<class Column, int> Column;
   typedef boost::error_info<class Position, int> Position;
+  typedef boost::error_info<class File, std::string> File;
 };
 }
 #endif

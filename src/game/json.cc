@@ -25,7 +25,8 @@ JSON::JSON(std::string const& filename)
       << Exception::Source(error.source)
       << Exception::Line(error.line)
       << Exception::Column(error.column)
-      << Exception::Position(error.position));
+      << Exception::Position(error.position)
+      << Exception::File(filename));
   }
 }
 

@@ -4,5 +4,6 @@
 namespace sdl
 {
 bool Intersection(SDL_FRect const* a, SDL_FRect const* b);
+bool Intersection(SDL_FRect const* a, SDL_FRect const* b, SDL_FRect* ret);
 }
 #endif

@@ -7,6 +7,7 @@ namespace display
 class BoundingBoxImpl
 {
 public:
+  BoundingBoxImpl() = default;
   BoundingBoxImpl(float x, float y, float w, float h);
   BoundingBoxImpl(json::JSON const& json);
   SDL_FRect rect_;
@@ -88,8 +89,8 @@ BoundingBoxImpl::BoundingBoxImpl(float x, float y, float w, float h) : rect_({x,
 
 BoundingBoxImpl::BoundingBoxImpl(json::JSON const& json)
 {
-  int x, y, w, h;
-  json.Unpack("[iiii]", &x, &y, &w, &h);
+  double x, y, w, h;
+  json.Unpack("[ffff]", &x, &y, &w, &h);
   rect_.x = (float)x;
   rect_.y = (float)y;
   rect_.w = (float)w;
@@ -98,6 +99,22 @@ BoundingBoxImpl::BoundingBoxImpl(json::JSON const& json)
 
 BoundingBox::BoundingBox(json::JSON const& json)
 {
-  impl_ = std::make_shared<BoundingBoxImpl>(json);
+  if(json)
+  {
+    impl_ = std::make_shared<BoundingBoxImpl>(json);
+  }
+}
+
+BoundingBox::BoundingBox(BoundingBox const& first, BoundingBox const& second)
+{
+  if(bool(first) && bool(second))
+  {
+    SDL_FRect rect;
+    if(sdl::Intersection(&first.impl_->rect_, &second.impl_->rect_, &rect))
+    {
+      impl_ = std::make_shared<BoundingBoxImpl>();
+      impl_->rect_ = rect;
+    }
+  }
 }
 }

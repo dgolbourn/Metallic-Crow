@@ -123,14 +123,6 @@ SubtitleImpl::SubtitleImpl(json::JSON const& json, display::Window& window, even
   down_current_ = down_idle_;
   left_current_ = left_idle_;
   right_current_ = right_idle_;
-  up_current_.Play();
-  up_current_.Pause();
-  down_current_.Play();
-  down_current_.Pause();
-  left_current_.Play();
-  left_current_.Pause();
-  right_current_.Play();
-  right_current_.Pause();
   display::Shape shape = window_.Shape();
   float x = .5f * shape.first;
   float y = shape.second - float(base_offset);
@@ -271,12 +263,11 @@ void SubtitleImpl::Change(display::BoundingBox& box, State& current, State& next
 {
   if(!(current == next))
   {
-    current.Stop();
+    current.Reset();
     current = next;
-    current.Play();
-    if(paused_)
+    if(!paused_)
     {
-      current.Pause();
+      current.Resume();
     }
     box = Update(current, offset);
   }

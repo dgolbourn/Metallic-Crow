@@ -2,101 +2,147 @@
 #include "animation.h"
 #include "bounding_box.h"
 #include "sound.h"
+#include "timer.h"
+#include "bind.h"
+#include "signal.h"
 namespace game
 {
-class StateImpl
+class StateImpl : public std::enable_shared_from_this<StateImpl>
 {
 public:
-  StateImpl(json::JSON const& json, display::Window& window, event::Queue& queue);
-  void Play(void);
+  StateImpl(json::JSON const& json, display::Window& window);
+  void Reset(void);
   void Pause(void);
   void Resume(void);
-  void Stop(void);
   void Render(display::BoundingBox const& bounding_box, float parallax, bool tile, double angle, display::Modulation const& modulation) const;
   void End(event::Command const& command);
-  void Add(event::Command const& command);
-  Animation animation_;
+  void EndSignal();
+  void Next();
+  void Init(event::Queue& queue);
+
+  display::Texture texture_;
+  display::Animation animation_;
+  display::Animation::const_iterator iterator_;
   display::BoundingBox render_box_;
+  int frames_;
+  double interval_;
+  event::Timer timer_;
+  bool paused_;
+
   audio::Sound sound_;
   int loops_;
+  bool stopped_;
+
+  event::Signal end_;
 };
 
-StateImpl::StateImpl(json::JSON const& json, display::Window& window, event::Queue& queue)
+StateImpl::StateImpl(json::JSON const& json, display::Window& window) : paused_(true), stopped_(true)
 {
   json_t* animation;
   json_t* render_box;
-  char const* sound_effect;
-
-  json.Unpack("{sososssi}",
+  json_t* sound_json;
+  
+  json.Unpack("{sososfsisosi}",
     "animation", &animation,
     "render box", &render_box,
-    "sound effect", &sound_effect,
-    "loops", &loops_);
+    "interval", &interval_,
+    "frames", &frames_,
+    "sound effect", &sound_json,
+    "sound loops", &loops_);
 
-  animation_ = Animation(json::JSON(animation), window, queue);
+  animation_ = display::MakeAnimation(json::JSON(animation), window);
+  iterator_ = animation_.begin();
+  texture_ = *iterator_;
   render_box_ = display::BoundingBox(json::JSON(render_box));
-  if(std::string(sound_effect) != "")
+  
+  if(auto temp = json::JSON(sound_json))
   {
-    sound_ = audio::Sound(sound_effect);
+    char const* sound_file;
+    temp.Unpack("s", &sound_file);
+    sound_ = audio::Sound(sound_file);
   }
 }
 
-void StateImpl::Play(void)
+void StateImpl::Init(event::Queue& queue)
 {
-  animation_.Play(loops_);
+  timer_ = event::Timer(interval_, frames_);
+  queue.Add(event::Bind(&event::Timer::operator(), timer_));
+  auto ptr = shared_from_this();
+  timer_.Add(event::Bind(&StateImpl::Next, ptr));
+  timer_.End(event::Bind(&StateImpl::EndSignal, ptr));
+}
+
+void StateImpl::EndSignal()
+{
+  end_();
+}
+
+void StateImpl::Next()
+{
+  ++iterator_;
+  if(iterator_ == animation_.end())
+  {
+    iterator_ = animation_.begin();
+  }
+  texture_ = *iterator_;
+}
+
+void StateImpl::Reset(void)
+{
+  paused_ = true;
+  timer_.Reset(interval_, frames_);
+  iterator_ = animation_.begin();
+  texture_ = *iterator_;
   if(sound_)
   {
-    sound_.Play(loops_);
+    sound_.Stop();
+    stopped_ = true;
   }
 }
 
 void StateImpl::Pause(void)
 {
-  animation_.Pause();
-  if(sound_)
+  if(!paused_)
   {
-    sound_.Pause();
+    paused_ = true;
+    timer_.Pause();
+    if(sound_)
+    {
+      sound_.Pause();
+    }
   }
 }
 
 void StateImpl::Resume(void)
 {
-  animation_.Resume();
-  if(sound_)
+  if(paused_)
   {
-    sound_.Resume();
-  }
-}
+    paused_ = false;
+    timer_.Resume();
 
-static const int fade = 1000;
-
-void StateImpl::Stop(void)
-{
-  animation_.Pause();
-  if(sound_)
-  {
-    sound_.Fade(fade);
+    if(sound_)
+    {
+      if(stopped_)
+      { 
+        stopped_ = false;
+        sound_.Play(loops_);
+      }
+      else
+      {
+        sound_.Resume();
+      }
+    }
   }
 }
 
 void StateImpl::Render(display::BoundingBox const& bounding_box, float parallax, bool tile, double angle, display::Modulation const& modulation) const
 {
-  animation_.Render(bounding_box, parallax, tile, angle, modulation);
+  (void)texture_(display::BoundingBox(), bounding_box, parallax, tile, angle, modulation);
 }
 
 void StateImpl::End(event::Command const& command)
 {
-  animation_.End(command);
-}
-
-void StateImpl::Add(event::Command const& command)
-{
-  animation_.Add(command);
-}
-
-void State::Play(void)
-{
-  impl_->Play();
+  end_.Add(command);
 }
 
 void State::Pause(void)
@@ -109,9 +155,9 @@ void State::Resume(void)
   impl_->Resume();
 }
 
-void State::Stop(void)
+void State::Reset(void)
 {
-  impl_->Stop();
+  impl_->Reset();
 }
 
 void State::End(event::Command const& command)
@@ -119,12 +165,7 @@ void State::End(event::Command const& command)
   impl_->End(command);
 }
 
-void State::Add(event::Command const& command)
-{
-  impl_->Add(command);
-}
-
-display::BoundingBox const& State::Shape(void)
+display::BoundingBox const& State::Shape(void) const
 {
   return impl_->render_box_;
 }
@@ -144,8 +185,8 @@ State::operator bool(void) const
   return bool(impl_);
 }
 
-State::State(json::JSON const& json, display::Window& window, event::Queue& queue)
+State::State(json::JSON const& json, display::Window& window, event::Queue& queue) : impl_(std::make_shared<StateImpl>(json, window))
 {
-  impl_ = std::make_shared<StateImpl>(json, window, queue);
+  impl_->Init(queue);
 }
 }

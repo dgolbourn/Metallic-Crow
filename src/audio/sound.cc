@@ -83,7 +83,7 @@ void SoundImpl::Stop(void)
 {
   for(auto channel = channels.begin(); channel != channels.end();)
   {
-    if(channel->second ==  this)
+    if(channel->second == this)
     {
       (void)Mix_HaltChannel(channel->first);
       channel = channels.erase(channel);

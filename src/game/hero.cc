@@ -128,13 +128,12 @@ void HeroImpl::Change(std::string const& next)
     {
       if(state_)
       {
-        state_.Stop();
+        state_.Reset();
       }
       state_ = iter->second;
-      state_.Play();
-      if(paused_)
+      if(!paused_)
       {
-        state_.Pause();
+        state_.Resume();
       }
     }
   }

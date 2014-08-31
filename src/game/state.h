@@ -14,13 +14,11 @@ public:
   State(json::JSON const& json, display::Window& window, event::Queue& queue);
   State(void) = default;
   bool operator==(State const& other) const;
-  void Play(void);
   void Pause(void);
   void Resume(void);
-  void Stop(void);
+  void Reset(void);
   void End(event::Command const& command);
-  void Add(event::Command const& command);
-  display::BoundingBox const& Shape(void);
+  display::BoundingBox const& Shape(void) const;
   void Render(display::BoundingBox const& bounding_box, float parallax, bool tile, double angle, display::Modulation const& modulation) const;
   explicit operator bool(void) const;
 private:

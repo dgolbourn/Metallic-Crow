@@ -187,7 +187,6 @@ void WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, 
   sdl::Render(window_, renderer_, texture, source_ptr, destination_ptr, &view_, zoom_, parallax, tile, angle, modulation_ptr);
 }
 
-
 Shape Window::Shape(void) const
 {
   return impl_->Shape();

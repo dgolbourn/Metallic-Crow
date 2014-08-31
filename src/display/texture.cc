@@ -2,6 +2,7 @@
 #include "sdl_texture.h"
 #include "window.h"
 #include "window_impl.h"
+#include <algorithm>
 namespace display
 {
 class TextureImpl
@@ -10,12 +11,14 @@ public:
   TextureImpl(std::string const& file, Window& window);
   TextureImpl(std::string const& text, sdl::Font const& font, int length, Window& window);
   TextureImpl(std::string const& text, sdl::Font const& font, Window& window);
+  TextureImpl(TextureImpl const& texture, BoundingBox const& clip);
   bool Render(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const;
   bool Check(void) const;
   Shape Shape(void) const;
   Window::WeakPtr window_;
   sdl::Texture::WeakPtr texture_ptr_;
   sdl::Texture texture_;
+  display::BoundingBox clip_;
 };
 
 TextureImpl::TextureImpl(std::string const& file, Window& window) : window_(window)
@@ -35,6 +38,35 @@ TextureImpl::TextureImpl(std::string const& text, sdl::Font const& font, Window&
   texture_ptr_ = texture_;
 }
 
+namespace 
+{
+BoundingBox Clip(BoundingBox const& source, BoundingBox const& clip)
+{
+  BoundingBox box;
+  if(clip)
+  {
+    if(source)
+    {
+      box = BoundingBox(source, clip);
+    }
+    else
+    {
+      box = clip;
+    }
+  }
+  else
+  {
+    box = source;
+  }
+  return box;
+}
+}
+
+TextureImpl::TextureImpl(TextureImpl const& texture, BoundingBox const& clip) : TextureImpl(texture)
+{
+  clip_ = Clip(clip_, clip);
+}
+
 bool TextureImpl::Render(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const
 {
   bool locked = false;
@@ -42,7 +74,7 @@ bool TextureImpl::Render(BoundingBox const& source, BoundingBox const& destinati
   {
     if(auto texture = texture_ptr_.Lock())
     {
-      window.impl_->Render(texture, source, destination, parallax, tile, angle, modulation);
+      window.impl_->Render(texture, Clip(source, clip_), destination, parallax, tile, angle, modulation);
       locked = true;
     }
   }
@@ -62,6 +94,11 @@ Shape TextureImpl::Shape(void) const
   {
     width = float(texture->w);
     height = float(texture->h);
+    if(clip_)
+    {
+      width = std::min(clip_.w(), width);
+      height = std::min(clip_.h(), height);
+    }
   }
   return display::Shape(width, height);
 }
@@ -94,5 +131,10 @@ Texture::Texture(std::string const& text, sdl::Font const& font, int length, Win
 Texture::Texture(std::string const& text, sdl::Font const& font, Window& window)
 {
   impl_ = std::make_shared<TextureImpl>(text, font, window);
+}
+
+Texture::Texture(Texture const& texture, BoundingBox const& clip)
+{
+  impl_ = std::make_shared<TextureImpl>(*texture.impl_, clip);
 }
 }

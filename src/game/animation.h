@@ -1,28 +1,11 @@
 #ifndef ANIMATION_H_
 #define ANIMATION_H_
-
-#include <memory>
-#include <string>
 #include "window.h"
 #include "json.h"
-#include "command.h"
-#include "queue.h"
-
-namespace game
+#include <vector>
+namespace display
 {
-class Animation
-{
-public:
-  Animation(json::JSON const& json, display::Window& window, event::Queue& queue);
-  Animation(void) = default;
-  void Render(display::BoundingBox const& destination, float parallax, bool tile, double angle, display::Modulation const& modulation) const;
-  void Pause(void);
-  void Resume(void);
-  void Play(int loops = 0, bool end_on_first = false);
-  void End(event::Command const& command);
-  void Add(event::Command const& command);
-private:
-  std::shared_ptr<class AnimationImpl> impl_;
-};
+typedef std::vector<Texture> Animation;
+Animation MakeAnimation(json::JSON const& json, Window& window);
 }
 #endif

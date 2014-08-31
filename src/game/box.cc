@@ -59,8 +59,6 @@ BoxImpl::BoxImpl(json::JSON const& json, display::Window& window, event::Queue& 
     "body", &body);
   
   state_ = State(json::JSON(state), window, queue);
-  state_.Play();
-  state_.Pause();
   body_ = dynamics::Body(json::JSON(body), world);
   dcollision.Add(dynamics::Type::Body, body_);
   Update();

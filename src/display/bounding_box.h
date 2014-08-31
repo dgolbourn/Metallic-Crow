@@ -14,6 +14,7 @@ public:
   BoundingBox(void) = default;
   BoundingBox(float x, float y, float w, float h);
   BoundingBox(json::JSON const& json);
+  BoundingBox(BoundingBox const& first, BoundingBox const& second);
   bool operator&&(BoundingBox const& other) const;
   bool operator<(BoundingBox const& other) const;
   explicit operator bool(void) const;

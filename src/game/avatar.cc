@@ -16,6 +16,7 @@ public:
   void Eyes(int open);
   void Mouth(int open);
   void Facing(bool left_facing);
+  void ToggleFacing();
   void Position(game::Position const& position);
   void Modulation(display::Modulation const& modulation);
   void Pause(void);
@@ -64,7 +65,9 @@ Avatar::Impl::Impl(json::JSON const& json, display::Window& window) :
 void Avatar::Impl::Init(event::Queue& queue)
 {
   queue.Add(event::Bind(&event::Timer::operator(), timer_));
-  timer_.Add(event::Bind(&Impl::Next, shared_from_this()));
+  auto ptr = shared_from_this();
+  timer_.Add(event::Bind(&Impl::Next, ptr));
+  body_.Facing(event::Bind(&Impl::ToggleFacing, ptr));
 }
 
 void Avatar::Impl::Eyes(std::string const& expression)
@@ -101,6 +104,13 @@ void Avatar::Impl::Facing(bool left_facing)
 {
   facing_ = left_facing;
   body_.Expression(body_expression_, facing_);
+  eyes_.Expression(eyes_expression_, eyes_open_, facing_);
+  mouth_.Expression(mouth_expression_, mouth_open_, facing_);
+}
+
+void Avatar::Impl::ToggleFacing()
+{
+  facing_ ^= true;
   eyes_.Expression(eyes_expression_, eyes_open_, facing_);
   mouth_.Expression(mouth_expression_, mouth_open_, facing_);
 }

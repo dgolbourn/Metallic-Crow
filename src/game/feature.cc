@@ -23,16 +23,16 @@ public:
 
 Feature::Impl::Impl(json::JSON const& json, display::Window& window)
 {
-  json_t* frames;
+  json_t* expressions;
   json_t* render_box;
   
   json.Unpack("{soso}",
-    "render_box", &render_box,
-    "frames", &frames);
+    "render box", &render_box,
+    "expressions", &expressions);
 
   render_box_ = display::BoundingBox(json::JSON(render_box));
 
-  for(json::JSON const& value : json::JSON(frames))
+  for(json::JSON const& value : json::JSON(expressions))
   {
     char const* expression;
     int index;
@@ -40,7 +40,7 @@ Feature::Impl::Impl(json::JSON const& json, display::Window& window)
     char const* page;
     json_t* clip;
 
-    json.Unpack("{sssisissso}",
+    json.Unpack("{sssisbssso}",
       "expression", &expression,
       "index", &index,
       "left facing", &facing,

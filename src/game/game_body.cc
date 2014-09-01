@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include "boost/functional/hash.hpp"
 #include "json_iterator.h"
+#include "signal.h"
 namespace game
 {
 namespace
@@ -18,6 +19,7 @@ struct Animation
   Positions mouth_;
   display::BoundingBox render_box_;
   NextExpression next_;
+  bool left_facing_;
 };
 
 struct Iterator
@@ -87,7 +89,9 @@ NextExpression MakeNextExpression(json::JSON const& json)
   {
     char const* next_expression;
     int next_facing;
-    json.Unpack("[si]", &next_expression, &next_facing);
+    json.Unpack("[sssi]", 
+      "expression", &next_expression, 
+      "left facing", &next_facing);
     next = NextExpression(std::string(next_expression), (next_facing != 0));
   }
   return next;
@@ -103,12 +107,14 @@ public:
   void Reset();
   OptionalPosition Eyes() const;
   OptionalPosition Mouth() const;
+  void Facing(event::Command const& command);
   void Render(Position const& position, display::Modulation const& modulation, bool front) const;
  
   AnimationMap animations_;
   AnimationPtr animation_;
   Iterator iterator_;
   Texture texture_;
+  event::Signal facing_;
 };
 
 Body::Impl::Impl(json::JSON const& json, display::Window& window)
@@ -136,11 +142,12 @@ Body::Impl::Impl(json::JSON const& json, display::Window& window)
       "eyes position", &eyes,
       "mouth position", &mouth,
       "render box", &render_box,
-      "next expression", &next);
+      "next", &next);
 
+    bool left_facing = (facing != 0);
     animations_.emplace
     (
-      Key(std::string(expression), (facing != 0)), 
+      Key(std::string(expression), left_facing), 
       Animation
       ({
         display::MakeAnimation(json::JSON(back), window),
@@ -148,7 +155,8 @@ Body::Impl::Impl(json::JSON const& json, display::Window& window)
         MakePositions(json::JSON(eyes)),
         MakePositions(json::JSON(mouth)),
         display::BoundingBox(json::JSON(render_box)),
-        MakeNextExpression(json::JSON(next))
+        MakeNextExpression(json::JSON(next)),
+        left_facing
       })
     );
   }
@@ -175,6 +183,10 @@ void Body::Impl::Next()
   {
     if(animation_->second.next_.first != "")
     {
+      if(animation_->second.left_facing_ != animation_->second.next_.second)
+      {
+        facing_();
+      }
       Expression(animation_->second.next_.first, animation_->second.next_.second);
     }
   }
@@ -206,6 +218,11 @@ Body::OptionalPosition Body::Impl::Mouth() const
     position = texture_.mouth_;
   }
   return position;
+}
+
+void Body::Impl::Facing(event::Command const& command)
+{
+  facing_.Add(command);
 }
 
 void Body::Impl::Render(Position const& position, display::Modulation const& modulation, bool front) const
@@ -249,6 +266,11 @@ Body::OptionalPosition Body::Eyes() const
 Body::OptionalPosition Body::Mouth() const
 {
   return impl_->Mouth();
+}
+
+void Body::Facing(event::Command const& command)
+{
+  return impl_->Facing(command);
 }
 
 void Body::Render(Position const& position, display::Modulation const& modulation, bool front) const

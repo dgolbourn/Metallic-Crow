@@ -5,6 +5,7 @@
 #include "json.h"
 #include "position.h"
 #include "boost/optional/optional.hpp"
+#include "command.h"
 namespace game
 {
 class Body
@@ -17,6 +18,7 @@ public:
   typedef boost::optional<Position> OptionalPosition;
   OptionalPosition Eyes() const;
   OptionalPosition Mouth() const;
+  void Facing(event::Command const& command);
   void Render(Position const& position, display::Modulation const& modulation, bool front) const;
 private:
   class Impl;

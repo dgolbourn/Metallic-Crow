@@ -26,7 +26,10 @@ public:
   void Down(void);
   void Left(void);
   void Right(void);
-  void State(std::string const& state);
+  void Body(std::string const& expression);
+  void Eyes(std::string const& expression);
+  void Mouth(std::string const& expression);
+  void Mouth(int open);
   explicit operator bool(void) const;
   typedef memory::WeakPtr<Hero, class HeroImpl> WeakPtr;
 private:

@@ -312,11 +312,11 @@ void ScriptImpl::Command(void)
       }
       stage_->hero_ = hero;
     }
-    else if(command == "state")
+    else if(command == "expression")
     {
-      std::string state;
-      lua_.PopFront(state);
-      stage_->hero_.State(state);
+      std::string expression;
+      lua_.PopFront(expression);
+      stage_->hero_.Body(expression);
     }
     else if(command == "position")
     {

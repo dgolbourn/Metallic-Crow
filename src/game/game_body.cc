@@ -11,8 +11,39 @@ namespace
 typedef std::vector<Position> Positions;
 typedef std::pair<std::string, bool> NextExpression;
 
+Positions MakePositions(json::JSON& json)
+{
+  Positions positions;
+  if (json)
+  {
+    for (json::JSON const& value : json)
+    {
+      Position position;
+      value.Unpack("[ff]", &position.first, &position.second);
+      positions.push_back(position);
+    }
+  }
+  return positions;
+}
+
+NextExpression MakeNextExpression(json::JSON const& json)
+{
+  NextExpression next("", false);
+  if (json)
+  {
+    char const* next_expression;
+    int next_facing;
+    json.Unpack("{sssb}",
+      "expression", &next_expression,
+      "left facing", &next_facing);
+    next = NextExpression(std::string(next_expression), (next_facing != 0));
+  }
+  return next;
+}
+
 struct Animation
 {
+  Animation(json::JSON const& back, json::JSON const& front, json::JSON& eyes, json::JSON& mouth, json::JSON const& render_box, json::JSON const& next, bool left_facing, display::Window& window);
   display::Animation back_;
   display::Animation front_;
   Positions eyes_;
@@ -21,6 +52,17 @@ struct Animation
   NextExpression next_;
   bool left_facing_;
 };
+
+Animation::Animation(json::JSON const& back, json::JSON const& front, json::JSON& eyes, json::JSON& mouth, json::JSON const& render_box, json::JSON const& next, bool left_facing, display::Window& window) :
+  back_(display::MakeAnimation(back, window)),
+  front_(display::MakeAnimation(front, window)),
+  eyes_(MakePositions(eyes)),
+  mouth_(MakePositions(mouth)),
+  render_box_(render_box),
+  next_(MakeNextExpression(next)),
+  left_facing_(left_facing)
+{
+}
 
 struct Iterator
 {
@@ -66,36 +108,6 @@ template<class A, class B, class C> void Begin(A& texture, B& iterator, C& anima
     texture = *iterator;
   }
 }
-
-Positions MakePositions(json::JSON& json)
-{
-  Positions positions;
-  if(json)
-  {
-    for(json::JSON const& value : json)
-    {
-      Position position;
-      value.Unpack("[ff]", &position.first, &position.second);
-      positions.push_back(position);
-    }
-  }
-  return positions;
-}
-
-NextExpression MakeNextExpression(json::JSON const& json)
-{
-  NextExpression next("", false);
-  if(json)
-  {
-    char const* next_expression;
-    int next_facing;
-    json.Unpack("[sssi]", 
-      "expression", &next_expression, 
-      "left facing", &next_facing);
-    next = NextExpression(std::string(next_expression), (next_facing != 0));
-  }
-  return next;
-}
 }
 
 class Body::Impl
@@ -134,7 +146,7 @@ Body::Impl::Impl(json::JSON const& json, display::Window& window)
     json_t* render_box;
     json_t* next;
 
-    value.Unpack("{sssisosososososo}", 
+    value.Unpack("{sssbsosososososo}", 
       "expression", &expression,
       "left facing", &facing,
       "back animation", &back,
@@ -147,17 +159,8 @@ Body::Impl::Impl(json::JSON const& json, display::Window& window)
     bool left_facing = (facing != 0);
     animations_.emplace
     (
-      Key(std::string(expression), left_facing), 
-      Animation
-      ({
-        display::MakeAnimation(json::JSON(back), window),
-        display::MakeAnimation(json::JSON(front), window),
-        MakePositions(json::JSON(eyes)),
-        MakePositions(json::JSON(mouth)),
-        display::BoundingBox(json::JSON(render_box)),
-        MakeNextExpression(json::JSON(next)),
-        left_facing
-      })
+      Key(std::string(expression), left_facing),
+      Animation(json::JSON(back), json::JSON(front), json::JSON(eyes), json::JSON(mouth), json::JSON(render_box), json::JSON(next), left_facing, window)
     );
   }
 }

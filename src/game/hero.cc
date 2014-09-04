@@ -4,6 +4,13 @@
 #include "bind.h"
 #include "avatar.h"
 #include "json_iterator.h"
+#include "timer.h"
+#include <random>
+namespace
+{
+auto interval = std::bind(std::uniform_real_distribution<double>(2., 20.), std::default_random_engine());
+}
+
 namespace game
 {
 class HeroImpl final : public std::enable_shared_from_this<HeroImpl>
@@ -28,6 +35,7 @@ public:
   void Begin(void);
   void End(void);
   void Collide(void);
+  void Blink(void);
 
   Avatar avatar_;
   dynamics::Body body_;
@@ -37,18 +45,23 @@ public:
   int y_sign_;
   game::Position force_;
   float magnitude_;
+
+  event::Timer blink_;
+  bool open_;
 };
 
 void HeroImpl::Pause(void)
 {
   paused_ = true;
   avatar_.Pause();
+  blink_.Pause();
 }
 
 void HeroImpl::Resume(void)
 {
   paused_ = false;
   avatar_.Resume();
+  blink_.Resume();
 }
 
 void HeroImpl::Up(void)
@@ -166,12 +179,32 @@ void HeroImpl::Mouth(int open)
   avatar_.Mouth(open);
 }
 
+void HeroImpl::Blink()
+{
+  double t = .2;
+  if(!open_)
+  {
+    t = interval();
+  }
+
+  blink_.Reset(t, 0);
+  if(!paused_)
+  {
+    blink_.Resume();
+  }
+
+  open_ ^= true;
+  avatar_.Eyes(open_);
+}
+
 HeroImpl::HeroImpl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world) : 
   paused_(true), 
   x_sign_(0), 
   y_sign_(0), 
   force_(0.f, 0.f), 
-  magnitude_(2000.f)
+  magnitude_(2000.f),
+  blink_(interval(), 0),
+  open_(true)
 {
   json_t* avatar;
   json_t* body;
@@ -182,18 +215,22 @@ HeroImpl::HeroImpl(json::JSON const& json, display::Window& window, event::Queue
   avatar_ = Avatar(json::JSON(avatar), window, queue);
   avatar_.Body("idle");
   avatar_.Eyes("idle");
+  avatar_.Eyes(open_);
   avatar_.Mouth("idle");
+
+  queue.Add(event::Bind(&event::Timer::operator(), blink_));
 }
 
 void HeroImpl::Init(Scene& scene, DynamicsCollision& dcollision, CommandCollision& ccollision, dynamics::World& world)
 {
-  auto ptr = shared_from_this();
-  world.Begin(event::Bind(&HeroImpl::Begin, ptr));
-  world.End(event::Bind(&HeroImpl::End, ptr));
-  scene.Add(event::Bind(&HeroImpl::Render, ptr), 0);
- 
+  world.Begin(event::Bind(&HeroImpl::Begin, shared_from_this()));
+  world.End(event::Bind(&HeroImpl::End, shared_from_this()));
+  scene.Add(event::Bind(&HeroImpl::Render, shared_from_this()), 0);
+
   dcollision.Add(dynamics::Type::Hero, body_);
-  ccollision.Add(dynamics::Type::Hero, body_, event::Bind(&HeroImpl::Collide, ptr), true);
+  ccollision.Add(dynamics::Type::Hero, body_, event::Bind(&HeroImpl::Collide, shared_from_this()), true);
+
+  blink_.End(event::Bind(&HeroImpl::Blink, shared_from_this()));
 }
 
 void Hero::Position(game::Position const& position)

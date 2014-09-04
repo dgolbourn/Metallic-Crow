@@ -14,9 +14,9 @@ typedef std::pair<std::string, bool> NextExpression;
 Positions MakePositions(json::JSON& json)
 {
   Positions positions;
-  if (json)
+  if(json)
   {
-    for (json::JSON const& value : json)
+    for(json::JSON const& value : json)
     {
       Position position;
       value.Unpack("[ff]", &position.first, &position.second);
@@ -29,7 +29,7 @@ Positions MakePositions(json::JSON& json)
 NextExpression MakeNextExpression(json::JSON const& json)
 {
   NextExpression next("", false);
-  if (json)
+  if(json)
   {
     char const* next_expression;
     int next_facing;

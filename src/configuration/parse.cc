@@ -91,7 +91,7 @@ bool Parse(int argc, char* argv[], event::Event& event, display::Window& window,
   {
     event = event::Event(json::JSON(event_file));
     window = display::Window(json::JSON(window_file));
-    script = game::Script(json::JSON(script_file), window, queue);
+    script = game::Script(script_file, window, queue);
   }
   else if(help)
   {

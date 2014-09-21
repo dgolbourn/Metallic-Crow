@@ -8,18 +8,20 @@ namespace event
 class Timer
 {
 public:
-  Timer(void) = default;
+  Timer() = default;
   Timer(double interval, int loops);
   void Reset(double interval, int loops);
-  void Pause(void);
-  void Resume(void);
+  void Pause();
+  void Resume();
   void Add(Command const& command);
   void End(Command const& command);
-  void operator()(void);
-  explicit operator bool(void) const;
-  typedef memory::WeakPtr<Timer, class TimerImpl> WeakPtr;
+  void operator()();
+  explicit operator bool() const;
 private:
-  std::shared_ptr<class TimerImpl> impl_;
+  class Impl;
+  std::shared_ptr<Impl> impl_;
+public:
+  typedef memory::WeakPtr<Timer> WeakPtr;
   friend WeakPtr;
 };
 }

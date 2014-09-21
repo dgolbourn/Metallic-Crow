@@ -5,17 +5,17 @@ namespace event
 {
 typedef std::chrono::high_resolution_clock Clock;
 
-class TimerImpl 
+class Timer::Impl 
 {
 public:
-  TimerImpl(double interval, int loops);
-  void Pause(void);
-  void Resume(void);
+  Impl(double interval, int loops);
+  void Pause();
+  void Resume();
   void Reset(double interval, int loops);
   void Add(Command const& command);
   void End(Command const& command);
-  void Check(void);
-  bool Valid(void);
+  void Check();
+  bool Valid();
 
   Clock::duration interval_;
   Clock::time_point tick_;
@@ -26,26 +26,32 @@ public:
   bool paused_;
 };
 
-TimerImpl::TimerImpl(double interval, int loops) 
+Timer::Impl::Impl(double interval, int loops) 
 {
   Reset(interval, loops);
 }
 
-void TimerImpl::Reset(double interval, int loops)
+void Timer::Impl::Reset(double interval, int loops)
 {
+  if(interval <= 0.f)
+  { 
+    interval = 0.f;
+    loops = 0;
+  }
+  else if(loops >= 0)
+  {
+    ++loops;
+  }
+  
   static const double scale = double(Clock::period::den) / double(Clock::period::num);
   interval *= scale;
   interval_ = Clock::duration(Clock::rep(interval));
   remaining_ = interval_;
   paused_ = true;
-  if(loops >= 0)
-  {
-    ++loops;
-  }
   loops_ = loops;
 }
 
-void TimerImpl::Pause(void)
+void Timer::Impl::Pause()
 {
   if(!paused_)
   {
@@ -54,7 +60,7 @@ void TimerImpl::Pause(void)
   }
 }
 
-void TimerImpl::Resume(void)
+void Timer::Impl::Resume()
 {
   if(paused_)
   {
@@ -63,22 +69,22 @@ void TimerImpl::Resume(void)
   }
 }
 
-void TimerImpl::Add(event::Command const& command)
+void Timer::Impl::Add(event::Command const& command)
 {
   signal_.Add(command);
 }
 
-void TimerImpl::End(event::Command const& command)
+void Timer::Impl::End(event::Command const& command)
 {
   end_.Add(command);
 }
 
-bool TimerImpl::Valid(void)
+bool Timer::Impl::Valid()
 {
   return loops_ != 0;
 }
 
-void TimerImpl::Check(void)
+void Timer::Impl::Check()
 {
   if(!paused_ && (loops_ != 0))
   {
@@ -102,17 +108,16 @@ void TimerImpl::Check(void)
   }
 }
 
-Timer::Timer(double interval, int loops)
+Timer::Timer(double interval, int loops) : impl_(std::make_shared<Impl>(interval, loops))
 {
-  impl_ = std::make_shared<TimerImpl>(interval, loops);
 }
 
-void Timer::Pause(void)
+void Timer::Pause()
 {
   impl_->Pause();
 }
 
-void Timer::Resume(void)
+void Timer::Resume()
 {
   impl_->Resume();
 }
@@ -127,7 +132,7 @@ void Timer::End(event::Command const& command)
   impl_->End(command);
 }
 
-void Timer::operator()(void)
+void Timer::operator()()
 {
   impl_->Check();
 }
@@ -137,7 +142,7 @@ void Timer::Reset(double interval, int loops)
   impl_->Reset(interval, loops);
 }
 
-Timer::operator bool(void) const
+Timer::operator bool() const
 {
   return bool(impl_) && impl_->Valid();
 }

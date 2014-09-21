@@ -1,5 +1,5 @@
-#ifndef HERO_H_
-#define HERO_H_
+#ifndef ACTOR_H_
+#define ACTOR_H_
 #include <memory>
 #include <string>
 #include "window.h"
@@ -8,18 +8,21 @@
 #include "position.h"
 #include "weak_ptr.h"
 #include "queue.h"
-#include "dynamics_collision.h"
+#include "collision_group.h"
 #include "world.h"
-#include "command_collision.h"
 namespace game
 {
-class Hero
+class Actor
 {
 public:
-  Hero(void) = default;
-  Hero(json::JSON const& json, display::Window& window, Scene& scene, DynamicsCollision& dcollision, CommandCollision& ccollision, event::Queue& queue, dynamics::World& world);
+  Actor(void) = default;
+  Actor(json::JSON const& json, display::Window& window, Scene& scene, collision::Group& collision, event::Queue& queue, dynamics::World& world);
   void Position(game::Position const& position);
-  game::Position Position(void);
+  game::Position Position(void) const;
+  void Velocity(game::Position const& velocity);
+  game::Position Velocity(void) const;
+  void Force(game::Position const& force);
+  void Impulse(game::Position const& impulse);
   void Pause(void);
   void Resume(void);
   void Up(void);
@@ -31,9 +34,11 @@ public:
   void Mouth(std::string const& expression);
   void Mouth(int open);
   explicit operator bool(void) const;
-  typedef memory::WeakPtr<Hero, class HeroImpl> WeakPtr;
 private:
-  std::shared_ptr<class HeroImpl> impl_;
+  class Impl;
+  std::shared_ptr<Impl> impl_;
+public:
+  typedef memory::WeakPtr<Actor> WeakPtr;
   friend WeakPtr;
 };
 }

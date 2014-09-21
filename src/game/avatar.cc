@@ -64,9 +64,9 @@ Avatar::Impl::Impl(json::JSON const& json, display::Window& window) :
 
 void Avatar::Impl::Init(event::Queue& queue)
 {
-  queue.Add(event::Bind(&event::Timer::operator(), timer_));
-  timer_.Add(event::Bind(&Impl::Next, shared_from_this()));
-  body_.Facing(event::Bind(&Impl::ToggleFacing, shared_from_this()));
+  queue.Add(function::Bind(&event::Timer::operator(), timer_));
+  timer_.Add(function::Bind(&Impl::Next, shared_from_this()));
+  body_.Facing(function::Bind(&Impl::ToggleFacing, shared_from_this()));
 }
 
 void Avatar::Impl::Eyes(std::string const& expression)

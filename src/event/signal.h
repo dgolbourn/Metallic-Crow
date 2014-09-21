@@ -3,6 +3,7 @@
 #include <memory>
 #include "command.h"
 #include "queue.h"
+#include "weak_ptr.h"
 namespace event
 {
 class Signal
@@ -15,7 +16,11 @@ public:
   void Clear(void);
   explicit operator bool(void) const;
 private:
-  std::shared_ptr<class SignalImpl> impl_;
+  class Impl;
+  std::shared_ptr<Impl> impl_;
+public:
+  typedef memory::WeakPtr<Signal> WeakPtr;
+  friend WeakPtr;
 };
 }
 #endif

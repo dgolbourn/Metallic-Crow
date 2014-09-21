@@ -1,96 +1,151 @@
 #include "collision.h"
 #include <map>
 #include "switch.h"
-namespace game
+namespace collision
 {
-typedef std::pair<dynamics::Body::WeakPtr, dynamics::Body::WeakPtr> BodyPair;
-typedef std::map<BodyPair, event::Switch> CollisionMap;
+namespace
+{
+typedef std::map<dynamics::Body::WeakPtr, std::map<dynamics::Body::WeakPtr, event::Switch>> CollisionMap;
+}
 
-class CollisionImpl
+class Collision::Impl
 {
 public:
-  CollisionImpl(event::Queue& queue);
-  void Add(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c, bool start);
+  Impl(event::Queue& queue);
+
+  void Begin(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c);
+  void End(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c);
   bool Check(dynamics::Body const& a, dynamics::Body const& b) const;
-  void Notify(dynamics::Body const& a, dynamics::Body const& b, bool start);
-  void Clear(void);
+  void Begin(dynamics::Body const& a, dynamics::Body const& b);
+  void End(dynamics::Body const& a, dynamics::Body const& b);
+
+  bool Link(dynamics::Body const& a, dynamics::Body const& b);
+  void Unlink(dynamics::Body::WeakPtr const& a);
+  void Unlink(dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b);
+
   CollisionMap collisions_;
   event::Queue queue_;
 };
 
-CollisionImpl::CollisionImpl(event::Queue& queue) : queue_(queue)
+Collision::Impl::Impl(event::Queue& queue) : queue_(queue)
 {
 }
 
-static BodyPair MakePair(dynamics::Body const& a, dynamics::Body const& b)
+void Collision::Impl::Unlink(dynamics::Body::WeakPtr const& a)
 {
-  BodyPair body_pair;
-  if(b < a)
+  auto iter_a = collisions_.find(a);
+  if(iter_a != collisions_.end())
   {
-    body_pair = BodyPair(b, a);
-  }
-  else
-  {
-    body_pair = BodyPair(a, b);
-  }
-  return body_pair;
-}
-
-void CollisionImpl::Add(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c, bool start)
-{
-  if(start)
-  {
-    collisions_[MakePair(a, b)].first.Add(c);
-  }
-  else
-  {
-    collisions_[MakePair(a, b)].second.Add(c);
-  }
-}
-
-bool CollisionImpl::Check(dynamics::Body const& a, dynamics::Body const& b) const
-{
-  return collisions_.find(MakePair(a, b)) != collisions_.end();
-}
-
-static bool Empty(event::Switch const& s)
-{
-  return !(bool(s.first) || bool(s.second));
-}
-
-void CollisionImpl::Notify(dynamics::Body const& a, dynamics::Body const& b, bool start)
-{
-  auto iter = collisions_.find(MakePair(a, b));
-  if(iter != collisions_.end())
-  {
-    if(start)
+    for(auto element : iter_a->second)
     {
-      iter->second.first(queue_);
+      collisions_[element.first].erase(a);
     }
-    else
+    collisions_.erase(iter_a);
+  }
+}
+
+void Collision::Impl::Unlink(dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b)
+{
+  auto iter_a = collisions_.find(a);
+  if(iter_a != collisions_.end())
+  {
+    auto iter_b = iter_a->second.find(b);
+    if(iter_b != iter_a->second.end())
     {
-      iter->second.second(queue_);
+      iter_a->second.erase(iter_b);
     }
-    if(Empty(iter->second))
+    if(iter_a->second.empty())
     {
-      iter = collisions_.erase(iter);
+      collisions_.erase(iter_a);
     }
   }
 }
 
-void CollisionImpl::Clear(void)
+void Collision::Impl::Begin(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c)
 {
-  collisions_.clear();
+  if(Link(a, b))
+  {
+    collisions_[a][b].first.Add(c);
+  }
 }
 
-Collision::Collision(event::Queue& queue)
+void Collision::Impl::End(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c)
 {
-  impl_ = std::make_shared<CollisionImpl>(queue);
+  if(Link(a, b))
+  {
+    collisions_[a][b].second.Add(c);
+  }
 }
 
-void Collision::Add(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c, bool start)
+bool Collision::Impl::Check(dynamics::Body const& a, dynamics::Body const& b) const
 {
-  impl_->Add(a, b, c, start);
+  bool collision = false;
+  auto iter_a = collisions_.find(a);
+  if(iter_a != collisions_.end())
+  {
+    auto iter_b = iter_a->second.find(b);
+    if(iter_b != iter_a->second.end())
+    {
+      collision = true;
+    }
+  }
+  return collision;
+}
+
+void Collision::Impl::Begin(dynamics::Body const& a, dynamics::Body const& b)
+{
+  auto iter_a = collisions_.find(a);
+  if(iter_a != collisions_.end())
+  {
+    auto iter_b = iter_a->second.find(b);
+    if(iter_b != iter_a->second.end())
+    {
+      iter_b->second.first(queue_);
+    }
+  }
+}
+
+void Collision::Impl::End(dynamics::Body const& a, dynamics::Body const& b)
+{
+  auto iter_a = collisions_.find(a);
+  if(iter_a != collisions_.end())
+  {
+    auto iter_b = iter_a->second.find(b);
+    if(iter_b != iter_a->second.end())
+    {
+      iter_b->second.second(queue_);
+    }
+  }
+}
+
+bool Collision::Impl::Link(dynamics::Body const& a, dynamics::Body const& b)
+{
+  bool link = false;
+  if((a < b) || (b < a))
+  {
+    collisions_[b][a] = collisions_[a][b];
+    link = true;
+  }
+  return link;
+}
+
+Collision::Collision(event::Queue& queue) : impl_(std::make_shared<Collision::Impl>(queue))
+{
+}
+
+void Collision::Begin(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c)
+{
+  impl_->Begin(a, b, c);
+}
+
+void Collision::End(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c)
+{
+  impl_->End(a, b, c);
+}
+
+void Collision::Link(dynamics::Body const& a, dynamics::Body const& b)
+{
+  impl_->Link(a, b);
 }
 
 bool Collision::Check(dynamics::Body const& a, dynamics::Body const& b) const
@@ -98,13 +153,24 @@ bool Collision::Check(dynamics::Body const& a, dynamics::Body const& b) const
   return impl_->Check(a, b);
 }
 
-void Collision::operator()(dynamics::Body const& a, dynamics::Body const& b, bool start)
+void Collision::Begin(dynamics::Body const& a, dynamics::Body const& b)
 {
-  impl_->Notify(a, b, start);
+  impl_->Begin(a, b);
 }
 
-void Collision::Clear(void)
+void Collision::End(dynamics::Body const& a, dynamics::Body const& b)
 {
-  impl_->Clear();
+  impl_->End(a, b);
+}
+
+void Collision::Unlink(dynamics::Body::WeakPtr const& a)
+{
+  impl_->Unlink(a);
+}
+
+void Collision::Unlink(dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b)
+{
+  impl_->Unlink(a, b);
+  impl_->Unlink(b, a);
 }
 }

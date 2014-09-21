@@ -27,7 +27,7 @@ public:
   void Push(double in);
   void Push(std::string const& in);
   void Push(bool in);
-  void Add(event::Command const& command, std::string const& name, int out = 0);
+  void Add(event::Command const& command, std::string const& name, int out);
 private:
   std::shared_ptr<class StackImpl> impl_;
 };

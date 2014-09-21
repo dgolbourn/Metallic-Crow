@@ -1,17 +1,17 @@
 #ifndef SCRIPT_H_
 #define SCRIPT_H_
 #include <memory>
-#include <json.h>
-#include "event.h"
+#include <string>
 #include "window.h"
 #include "weak_ptr.h"
+#include "queue.h"
 namespace game
 {
 class Script
 {
 public:
   Script(void) = default;
-  Script(json::JSON const& json, display::Window& window, event::Queue& queue);
+  Script(std::string const& file, display::Window& window, event::Queue& queue);
   void Pause(void);
   void Resume(void);
   void Render(void);
@@ -23,10 +23,12 @@ public:
   void Down(void);
   void Left(void);
   void Right(void);
-  typedef memory::WeakPtr<Script, class ScriptImpl> WeakPtr;
   explicit operator bool(void) const;
 private:
-  std::shared_ptr<class ScriptImpl> impl_;
+  class Impl;
+  std::shared_ptr<Impl> impl_;
+public:
+  typedef memory::WeakPtr<Script> WeakPtr;
   friend WeakPtr;
 };
 }

@@ -4,19 +4,24 @@
 #include "command.h"
 #include "body.h"
 #include "queue.h"
-namespace game
+namespace collision
 {
 class Collision
 {
 public:
   Collision(void) = default;
   Collision(event::Queue& queue);
-  void Add(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c, bool start);
+  void Begin(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c);
+  void End(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c);
+  void Link(dynamics::Body const& a, dynamics::Body const& b);
   bool Check(dynamics::Body const& a, dynamics::Body const& b) const;
-  void operator()(dynamics::Body const& a, dynamics::Body const& b, bool start);
-  void Clear(void);
+  void Begin(dynamics::Body const& a, dynamics::Body const& b);
+  void End(dynamics::Body const& a, dynamics::Body const& b);
+  void Unlink(dynamics::Body::WeakPtr const& a);
+  void Unlink(dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b);
 private:
-  std::shared_ptr<class CollisionImpl> impl_;
+  class Impl;
+  std::shared_ptr<class Impl> impl_;
 };
 }
 #endif

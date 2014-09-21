@@ -3,19 +3,17 @@
 #include <memory>
 namespace memory
 {
-template<class T, class TImpl> class WeakPtr
+template<class T, class TImpl = T::Impl> class WeakPtr
 {
   std::weak_ptr<TImpl> impl_;
 public:
-  WeakPtr(void)
-  {
-  }
+  WeakPtr() = default;
 
   WeakPtr(T const& object) : impl_(object.impl_)
   {
   }
 
-  T Lock(void) const
+  T Lock() const
   {
     T object;
     object.impl_ = impl_.lock();

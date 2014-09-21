@@ -18,7 +18,7 @@ typedef std::map<BodyImplPair, int> BodyImplCount;
 class WorldImpl final : public b2DestructionListener, public b2ContactFilter, public b2ContactListener, public std::enable_shared_from_this<WorldImpl>
 {
 public:
-  WorldImpl(json::JSON const& json, game::Collision& collision);
+  WorldImpl(json::JSON const& json, collision::Collision& collision);
   void Init(event::Queue& queue);
   void Update(void);
   void Pause(void);
@@ -36,7 +36,7 @@ public:
   float Pixels(float32 metres) const;
   float32 f_;
   float32 dt_;
-  game::Collision collision_;
+  collision::Collision collision_;
   event::Signal begin_;
   event::Signal end_;
   b2World world_;

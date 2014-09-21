@@ -5,10 +5,10 @@ namespace event
 {
 typedef std::list<Command> CommandList;
 
-class SignalImpl final : public std::enable_shared_from_this<SignalImpl>
+class Signal::Impl final : public std::enable_shared_from_this<Signal::Impl>
 {
 public:
-  SignalImpl(void);
+  Signal::Impl(void);
   void Notify(void);
   void Queue(Queue& queue);
   void Add(Command const& comand);
@@ -19,11 +19,11 @@ public:
   bool clear_;
 };
 
-SignalImpl::SignalImpl(void) : active_(false), clear_(false)
+Signal::Impl::Impl(void) : active_(false), clear_(false)
 {
 }
 
-void SignalImpl::Notify(void)
+void Signal::Impl::Notify(void)
 {
   if(!active_)
   {
@@ -49,23 +49,23 @@ void SignalImpl::Notify(void)
   }
 }
 
-void SignalImpl::Queue(event::Queue& queue)
+void Signal::Impl::Queue(event::Queue& queue)
 {
-  auto command = event::Bind(&SignalImpl::Notify, shared_from_this());
+  auto command = function::Bind(&Signal::Impl::Notify, shared_from_this());
   queue.Add([=](){command(); return false;});
 }
 
-void SignalImpl::Add(Command const& comand)
+void Signal::Impl::Add(Command const& comand)
 {
   commands_.push_back(comand);
 }
 
-bool SignalImpl::Empty(void) const
+bool Signal::Impl::Empty(void) const
 {
   return commands_.empty();
 }
 
-void SignalImpl::Clear(void)
+void Signal::Impl::Clear(void)
 {
   if(active_)
   {
@@ -92,9 +92,8 @@ void Signal::Add(Command const& comand)
   impl_->Add(comand);
 }
 
-Signal::Signal(void)
+Signal::Signal(void) : impl_(std::make_shared<Impl>())
 {
-  impl_ = std::make_shared<SignalImpl>();
 }
 
 Signal::operator bool(void) const

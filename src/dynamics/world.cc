@@ -54,7 +54,7 @@ void WorldImpl::BeginContact(b2Contact* contact)
 {
   if(ToggleContact(contact, contact_, true))
   {
-    collision_(BodyImpl::MakeBody(contact->GetFixtureA()->GetBody()), BodyImpl::MakeBody(contact->GetFixtureB()->GetBody()), true);
+    collision_.Begin(BodyImpl::MakeBody(contact->GetFixtureA()->GetBody()), BodyImpl::MakeBody(contact->GetFixtureB()->GetBody()));
   }
 }
 
@@ -62,7 +62,7 @@ void WorldImpl::EndContact(b2Contact* contact)
 {
   if(ToggleContact(contact, contact_, false))
   {
-    collision_(BodyImpl::MakeBody(contact->GetFixtureA()->GetBody()), BodyImpl::MakeBody(contact->GetFixtureB()->GetBody()), false);
+    collision_.End(BodyImpl::MakeBody(contact->GetFixtureA()->GetBody()), BodyImpl::MakeBody(contact->GetFixtureB()->GetBody()));
   }
 }
 
@@ -125,7 +125,7 @@ void WorldImpl::End(event::Command const& command)
   end_.Add(command);
 }
 
-WorldImpl::WorldImpl(json::JSON const& json, game::Collision& collision) : world_(b2Vec2(0, 0)), collision_(collision), paused_(true)
+WorldImpl::WorldImpl(json::JSON const& json, collision::Collision& collision) : world_(b2Vec2(0, 0)), collision_(collision), paused_(true)
 {
   double x, y, r, g, b, rate, scale;
 
@@ -157,7 +157,7 @@ WorldImpl::WorldImpl(json::JSON const& json, game::Collision& collision) : world
 
 void WorldImpl::Init(event::Queue& queue)
 {
-  queue.Add(event::Bind(&WorldImpl::Update, shared_from_this()));
+  queue.Add(function::Bind(&WorldImpl::Update, shared_from_this()));
 }
 
 void WorldImpl::Pause(void)
@@ -193,7 +193,7 @@ float WorldImpl::Pixels(float32 metres) const
   return float(metres * scale_);
 }
 
-World::World(json::JSON const& json, game::Collision& collision, event::Queue& queue)
+World::World(json::JSON const& json, collision::Collision& collision, event::Queue& queue)
 {
   impl_ = std::make_shared<WorldImpl>(json, collision);
   impl_->Init(queue);
@@ -227,5 +227,10 @@ void World::Resume(void)
 void World::Ambient(float r, float g, float b)
 {
   impl_->Ambient(r, g, b);
+}
+
+bool World::operator==(World const& other) const
+{
+  return impl_ == other.impl_;
 }
 }

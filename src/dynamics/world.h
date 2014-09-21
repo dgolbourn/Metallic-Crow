@@ -12,13 +12,14 @@ class World
 {
 public:
   World(void) = default;
-  World(json::JSON const& json, game::Collision& collision, event::Queue& queue);
+  World(json::JSON const& json, collision::Collision& collision, event::Queue& queue);
   explicit operator bool(void) const;
   void Begin(event::Command const& command);
   void End(event::Command const& command);
   void Pause(void);
   void Resume(void);
   void Ambient(float r, float g, float b);
+  bool operator==(World const& other) const;
   typedef memory::WeakPtr<World, class WorldImpl> WeakPtr;
 private:
   std::shared_ptr<class WorldImpl> impl_;

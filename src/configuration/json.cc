@@ -64,7 +64,7 @@ bool JSON::operator==(JSON const& other) const
 void JSON::Unpack_(std::string const& format, int dummy, ...) const
 {
   json_error_t error;
-  if(json_vunpack_ex(json_, &error, JSON_STRICT, format.c_str(), cstd::VAList<int>(dummy)) == -1)
+  if(json_vunpack_ex(json_, &error, JSON_STRICT, format.c_str(), c::VAList<int>(dummy)) == -1)
   {
     BOOST_THROW_EXCEPTION(Exception()
       << Exception::Text(error.text)

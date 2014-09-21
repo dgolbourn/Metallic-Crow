@@ -42,14 +42,12 @@ static ShapePair Circle(WorldImpl const& world, json::JSON& json)
 
 static ShapePair Chain(WorldImpl const& world, json::JSON& json)
 {
-  std::vector<b2Vec2> vertices(json.Size());
-  auto vertex = vertices.begin();
+  std::vector<b2Vec2> vertices;
   for(json::JSON const& value : json)
   {
     double x, y;
     value.Unpack("[ff]", &x, &y);
-    vertex->Set(world.Metres(x), world.Metres(y));
-    ++vertex;
+    vertices.emplace_back(world.Metres(x), world.Metres(y));
   }
 
   ShapePair shape;

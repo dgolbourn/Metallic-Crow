@@ -5,23 +5,29 @@
 #include <vector>
 #include "texture.h"
 #include "json_iterator.h"
+#include "collision_group.h"
+#include "make_body.h"
 namespace game
 {
-class TerrainImpl final : public std::enable_shared_from_this<TerrainImpl>
+namespace
+{
+typedef std::pair<display::Texture, display::BoundingBox> TexturePair;
+}
+
+class Terrain::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  TerrainImpl(json::JSON const& json, display::Window& window, DynamicsCollision& dcollision, dynamics::World& world, int& plane);
+  Impl(json::JSON const& json, display::Window& window, collision::Group& dcollision, dynamics::World& world, int& plane);
   void Init(Scene& scene, int plane);
   void Render(void) const;
   void Modulation(float r, float g, float b);
   dynamics::Body body_;
-  typedef std::pair<display::Texture, display::BoundingBox> TexturePair;
   std::vector<TexturePair> textures_;
   float parallax_;
   display::Modulation modulation_;
 };
 
-void TerrainImpl::Render(void) const
+void Terrain::Impl::Render(void) const
 {
   for(auto& texture : textures_)
   {
@@ -29,19 +35,19 @@ void TerrainImpl::Render(void) const
   }
 }
 
-void TerrainImpl::Modulation(float r, float g, float b)
+void Terrain::Impl::Modulation(float r, float g, float b)
 {
   modulation_ = display::Modulation(r, g, b, 1.f);
 }
 
-TerrainImpl::TerrainImpl(json::JSON const& json, display::Window& window, DynamicsCollision& dcollision, dynamics::World& world, int& plane)
+Terrain::Impl::Impl(json::JSON const& json, display::Window& window, collision::Group& collision, dynamics::World& world, int& plane)
 {
   json_t* textures;
-  json_t* body_ptr;
+  json_t* body;
   double parallax;
   double r, g, b;
   json.Unpack("{sososisfs[fff]}",
-    "body", &body_ptr,
+    "body", &body,
     "textures", &textures,
     "z", &plane,
     "parallax", &parallax,
@@ -50,34 +56,30 @@ TerrainImpl::TerrainImpl(json::JSON const& json, display::Window& window, Dynami
   modulation_ = display::Modulation(float(r), float(g), float(b), 1.f);
   parallax_ = float(parallax);
 
-  if(auto body = json::JSON(body_ptr))
-  {
-    body_ = dynamics::Body(body, world);
-    dcollision.Add(dynamics::Type::Body, body_);
-  }
+  body_ = MakeBody(json::JSON(body), world, collision);
 
-  textures_ = std::vector<TexturePair>(json::JSON(textures).Size());
-  auto texture_iter = textures_.begin();
   for(json::JSON const& value : json::JSON(textures))
   {
     char const* image;
     json_t* render_box;
-    value.Unpack("{ssso}",
+    json_t* clip;
+    value.Unpack("{sssoso}",
       "image", &image,
-      "render box", &render_box);
-    *texture_iter++ = TexturePair(display::Texture(image, window), display::BoundingBox(json::JSON(render_box)));
+      "render box", &render_box,
+      "clip", &clip);
+    textures_.emplace_back(display::Texture(display::Texture(image, window), display::BoundingBox(json::JSON(clip))), display::BoundingBox(json::JSON(render_box)));
   }
 }
 
-void TerrainImpl::Init(Scene& scene, int plane)
+void Terrain::Impl::Init(Scene& scene, int plane)
 {
-  scene.Add(event::Bind(&TerrainImpl::Render, shared_from_this()), plane);
+  scene.Add(function::Bind(&Terrain::Impl::Render, shared_from_this()), plane);
 }
 
-Terrain::Terrain(json::JSON const& json, display::Window& window, Scene& scene, DynamicsCollision& dcollision, dynamics::World& world)
+Terrain::Terrain(json::JSON const& json, display::Window& window, Scene& scene, collision::Group& collision, dynamics::World& world)
 {
   int plane;
-  impl_ = std::make_shared<TerrainImpl>(json, window, dcollision, world, plane);
+  impl_ = std::make_shared<Terrain::Impl>(json, window, collision, world, plane);
   impl_->Init(scene, plane);
 }
 

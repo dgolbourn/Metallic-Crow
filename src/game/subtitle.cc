@@ -4,28 +4,32 @@
 #include "position.h"
 #include "state.h"
 #include "signal.h"
+#include "timer.h"
 namespace game
 {
 class SubtitleImpl final : public std::enable_shared_from_this<SubtitleImpl>
 {
 public:
   SubtitleImpl(json::JSON const& json, display::Window& window, event::Queue& queue);
-  void Render(void) const;
-  void Init(void);
+  void Render() const;
+  void Init();
   void Text(std::string const& text);
-  void Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right);
-  void Up(void);
-  void Down(void);
-  void Left(void);
-  void Right(void);
-  void Pause(void);
-  void Resume(void);
+  void Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right, double timer);
+  void Up();
+  void Down();
+  void Left();
+  void Right();
+  void TimerEvent();
+  void Countdown();
+  void Pause();
+  void Resume();
   void Change(display::BoundingBox& box, State& current, State& next, display::BoundingBox& offset);
   void Up(event::Command const& command);
   void Down(event::Command const& command);
   void Left(event::Command const& command);
   void Right(event::Command const& command);
-  void Active(void);
+  void Timer(event::Command const& command);
+  void Active();
   display::BoundingBox Update(State& state, display::BoundingBox& offset);
   display::Window window_;
   sdl::Font text_font_;
@@ -37,12 +41,14 @@ public:
   bool down_choice_;
   bool left_choice_;
   bool right_choice_;
+  bool timer_choice_;
   bool paused_;
   display::Texture text_;
   display::Texture up_;
   display::Texture down_;
   display::Texture left_;
   display::Texture right_;
+  event::Timer timer_;
   State up_idle_;
   State down_idle_;
   State left_idle_;
@@ -59,6 +65,7 @@ public:
   event::Signal down_signal_;
   event::Signal left_signal_;
   event::Signal right_signal_;
+  event::Signal timer_signal_;
   display::BoundingBox text_box_;
   display::BoundingBox up_box_;
   display::BoundingBox up_icon_box_;
@@ -77,9 +84,12 @@ public:
   display::BoundingBox down_text_offset_;
   display::BoundingBox left_text_offset_;
   display::BoundingBox right_text_offset_;
+  display::Modulation modulation_;
+  int count_;
+  event::Queue queue_;
 };
 
-SubtitleImpl::SubtitleImpl(json::JSON const& json, display::Window& window, event::Queue& queue) : window_(window), subtitle_(false), up_choice_(false), down_choice_(false), left_choice_(false), right_choice_(false), active_(true), paused_(true)
+SubtitleImpl::SubtitleImpl(json::JSON const& json, display::Window& window, event::Queue& queue) : window_(window), subtitle_(false), up_choice_(false), down_choice_(false), left_choice_(false), right_choice_(false), timer_choice_(false), active_(true), paused_(true), modulation_(1.f, 1.f, 1.f, 1.f), count_(0), queue_(queue)
 {
   json_t* text_font;
   json_t* choice_font;
@@ -141,54 +151,57 @@ SubtitleImpl::SubtitleImpl(json::JSON const& json, display::Window& window, even
   right_text_offset_ = display::BoundingBox(x + float(choice_text_offset), y, 0.f, 0.f);
 }
 
-void SubtitleImpl::Init(void)
+void SubtitleImpl::Init()
 {
   auto ptr = shared_from_this();
-  up_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
-  down_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
-  left_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
-  right_signal_.Add(event::Bind(&SubtitleImpl::Active, ptr));
+  up_signal_.Add(function::Bind(&SubtitleImpl::Active, ptr));
+  down_signal_.Add(function::Bind(&SubtitleImpl::Active, ptr));
+  left_signal_.Add(function::Bind(&SubtitleImpl::Active, ptr));
+  right_signal_.Add(function::Bind(&SubtitleImpl::Active, ptr));
+  timer_signal_.Add(function::Bind(&SubtitleImpl::Active, ptr));
 }
 
-void SubtitleImpl::Active(void)
+void SubtitleImpl::Active()
 {
   active_ = true;
-  subtitle_ = up_choice_ = down_choice_ = left_choice_ = right_choice_ = false;
+  subtitle_ = up_choice_ = down_choice_ = left_choice_ = right_choice_ = timer_choice_ = false;
   Change(up_icon_box_, up_current_, up_idle_, up_offset_);
   Change(down_icon_box_, down_current_, down_idle_, down_offset_);
   Change(left_icon_box_, left_current_, left_idle_, left_offset_);
   Change(right_icon_box_, right_current_, right_idle_, right_offset_);
+  modulation_ = display::Modulation(1.f, 1.f, 1.f, 1.f);
+  count_ = 0;
 }
 
-void SubtitleImpl::Render(void) const
+void SubtitleImpl::Render() const
 {
   if(subtitle_)
   {
-    text_(display::BoundingBox(), text_box_, 0.f, false, 0., display::Modulation());
+    text_(display::BoundingBox(), text_box_, 0.f, false, 0., modulation_);
   }
 
   if(up_choice_)
   {
-    up_(display::BoundingBox(), up_box_, 0.f, false, 0., display::Modulation());
-    up_current_.Render(up_icon_box_, 0.f, false, 0., display::Modulation());
+    up_(display::BoundingBox(), up_box_, 0.f, false, 0., modulation_);
+    up_current_.Render(up_icon_box_, 0.f, false, 0., modulation_);
   }
 
   if(down_choice_)
   {
-    down_(display::BoundingBox(), down_box_, 0.f, false, 0., display::Modulation());
-    down_current_.Render(down_icon_box_, 0.f, false, 0., display::Modulation());
+    down_(display::BoundingBox(), down_box_, 0.f, false, 0., modulation_);
+    down_current_.Render(down_icon_box_, 0.f, false, 0., modulation_);
   }
 
   if(left_choice_)
   {
-    left_(display::BoundingBox(), left_box_, 0.f, false, 0., display::Modulation());
-    left_current_.Render(left_icon_box_, 0.f, false, 0., display::Modulation());
+    left_(display::BoundingBox(), left_box_, 0.f, false, 0., modulation_);
+    left_current_.Render(left_icon_box_, 0.f, false, 0., modulation_);
   }
 
   if(right_choice_)
   {
-    right_(display::BoundingBox(), right_box_, 0.f, false, 0., display::Modulation());
-    right_current_.Render(right_icon_box_, 0.f, false, 0., display::Modulation());
+    right_(display::BoundingBox(), right_box_, 0.f, false, 0., modulation_);
+    right_current_.Render(right_icon_box_, 0.f, false, 0., modulation_);
   }
 }
 
@@ -206,9 +219,18 @@ void SubtitleImpl::Text(std::string const& text)
   }
 }
 
-void SubtitleImpl::Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right)
+void SubtitleImpl::Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right, double timer)
 {
-  active_ = true;
+  timer_choice_ = false;
+  if(timer > 0.)
+  {
+    timer_choice_ = true;
+    timer_ = event::Timer(timer / 256., 255);
+    timer_.Add(function::Bind(&SubtitleImpl::Countdown, shared_from_this()));
+    timer_.End(function::Bind(&SubtitleImpl::TimerEvent, shared_from_this()));
+    queue_.Add(function::Bind(&event::Timer::operator(), timer_));
+    count_ = 0;
+  }
 
   up_choice_ = false;
   if(up != "")
@@ -257,6 +279,10 @@ void SubtitleImpl::Choice(std::string const& up, std::string const& down, std::s
     right_box_.y(right_box_.y() - .5f * shape.second);
     right_icon_box_ = Update(right_current_, right_offset_);
   }
+
+  modulation_ = display::Modulation(1.f, 1.f, 1.f, 1.f);
+
+  active_ = true;
 }
 
 void SubtitleImpl::Change(display::BoundingBox& box, State& current, State& next, display::BoundingBox& offset)
@@ -281,7 +307,7 @@ display::BoundingBox SubtitleImpl::Update(State& state, display::BoundingBox& of
   return temp;
 }
 
-void SubtitleImpl::Up(void)
+void SubtitleImpl::Up()
 {
   if(up_choice_ && active_)
   {
@@ -294,7 +320,7 @@ void SubtitleImpl::Up(void)
   }
 }
 
-void SubtitleImpl::Down(void)
+void SubtitleImpl::Down()
 {
   if(down_choice_ && active_)
   {
@@ -307,7 +333,7 @@ void SubtitleImpl::Down(void)
   }
 }
 
-void SubtitleImpl::Left(void)
+void SubtitleImpl::Left()
 {
   if(left_choice_ && active_)
   {
@@ -320,7 +346,7 @@ void SubtitleImpl::Left(void)
   }
 }
 
-void SubtitleImpl::Right(void)
+void SubtitleImpl::Right()
 {
   if(right_choice_ && active_)
   {
@@ -333,21 +359,46 @@ void SubtitleImpl::Right(void)
   }
 }
 
-void SubtitleImpl::Pause(void)
+void SubtitleImpl::TimerEvent()
+{
+  if(timer_choice_ && active_)
+  {
+    active_ = false;
+    right_active_.End([=](){timer_signal_(); return false;});
+    Change(up_icon_box_, up_current_, up_active_, up_offset_);
+    Change(down_icon_box_, down_current_, down_active_, down_offset_);
+    Change(left_icon_box_, left_current_, left_active_, left_offset_);
+    Change(right_icon_box_, right_current_, right_active_, right_offset_);
+  }
+}
+
+void SubtitleImpl::Countdown()
+{
+  if(timer_choice_ && active_)
+  {
+    ++count_;
+    float factor = (256 - count_) / 256.f;
+    modulation_ = display::Modulation(1.f, factor, factor, 1.f);
+  }
+}
+
+void SubtitleImpl::Pause()
 {
   up_current_.Pause();
   down_current_.Pause();
   left_current_.Pause();
   right_current_.Pause();
+  timer_.Pause();
   paused_ = true;
 }
 
-void SubtitleImpl::Resume(void)
+void SubtitleImpl::Resume()
 {
   up_current_.Resume();
   down_current_.Resume();
   left_current_.Resume();
   right_current_.Resume();
+  timer_.Resume();
   paused_ = false;
 }
 
@@ -369,6 +420,11 @@ void SubtitleImpl::Left(event::Command const& command)
 void SubtitleImpl::Right(event::Command const& command)
 {
   right_signal_.Add(command);
+}
+
+void SubtitleImpl::Timer(event::Command const& command)
+{
+  timer_signal_.Add(command);
 }
 
 void Subtitle::Text(std::string const& text)
@@ -396,47 +452,52 @@ void Subtitle::Right(event::Command const& command)
   impl_->Right(command);
 }
 
-void Subtitle::Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right)
+void Subtitle::Timer(event::Command const& command)
 {
-  impl_->Choice(up, down, left, right);
+  impl_->Timer(command);
 }
 
-void Subtitle::Pause(void)
+void Subtitle::Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right, double timer)
+{
+  impl_->Choice(up, down, left, right, timer);
+}
+
+void Subtitle::Pause()
 {
   impl_->Pause();
 }
 
-void Subtitle::Resume(void)
+void Subtitle::Resume()
 {
   impl_->Resume();
 }
 
-void Subtitle::Render(void) const
+void Subtitle::Render() const
 {
   impl_->Render();
 }
 
-void Subtitle::Up(void)
+void Subtitle::Up()
 {
   impl_->Up();
 }
 
-void Subtitle::Down(void)
+void Subtitle::Down()
 {
   impl_->Down();
 }
 
-void Subtitle::Left(void)
+void Subtitle::Left()
 {
   impl_->Left();
 }
 
-void Subtitle::Right(void)
+void Subtitle::Right()
 {
   impl_->Right();
 }
 
-Subtitle::operator bool(void) const
+Subtitle::operator bool() const
 {
   return bool(impl_);
 }

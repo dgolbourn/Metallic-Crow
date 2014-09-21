@@ -27,7 +27,7 @@ void Free(void)
 
 ChunkImpl::ChunkImpl(std::string const& filename)
 {
-  static int const buffer_size = 4096;
+  static int const buffer_size = 16384;
   Uint8 data[buffer_size];
   ffmpeg::Decoder decoder(filename);
   while(int read = decoder.Read(data, buffer_size))

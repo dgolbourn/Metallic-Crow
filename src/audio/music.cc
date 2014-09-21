@@ -36,7 +36,7 @@ static void MixCallback(void*, Uint8* stream, int len)
   }
   if(!memset(stream, 0, len))
   {
-    BOOST_THROW_EXCEPTION(cstd::Exception());
+    BOOST_THROW_EXCEPTION(c::Exception());
   }
 }
 

@@ -53,7 +53,7 @@ int FrameImpl::Read(uint8_t* buffer, int size)
   }
   if(!memcpy(buffer, buffer_ptr_, size))
   {
-    BOOST_THROW_EXCEPTION(cstd::Exception());
+    BOOST_THROW_EXCEPTION(c::Exception());
   }
   buffer_ptr_ += size;
   buffer_size_ -= size;

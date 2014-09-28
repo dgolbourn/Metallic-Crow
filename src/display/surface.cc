@@ -31,42 +31,51 @@ SurfacePtr MakeText(TTF_Font *font, char const* text, SDL_Color const* colour)
   return SurfacePtr(surface, SDL_FreeSurface);
 }
 
-Uint32* GetPixel(int x, int y, SDL_Surface const* surface)
-{
-  return (Uint32*)((Uint8*)surface->pixels + y * surface->pitch + x * surface->format->BytesPerPixel);
-}
-
-class Lock
+class PixelAccess
 {
   SDL_Surface* surface_;
+  Uint32* pixel_;
 public:
-  Lock(SDL_Surface* surface) : surface_(surface)
+  PixelAccess(SDL_Surface* surface) : surface_(surface)
   {
     SDL_LockSurface(surface_);
   }
 
-  ~Lock()
+  ~PixelAccess()
   {
     SDL_UnlockSurface(surface_);
   }
+
+  void Seek(int x, int y)
+  {
+    pixel_ = (Uint32*)((Uint8*)surface_->pixels + y * surface_->pitch + x * surface_->format->BytesPerPixel);
+  }
+
+  void Get(Uint8* r, Uint8* g, Uint8* b, Uint8* a)
+  {
+    SDL_GetRGBA(*pixel_, surface_->format, r, g, b, a);
+  }
+
+  void Set(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+  {
+    *pixel_ = SDL_MapRGBA(surface_->format, r, g, b, a);
+  }
 };
 
-void AddOutline(SDL_Surface* surface, SDL_Color const* colour)
+void AddOutline(SDL_Surface* surface, SDL_Color const* outline)
 {
-  Lock lock(surface);
+  PixelAccess pixel(surface);
 
   for(int y = 0; y < surface->h; ++y)
   {
     for(int x = 0; x < surface->w; ++x)
     {
-      Uint32* pixel = GetPixel(x, y, surface);
-
-      Uint8 r, g, b, a;
-      SDL_GetRGBA(*pixel, surface->format, &r, &g, &b, &a);
-
-      if((a > 0) && (a < 255))
+      pixel.Seek(x, y);
+      SDL_Color colour;
+      pixel.Get(&colour.r, &colour.g, &colour.b, &colour.a);
+      if((colour.a > 0) && (colour.a < 255))
       {
-        *pixel = SDL_MapRGBA(surface->format, colour->r, colour->g, colour->b, a);
+        pixel.Set(outline->r, outline->g, outline->b, colour.a);
       }
     }
   }

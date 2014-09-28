@@ -5,7 +5,7 @@
 #include "terrain.h"
 #include "timer.h"
 #include "lua_stack.h"
-#include "subtitle.h"
+#include "choice.h"
 #include "scene.h"
 #include <memory>
 #include <map>
@@ -13,6 +13,7 @@
 #include <list>
 #include "boost/optional.hpp"
 #include <array>
+#include "subtitle.h"
 namespace game
 {
 typedef std::list<Actor::WeakPtr> ActorList;
@@ -34,7 +35,8 @@ struct Stage
   float zoom_;
 
   Scene scene_;
-  Subtitle dialogue_;
+  Choice choice_;
+  Subtitle subtitle_;
 
   dynamics::World world_;
   collision::Collision collision_;
@@ -98,9 +100,12 @@ public:
   void StagePause();
   void StageResume();
 
-  void DialogueInit();
-  void DialogueChoice();
-  void DialogueText();
+  void ChoiceInit();
+  void ChoiceChoice();
+
+  void SubtitleInit();
+  void SubtitleText();
+  void SubtitleLight();
 
   void TimerInit();
   void TimerLoad();

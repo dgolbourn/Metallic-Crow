@@ -9,9 +9,12 @@ JSON::JSON(void)
   json_ = json_null();
 }
 
-JSON::JSON(json_t* json)
+JSON::JSON(json_t* json) : JSON()
 {
-  json_ = json_incref(json);
+  if(json)
+  {
+    json_ = json_incref(json);
+  }
 }
 
 JSON::JSON(std::string const& filename)

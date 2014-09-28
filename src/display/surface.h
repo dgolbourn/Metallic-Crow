@@ -10,9 +10,10 @@ class Surface
 {
 public:
   Surface(void) = default;
-  Surface(std::string const& text, Font const& font, Uint32 length = UINT32_MAX);
+  Surface(std::string const& text, Font const& font);
+  Surface(std::string const& text, Font const& font, Uint32 length);
   Surface(std::string const& file);
-  operator SDL_Surface*(void) const;
+  explicit operator SDL_Surface*(void) const;
 private:
   std::shared_ptr<SDL_Surface> impl_;
 };

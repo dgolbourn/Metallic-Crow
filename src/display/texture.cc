@@ -2,105 +2,99 @@
 #include "sdl_texture.h"
 #include "window.h"
 #include "window_impl.h"
-#include <algorithm>
 namespace display
 {
-class TextureImpl
+class Texture::Impl
 {
 public:
-  TextureImpl(std::string const& file, Window& window);
-  TextureImpl(std::string const& text, sdl::Font const& font, int length, Window& window);
-  TextureImpl(std::string const& text, sdl::Font const& font, Window& window);
-  TextureImpl(TextureImpl const& texture, BoundingBox const& clip);
+  Impl(std::string const& file, Window& window);
+  Impl(std::string const& text, sdl::Font const& font, int width, Window& window);
+  Impl(std::string const& text, sdl::Font const& font, Window& window);
+  Impl(Impl const& texture, BoundingBox const& clip);
   bool Render(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const;
   bool Check(void) const;
-  Shape Shape(void) const;
+  display::Shape Shape(void) const;
   Window::WeakPtr window_;
   sdl::Texture::WeakPtr texture_ptr_;
   sdl::Texture texture_;
   display::BoundingBox clip_;
 };
 
-TextureImpl::TextureImpl(std::string const& file, Window& window) : window_(window)
+Texture::Impl::Impl(std::string const& file, Window& window) : window_(window)
 {
   texture_ptr_ = window.impl_->Load(file);
+  sdl::Texture texture = texture_ptr_.Lock();
+  clip_ = BoundingBox(0.f, 0.f, float(texture->w), float(texture->h));
 }
 
-TextureImpl::TextureImpl(std::string const& text, sdl::Font const& font, int length, Window& window) : window_(window)
+Texture::Impl::Impl(std::string const& text, sdl::Font const& font, int width, Window& window) : window_(window)
 {
-  texture_ = window.impl_->Text(text, font, length);
+  texture_ = window.impl_->Text(text, font, width);
   texture_ptr_ = texture_;
+  clip_ = BoundingBox(0.f, 0.f, float(texture_->w), float(texture_->h));
 }
 
-TextureImpl::TextureImpl(std::string const& text, sdl::Font const& font, Window& window) : window_(window)
+Texture::Impl::Impl(std::string const& text, sdl::Font const& font, Window& window) : window_(window)
 {
   texture_ = window.impl_->Text(text, font);
   texture_ptr_ = texture_;
+  clip_ = BoundingBox(0.f, 0.f, float(texture_->w), float(texture_->h));
 }
 
 namespace 
 {
-BoundingBox Clip(BoundingBox const& source, BoundingBox const& clip)
+BoundingBox Clip(BoundingBox const& current, BoundingBox const& clip)
 {
   BoundingBox box;
   if(clip)
   {
-    if(source)
+    if(current)
     {
-      box = BoundingBox(source, clip);
+      BoundingBox temp(clip, BoundingBox());
+      temp.x(temp.x() + current.x());
+      temp.y(temp.y() + current.y());
+      box = BoundingBox(current, temp);
     }
     else
     {
-      box = clip;
+      box = BoundingBox(clip, BoundingBox());
     }
   }
-  else
+  else if(current)
   {
-    box = source;
+    box = BoundingBox(current, BoundingBox());
   }
   return box;
 }
 }
 
-TextureImpl::TextureImpl(TextureImpl const& texture, BoundingBox const& clip) : TextureImpl(texture)
+Texture::Impl::Impl(Impl const& texture, BoundingBox const& clip) : Impl(texture)
 {
   clip_ = Clip(clip_, clip);
 }
 
-bool TextureImpl::Render(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const
+bool Texture::Impl::Render(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const
 {
   bool locked = false;
   if(auto window = window_.Lock())
   {
     if(auto texture = texture_ptr_.Lock())
     {
-      window.impl_->Render(texture, Clip(source, clip_), destination, parallax, tile, angle, modulation);
+      window.impl_->Render(texture, Clip(clip_, source), destination, parallax, tile, angle, modulation);
       locked = true;
     }
   }
   return locked;
 }
 
-bool TextureImpl::Check(void) const
+bool Texture::Impl::Check(void) const
 {
   return bool(window_.Lock()) && bool(texture_ptr_.Lock());
 }
 
-Shape TextureImpl::Shape(void) const
+Shape Texture::Impl::Shape(void) const
 {
-  float width = 0.f;
-  float height = 0.f;
-  if(auto texture = texture_ptr_.Lock())
-  {
-    width = float(texture->w);
-    height = float(texture->h);
-    if(clip_)
-    {
-      width = std::min(clip_.w(), width);
-      height = std::min(clip_.h(), height);
-    }
-  }
-  return display::Shape(width, height);
+  return display::Shape(clip_.w(), clip_.h());
 }
 
 bool Texture::operator()(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const
@@ -118,23 +112,19 @@ Shape Texture::Shape(void) const
   return impl_->Shape();
 }
 
-Texture::Texture(std::string const& file, Window& window)
+Texture::Texture(std::string const& file, Window& window) : impl_(std::make_shared<Impl>(file, window))
 {
-  impl_ = std::make_shared<TextureImpl>(file, window);
 }
 
-Texture::Texture(std::string const& text, sdl::Font const& font, int length, Window& window)
+Texture::Texture(std::string const& text, sdl::Font const& font, int width, Window& window) : impl_(std::make_shared<Impl>(text, font, width, window))
 {
-  impl_ = std::make_shared<TextureImpl>(text, font, length, window);
 }
 
-Texture::Texture(std::string const& text, sdl::Font const& font, Window& window)
+Texture::Texture(std::string const& text, sdl::Font const& font, Window& window) : impl_(std::make_shared<Impl>(text, font, window))
 {
-  impl_ = std::make_shared<TextureImpl>(text, font, window);
 }
 
-Texture::Texture(Texture const& texture, BoundingBox const& clip)
+Texture::Texture(Texture const& texture, BoundingBox const& clip) : impl_(std::make_shared<Impl>(*texture.impl_, clip))
 {
-  impl_ = std::make_shared<TextureImpl>(*texture.impl_, clip);
 }
 }

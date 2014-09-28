@@ -10,7 +10,6 @@ namespace
 {
 typedef std::map<std::string, std::set<dynamics::Body::WeakPtr>> Members;
 typedef std::map<std::string, std::map<std::string, event::Switch>> Collisions;
-typedef void (event::Signal::*Notify)();
 }
 
 class Group::Impl
@@ -78,6 +77,7 @@ void Group::Impl::Link(std::string const& group_a, std::string const& group_b)
           if(auto body_b = iter_bb->Lock())
           {
             auto signals = collisions_[group_b][group_a];
+            typedef void (event::Signal::*Notify)();
             collision_.Begin(body_a, body_b, function::Bind((Notify)&event::Signal::operator(), signals.first));
             collision_.End(body_a, body_b, function::Bind((Notify)&event::Signal::operator(), signals.second));
             ++iter_bb;
@@ -110,6 +110,7 @@ void Group::Impl::Add(std::string const& group, dynamics::Body const& body)
       {
         if(auto other = other_iter->Lock())
         {
+          typedef void (event::Signal::*Notify)();
           collision_.Begin(body, other, function::Bind((Notify)&event::Signal::operator(), iter.second.first));
           collision_.End(body, other, function::Bind((Notify)&event::Signal::operator(), iter.second.first));
           ++other_iter;

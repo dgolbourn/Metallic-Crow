@@ -25,7 +25,7 @@ public:
 private:
   std::shared_ptr<class WindowImpl> impl_;
   friend WeakPtr;
-  friend class TextureImpl;
+  friend class Texture::Impl;
 };
 }
 #endif

@@ -1,11 +1,9 @@
 #ifndef BOUNDING_BOX_H_
 #define BOUNDING_BOX_H_
-
 #include <memory>
 #include <string>
 #include "json.h"
 #include "weak_ptr.h"
-
 namespace display
 {
 class BoundingBox
@@ -15,7 +13,7 @@ public:
   BoundingBox(float x, float y, float w, float h);
   BoundingBox(json::JSON const& json);
   BoundingBox(BoundingBox const& first, BoundingBox const& second);
-  bool operator&&(BoundingBox const& other) const;
+  bool operator&(BoundingBox const& other) const;
   bool operator<(BoundingBox const& other) const;
   explicit operator bool(void) const;
   void x(float x);
@@ -26,11 +24,11 @@ public:
   float y(void) const;
   float w(void) const;
   float h(void) const;
-  BoundingBox Copy(void) const;
-  void Copy(BoundingBox const& other) const;
-  typedef memory::WeakPtr<BoundingBox, class BoundingBoxImpl> WeakPtr;
 private:
-  std::shared_ptr<class BoundingBoxImpl> impl_;
+  class Impl;
+  std::shared_ptr<Impl> impl_;
+public:
+  typedef memory::WeakPtr<BoundingBox> WeakPtr;
   friend WeakPtr;
 };
 }

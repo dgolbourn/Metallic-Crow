@@ -230,7 +230,7 @@ void Body::Impl::Facing(event::Command const& command)
 
 void Body::Impl::Render(Position const& position, display::Modulation const& modulation, bool front) const
 {
-  display::BoundingBox box = animation_->second.render_box_.Copy();
+  display::BoundingBox box = display::BoundingBox(animation_->second.render_box_, display::BoundingBox());
   box.x(box.x() + position.first);
   box.y(box.y() + position.second);
   

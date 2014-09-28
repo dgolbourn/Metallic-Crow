@@ -90,7 +90,7 @@ sdl::Texture WindowImpl::Load(std::string const& file)
   }
   else
   {
-    texture = sdl::Texture(renderer_, sdl::Surface(file));
+    texture = sdl::Texture(renderer_, (SDL_Surface*)sdl::Surface(file));
     textures_[file] = texture;
   }
   return texture;
@@ -98,12 +98,12 @@ sdl::Texture WindowImpl::Load(std::string const& file)
 
 sdl::Texture WindowImpl::Text(std::string const& text, sdl::Font const& font, int length)
 {
-  return sdl::Texture(renderer_, sdl::Surface(text, font, length));
+  return sdl::Texture(renderer_, (SDL_Surface*)sdl::Surface(text, font, length));
 }
 
 sdl::Texture WindowImpl::Text(std::string const& text, sdl::Font const& font)
 {
-  return sdl::Texture(renderer_, sdl::Surface(text, font));
+  return sdl::Texture(renderer_, (SDL_Surface*)sdl::Surface(text, font));
 }
 
 void WindowImpl::Clear(void) const

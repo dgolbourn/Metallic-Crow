@@ -1,3 +1,5 @@
+#ifndef SYNC_H_
+#define SYNC_H_
 #include <memory>
 namespace event
 {
@@ -11,3 +13,4 @@ private:
   std::shared_ptr<class SyncImpl> impl_;
 };
 }
+#endif

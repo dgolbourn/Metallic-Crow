@@ -9,10 +9,11 @@ class Font
 {
 public:
   Font(void) = default;
-  Font(std::string const& file, int point, int r, int g, int b, int a = 255, bool bold = false, bool italic = false, int outline = 0, int or = 0, int og = 0, int ob = 0);
+  Font(std::string const& file, int point, int r, int g, int b, bool bold = false, bool italic = false, bool outline = true, int or = 0, int og = 0, int ob = 0);
   Font(json::JSON const& json);
 private:
-  std::shared_ptr<class FontImpl> impl_;
+  class Impl;
+  std::shared_ptr<Impl> impl_;
   friend class Surface;
 };
 }

@@ -62,7 +62,7 @@ void Feature::Impl::Expression(std::string const& expression, int index, bool le
 
 void Feature::Impl::Render(Position const& position, display::Modulation const& modulation) const
 {
-  display::BoundingBox box = render_box_.Copy();
+  display::BoundingBox box = display::BoundingBox(render_box_, display::BoundingBox());
   box.x(box.x() + position.first);
   box.y(box.y() + position.second);
   texture_(display::BoundingBox(), box, 1.f, false, 0., modulation);

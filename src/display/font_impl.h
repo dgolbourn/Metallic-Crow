@@ -4,21 +4,23 @@
 #include "SDL_TTF.h"
 #include "SDL_Pixels.h"
 #include "ttf_library.h"
+#include "boost/optional.hpp"
 namespace sdl
 {
-class FontImpl
+typedef boost::optional<SDL_Color> Colour;
+
+class Font::Impl
 {
 public:
-  FontImpl(json::JSON const& json);
-  FontImpl(std::string const& filename, int point, int r, int g, int b, int a, bool bold, bool italic, int outline, int or, int ob, int og);
-  void Init(std::string const& filename, int point, int r, int g, int b, int a, bool bold, bool italic, int outline, int or, int ob, int og);
-  void Destroy(void);
-  ~FontImpl(void);
+  Impl(json::JSON const& json);
+  Impl(std::string const& filename, int point, int r, int g, int b, bool bold, bool italic, bool outline, int or, int ob, int og);
+  void Init(std::string const& filename, int point, int r, int g, int b, bool bold, bool italic, Colour const& outline);
+  void Destroy();
+  ~Impl();
   ttf::Library const ttf_;
   TTF_Font* font_;
   SDL_Color colour_;
-  TTF_Font* outline_;
-  SDL_Color outline_colour_;
+  Colour outline_;
 };
 }
 #endif

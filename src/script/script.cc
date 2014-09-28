@@ -14,7 +14,8 @@ void Script::Impl::Init(std::string const& file)
   ActorInit();
   StageInit();
   TerrainInit();
-  DialogueInit();
+  ChoiceInit();
+  SubtitleInit();
   TimerInit();
   ViewInit();
   CollisionInit();
@@ -55,27 +56,28 @@ void Script::Impl::Resume()
 void Script::Impl::Render(void)
 {
   stage_->scene_.Render();
-  stage_->dialogue_.Render();
+  stage_->choice_.Render();
+  stage_->subtitle_.Render();
 }
 
 void Script::Impl::ChoiceUp(void)
 {
-  stage_->dialogue_.Up();
+  stage_->choice_.Up();
 }
 
 void Script::Impl::ChoiceDown(void)
 {
-  stage_->dialogue_.Down();
+  stage_->choice_.Down();
 }
 
 void Script::Impl::ChoiceLeft(void)
 {
-  stage_->dialogue_.Left();
+  stage_->choice_.Left();
 }
 
 void Script::Impl::ChoiceRight(void)
 {
-  stage_->dialogue_.Right();
+  stage_->choice_.Right();
 }
 
 void Script::Impl::Up(void)

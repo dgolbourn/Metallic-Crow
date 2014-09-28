@@ -29,13 +29,15 @@ void Script::Impl::StageLoad()
   std::string name;
   std::string world_file;
   std::string scene;
-  std::string dialogue_file;
+  std::string choice_file;
   std::string collision;
+  std::string subtitle;
   lua_.PopFront(name);
   lua_.PopFront(world_file);
   lua_.PopFront(scene);
-  lua_.PopFront(dialogue_file);
+  lua_.PopFront(choice_file);
   lua_.PopFront(collision);
+  lua_.PopFront(subtitle);
   
   StagePtr stage = std::make_shared<Stage>();
   
@@ -45,13 +47,15 @@ void Script::Impl::StageLoad()
 
   stage->scene_ = Scene(json::JSON(scene), window_);
 
-  Subtitle dialogue(json::JSON(dialogue_file), window_, queue_);
-  dialogue.Up(function::Bind(&Impl::Call, shared_from_this(), "dialogue_up"));
-  dialogue.Down(function::Bind(&Impl::Call, shared_from_this(), "dialogue_down"));
-  dialogue.Left(function::Bind(&Impl::Call, shared_from_this(), "dialogue_left"));
-  dialogue.Right(function::Bind(&Impl::Call, shared_from_this(), "dialogue_right"));
-  dialogue.Timer(function::Bind(&Impl::Call, shared_from_this(), "dialogue_timer"));
-  stage_->dialogue_ = dialogue;
+  Choice choice(json::JSON(choice_file), window_, queue_);
+  choice.Up(function::Bind(&Impl::Call, shared_from_this(), "choice_up"));
+  choice.Down(function::Bind(&Impl::Call, shared_from_this(), "choice_down"));
+  choice.Left(function::Bind(&Impl::Call, shared_from_this(), "choice_left"));
+  choice.Right(function::Bind(&Impl::Call, shared_from_this(), "choice_right"));
+  choice.Timer(function::Bind(&Impl::Call, shared_from_this(), "choice_timer"));
+  stage_->choice_ = choice;
+
+  stage_->subtitle_ = Subtitle(json::JSON(subtitle), window_);
 
   stage->group_ = collision::Group(json::JSON(collision), stage->collision_);
   
@@ -128,7 +132,7 @@ void Script::Impl::Pause(StagePtr const& stage, bool& paused)
       actor.second.Pause();
     }
     stage->world_.Pause();
-    stage->dialogue_.Pause();
+    stage->choice_.Pause();
     for(auto timer = stage->timers_.begin(); timer != stage->timers_.end();)
     {
       if(timer->second)
@@ -157,7 +161,7 @@ void Script::Impl::Resume(StagePtr const& stage, bool& paused)
       actor.second.Resume();
     }
     stage->world_.Resume();
-    stage->dialogue_.Resume();
+    stage->choice_.Resume();
     for(auto timer = stage->timers_.begin(); timer != stage->timers_.end();)
     {
       if(timer->second)

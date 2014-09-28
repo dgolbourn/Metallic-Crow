@@ -3,7 +3,9 @@
 #include "ttf_exception.h"
 namespace sdl
 {
-static int Style(bool bold, bool italic)
+namespace
+{ 
+int Style(bool bold, bool italic)
 {
   int style = 0;
   if(bold)
@@ -17,7 +19,7 @@ static int Style(bool bold, bool italic)
   return style;
 }
 
-static TTF_Font* Open(std::string const& file, int point)
+TTF_Font* Open(std::string const& file, int point)
 {
   TTF_Font* font = TTF_OpenFont(file.c_str(), point);
   if(!font)
@@ -27,31 +29,38 @@ static TTF_Font* Open(std::string const& file, int point)
   return font;
 }
 
-static void Close(TTF_Font* font)
+Colour MakeColour(bool valid, int r, int g, int b)
 {
-  if(font)
+  Colour colour;
+  if(valid)
   {
-    TTF_CloseFont(font);
+    colour = {r, g, b, 255};
   }
+  return colour;
 }
 
-void FontImpl::Init(std::string const& file, int point, int r, int g, int b, int a, bool bold, bool italic, int outline, int or, int og, int ob)
+Colour MakeColour(json::JSON const& json)
+{
+  Colour colour;
+  if(json)
+  {
+    colour = SDL_Color();
+    json.Unpack("[iii]", &colour->r, &colour->g, &colour->b);
+    colour->a = 255;
+  }
+  return colour;
+}
+}
+
+void Font::Impl::Init(std::string const& file, int point, int r, int g, int b, bool bold, bool italic, Colour const& outline)
 {
   font_ = nullptr;
-  outline_ = nullptr;
   try
   {
-    colour_ = {r, g, b, a};
-    outline_colour_ = {or, og, ob, a};
+    colour_ = {r, g, b, 255};
+    outline_ = outline;
     font_ = Open(file, point);
-    int style = Style(bold, italic);
-    TTF_SetFontStyle(font_, style);
-    if(outline)
-    {
-      outline_ = Open(file, point);
-      TTF_SetFontStyle(outline_, style);
-      TTF_SetFontOutline(outline_, outline);
-    }
+    TTF_SetFontStyle(font_, Style(bold, italic));
   }
   catch(...)
   {
@@ -59,57 +68,51 @@ void FontImpl::Init(std::string const& file, int point, int r, int g, int b, int
   }
 }
 
-void FontImpl::Destroy(void)
+void Font::Impl::Destroy(void)
 {
-  Close(font_);
-  Close(outline_);
+  if(font_)
+  {
+    TTF_CloseFont(font_);
+  }
 }
 
-FontImpl::FontImpl(std::string const& file, int point, int r, int g, int b, int a, bool bold, bool italic, int outline, int or, int og, int ob)
+Font::Impl::Impl(std::string const& file, int point, int r, int g, int b, bool bold, bool italic, bool outline, int or, int og, int ob)
 {
-  Init(file, point, r, g, b, a, bold, italic, outline, or, og, ob);
+  Init(file, point, r, g, b, bold, italic, MakeColour(outline, or, og, ob));
 }
 
-FontImpl::FontImpl(json::JSON const& json)
+Font::Impl::Impl(json::JSON const& json)
 {
   char const* file;
   int point;
   int r;
   int g;
   int b;
-  int a;
   int bold;
   int italic;
-  int outline;
-  int or;
-  int og;
-  int ob;
+  json_t* outline;
 
-  json.Unpack("{sssis[iiii]sisis{sis[iii]}}",
+  json.Unpack("{sssis[iii]sbsbso}",
     "file", &file,
     "point", &point,
-    "colour", &r, &g, &b, &a,
+    "colour", &r, &g, &b,
     "bold", &bold,
     "italic", &italic,
-    "outline", 
-    "size", &outline,
-    "colour", &or, &og, &ob);
+    "outline", &outline);
 
-  Init(file, point, r, g, b, a, bold != 0, italic != 0, outline, or, og, ob);
+  Init(file, point, r, g, b, bold != 0, italic != 0, MakeColour(json::JSON(outline)));
 }
 
-FontImpl::~FontImpl(void)
+Font::Impl::~Impl(void)
 {
   Destroy();
 }
 
-Font::Font(std::string const& file, int point, int r, int g, int b, int a, bool bold, bool italic, int outline, int or, int og, int ob)
+Font::Font(std::string const& file, int point, int r, int g, int b, bool bold, bool italic, bool outline, int or, int og, int ob) : impl_(std::make_shared<Impl>(file, point, r, g, b, bold, italic, outline, or, og, ob))
 {
-  impl_ = std::make_shared<FontImpl>(file, point, r, g, b, a, bold, italic, outline, or, og, ob);
 }
 
-Font::Font(json::JSON const& json)
+Font::Font(json::JSON const& json) : impl_(std::make_shared<Impl>(json))
 {
-  impl_ = std::make_shared<FontImpl>(json);
 }
 }

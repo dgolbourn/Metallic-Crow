@@ -12,11 +12,6 @@ public:
   SDL_FRect rect_;
 };
 
-bool BoundingBox::operator&(BoundingBox const& other) const
-{
-  return sdl::Intersection(&impl_->rect_, &other.impl_->rect_);
-}
-
 bool BoundingBox::operator<(BoundingBox const& other) const
 {
   return impl_.owner_before(other.impl_);

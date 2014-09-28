@@ -10,7 +10,7 @@ class Texture
 public:
   Texture(void) = default;
   Texture(SDL_Renderer* renderer, SDL_Surface* surface);
-  operator SDL_Texture*(void) const;
+  explicit operator SDL_Texture*(void) const;
   SDL_Texture* operator->(void) const;
   explicit operator bool(void) const;
   typedef memory::WeakPtr<class Texture, SDL_Texture> WeakPtr;

@@ -8,7 +8,7 @@ class Texture::Impl
 {
 public:
   Impl(std::string const& file, Window& window);
-  Impl(std::string const& text, sdl::Font const& font, int width, Window& window);
+  Impl(std::string const& text, sdl::Font const& font, float width, Window& window);
   Impl(std::string const& text, sdl::Font const& font, Window& window);
   Impl(Impl const& texture, BoundingBox const& clip);
   bool Render(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const;
@@ -27,7 +27,7 @@ Texture::Impl::Impl(std::string const& file, Window& window) : window_(window)
   clip_ = BoundingBox(0.f, 0.f, float(texture->w), float(texture->h));
 }
 
-Texture::Impl::Impl(std::string const& text, sdl::Font const& font, int width, Window& window) : window_(window)
+Texture::Impl::Impl(std::string const& text, sdl::Font const& font, float width, Window& window) : window_(window)
 {
   texture_ = window.impl_->Text(text, font, width);
   texture_ptr_ = texture_;
@@ -116,7 +116,7 @@ Texture::Texture(std::string const& file, Window& window) : impl_(std::make_shar
 {
 }
 
-Texture::Texture(std::string const& text, sdl::Font const& font, int width, Window& window) : impl_(std::make_shared<Impl>(text, font, width, window))
+Texture::Texture(std::string const& text, sdl::Font const& font, float width, Window& window) : impl_(std::make_shared<Impl>(text, font, width, window))
 {
 }
 

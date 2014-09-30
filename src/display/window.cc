@@ -96,9 +96,9 @@ sdl::Texture WindowImpl::Load(std::string const& file)
   return texture;
 }
 
-sdl::Texture WindowImpl::Text(std::string const& text, sdl::Font const& font, int length)
+sdl::Texture WindowImpl::Text(std::string const& text, sdl::Font const& font, float length)
 {
-  return sdl::Texture(renderer_, (SDL_Surface*)sdl::Surface(text, font, length));
+  return sdl::Texture(renderer_, (SDL_Surface*)sdl::Surface(text, font, Uint32(length)));
 }
 
 sdl::Texture WindowImpl::Text(std::string const& text, sdl::Font const& font)

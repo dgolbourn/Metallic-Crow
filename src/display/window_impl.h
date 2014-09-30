@@ -19,7 +19,7 @@ class WindowImpl
 public:
   WindowImpl(json::JSON const& json);
   sdl::Texture Load(std::string const& file);
-  sdl::Texture Text(std::string const& text, sdl::Font const& font, int length);
+  sdl::Texture Text(std::string const& text, sdl::Font const& font, float length);
   sdl::Texture Text(std::string const& text, sdl::Font const& font);
   void Free(void);
   void Clear(void) const;

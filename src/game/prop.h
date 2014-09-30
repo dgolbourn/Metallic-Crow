@@ -1,5 +1,5 @@
-#ifndef TERRAIN_H_
-#define TERRAIN_H_
+#ifndef PROP_H_
+#define PROP_H_
 #include "scene.h"
 #include "json.h"
 #include "window.h"
@@ -7,11 +7,11 @@
 #include "world.h"
 namespace game
 {
-class Terrain
+class Prop
 {
 public:
-  Terrain() = default;
-  Terrain(json::JSON const& json, display::Window& window, Scene& scene, collision::Group& collision, dynamics::World& world);
+  Prop() = default;
+  Prop(json::JSON const& json, display::Window& window, Scene& scene, collision::Group& collision, dynamics::World& world);
   void Modulation(float r, float g, float b);
 private:
   class Impl;

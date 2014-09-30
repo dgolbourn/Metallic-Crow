@@ -112,7 +112,7 @@ Surface::Surface(std::string const& file)
   impl_ = SurfacePtr(surface, SDL_FreeSurface);
 }
 
-Surface::operator SDL_Surface*(void) const
+Surface::operator SDL_Surface*() const
 {
   return impl_.get();
 }

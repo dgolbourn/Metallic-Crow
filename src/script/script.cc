@@ -13,7 +13,7 @@ void Script::Impl::Init(std::string const& file)
 
   ActorInit();
   StageInit();
-  TerrainInit();
+  PropInit();
   ChoiceInit();
   SubtitleInit();
   TimerInit();

@@ -16,6 +16,7 @@ public:
   Impl(std::string const& filename, int point, int r, int g, int b, bool bold, bool italic, bool outline, int or, int ob, int og);
   void Init(std::string const& filename, int point, int r, int g, int b, bool bold, bool italic, Colour const& outline);
   void Destroy();
+  float LineSpacing() const;
   ~Impl();
   ttf::Library const ttf_;
   TTF_Font* font_;

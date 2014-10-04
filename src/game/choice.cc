@@ -325,7 +325,7 @@ Choice::operator bool() const
   return bool(impl_);
 }
 
-Choice::Choice(json::JSON const& json, display::Window& window, event::Queue& queue) : impl_(std::make_shared<Choice::Impl>(json, window, queue))
+Choice::Choice(json::JSON const& json, display::Window& window, event::Queue& queue) : impl_(std::make_shared<Impl>(json, window, queue))
 {
 }
 }

@@ -108,6 +108,16 @@ Font::Impl::~Impl(void)
   Destroy();
 }
 
+float Font::Impl::LineSpacing() const
+{
+  return float(TTF_FontLineSkip(font_));
+}
+
+float Font::LineSpacing() const
+{
+  return impl_->LineSpacing();
+}
+
 Font::Font(std::string const& file, int point, int r, int g, int b, bool bold, bool italic, bool outline, int or, int og, int ob) : impl_(std::make_shared<Impl>(file, point, r, g, b, bold, italic, outline, or, og, ob))
 {
 }

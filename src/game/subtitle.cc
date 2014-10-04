@@ -32,7 +32,7 @@ Subtitle::Impl::Impl(json::JSON const& json, display::Window& window) : window_(
 
 void Subtitle::Impl::Render() const
 {
-  text_(display::BoundingBox(), render_box_, 1.f, false, 0., modulation_);
+  text_(display::BoundingBox(), render_box_, 0.f, false, 0., modulation_);
 }
 
 void Subtitle::Impl::Subtitle(std::string const& text)

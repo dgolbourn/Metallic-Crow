@@ -1,4 +1,4 @@
-#include "prop.h"
+#include "set.h"
 #include "bounding_box.h"
 #include "body.h"
 #include "bind.h"
@@ -13,8 +13,9 @@ namespace game
 namespace
 {
 typedef std::pair<display::Texture, display::BoundingBox> TexturePair;
+typedef std::vector<TexturePair> Textures;
 
-void MakeProp(json::JSON const& json, collision::Group& collision, dynamics::World& world, dynamics::Body& body, float& parallax)
+void MakeSet(json::JSON const& json, collision::Group& collision, dynamics::World& world, dynamics::Body& body, float& parallax, game::Position& position)
 {
   char const* type_ptr;
   json_t* properties;
@@ -28,6 +29,7 @@ void MakeProp(json::JSON const& json, collision::Group& collision, dynamics::Wor
   {
     body = MakeBody(json::JSON(properties), world, collision);
     parallax = 1.f;
+    position = body.Position();
   }
   else if(type == "parallax")
   {
@@ -42,20 +44,22 @@ void MakeProp(json::JSON const& json, collision::Group& collision, dynamics::Wor
 }
 }
 
-class Prop::Impl final : public std::enable_shared_from_this<Impl>
+class Set::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
   Impl(json::JSON const& json, display::Window& window, collision::Group& dcollision, dynamics::World& world, int& plane);
-  void Init(Scene& scene, int plane);
+  void Init(Scene& scene, dynamics::World& world, int plane);
+  void End();
   void Render(void) const;
   void Modulation(float r, float g, float b);
   dynamics::Body body_;
-  std::vector<TexturePair> textures_;
+  Textures textures_;
   float parallax_;
   display::Modulation modulation_;
+  game::Position position_;
 };
 
-void Prop::Impl::Render(void) const
+void Set::Impl::Render(void) const
 {
   for(auto& texture : textures_)
   {
@@ -63,19 +67,31 @@ void Prop::Impl::Render(void) const
   }
 }
 
-void Prop::Impl::Modulation(float r, float g, float b)
+void Set::Impl::End()
+{
+  game::Position position = body_.Position();
+  for(auto& texture : textures_)
+  {
+    texture.second.x(texture.second.x() - position_.first + position.first);
+    texture.second.y(texture.second.y() - position_.second + position.second);
+  }
+  position_ = position;
+  modulation_ = body_.Modulation();
+}
+
+void Set::Impl::Modulation(float r, float g, float b)
 {
   modulation_ = display::Modulation(r, g, b, 1.f);
 }
 
-Prop::Impl::Impl(json::JSON const& json, display::Window& window, collision::Group& collision, dynamics::World& world, int& plane)
+Set::Impl::Impl(json::JSON const& json, display::Window& window, collision::Group& collision, dynamics::World& world, int& plane)
 {
   json_t* textures;
-  json_t* prop;
+  json_t* set;
   double parallax;
   double r, g, b;
   json.Unpack("{sososisfs[fff]}",
-    "prop", &prop,
+    "set", &set,
     "textures", &textures,
     "plane", &plane,
     "parallax", &parallax,
@@ -83,7 +99,7 @@ Prop::Impl::Impl(json::JSON const& json, display::Window& window, collision::Gro
  
   modulation_ = display::Modulation(float(r), float(g), float(b), 1.f);
   
-  MakeProp(json::JSON(prop), collision, world, body_, parallax_);
+  MakeSet(json::JSON(set), collision, world, body_, parallax_, position_);
 
   for(json::JSON const& value : json::JSON(textures))
   {
@@ -98,19 +114,23 @@ Prop::Impl::Impl(json::JSON const& json, display::Window& window, collision::Gro
   }
 }
 
-void Prop::Impl::Init(Scene& scene, int plane)
+void Set::Impl::Init(Scene& scene, dynamics::World& world, int plane)
 {
-  scene.Add(function::Bind(&Prop::Impl::Render, shared_from_this()), plane);
+  scene.Add(function::Bind(&Set::Impl::Render, shared_from_this()), plane);
+  if(body_)
+  {
+    world.End(function::Bind(&Impl::End, shared_from_this()));
+  }
 }
 
-Prop::Prop(json::JSON const& json, display::Window& window, Scene& scene, collision::Group& collision, dynamics::World& world)
+Set::Set(json::JSON const& json, display::Window& window, Scene& scene, collision::Group& collision, dynamics::World& world)
 {
   int plane;
-  impl_ = std::make_shared<Prop::Impl>(json, window, collision, world, plane);
-  impl_->Init(scene, plane);
+  impl_ = std::make_shared<Set::Impl>(json, window, collision, world, plane);
+  impl_->Init(scene, world, plane);
 }
 
-void Prop::Modulation(float r, float g, float b)
+void Set::Modulation(float r, float g, float b)
 {
   impl_->Modulation(r, g, b);
 }

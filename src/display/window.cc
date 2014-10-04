@@ -6,6 +6,18 @@
 #include "sdl_exception.h"
 namespace display
 {
+namespace
+{
+Uint8 Colour(float colour)
+{
+  colour *= 255.f;
+  colour = std::round(colour);
+  colour = std::min(colour, 255.f);
+  colour = std::max(colour, 0.f);
+  return Uint8(colour);
+}
+}
+
 void WindowImpl::Destroy(void)
 {
   if(renderer_)
@@ -106,6 +118,49 @@ sdl::Texture WindowImpl::Text(std::string const& text, sdl::Font const& font)
   return sdl::Texture(renderer_, (SDL_Surface*)sdl::Surface(text, font));
 }
 
+void WindowImpl::Draw(BoundingBox const& box, Modulation const& modulation) const
+{
+  SDL_Color colour;
+  if(SDL_GetRenderDrawColor(renderer_, &colour.r, &colour.g, &colour.b, &colour.a))
+  {
+    BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
+  }
+
+  SDL_Color fill = {0, 0, 0, 255};
+  if(modulation)
+  {
+    fill.r = Colour(modulation.r());
+    fill.g = Colour(modulation.g());
+    fill.b = Colour(modulation.b());
+    fill.a = Colour(modulation.a());
+  }
+  if(SDL_SetRenderDrawColor(renderer_, fill.r, fill.g, fill.b, fill.a))
+  {
+    BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
+  }
+
+  SDL_Rect* rect_ptr = nullptr;
+  SDL_Rect rect;
+  if(box)
+  {
+    rect.x = int(std::round(box.x()));
+    rect.y = int(std::round(box.y()));
+    rect.w = int(std::round(box.w()));
+    rect.h = int(std::round(box.h()));
+    rect_ptr = &rect;
+  }
+
+  if(SDL_RenderFillRect(renderer_, rect_ptr))
+  {
+    BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
+  }
+
+  if(SDL_SetRenderDrawColor(renderer_, colour.r, colour.g, colour.b, colour.a))
+  {
+    BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
+  }
+}
+
 void WindowImpl::Clear(void) const
 {
   if(SDL_RenderClear(renderer_))
@@ -138,15 +193,6 @@ Shape WindowImpl::Shape(void) const
   int w, h;
   SDL_GetWindowSize(window_, &w, &h);
   return display::Shape(float(w), float(h));
-}
-
-static Uint8 Colour(float colour)
-{
-  colour *= 255.f;
-  colour = std::round(colour);
-  colour = std::min(colour, 255.f);
-  colour = std::max(colour, 0.f);
-  return Uint8(colour);
 }
 
 void WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const
@@ -205,6 +251,11 @@ void Window::Clear(void) const
 void Window::Show(void) const
 {
   return impl_->Show();
+}
+
+void Window::Draw(BoundingBox const& box, Modulation const& modulation) const
+{
+  impl_->Draw(box, modulation);
 }
 
 void Window::Free(void)

@@ -25,6 +25,7 @@ public:
   void Clear(void) const;
   void Show(void) const;
   void Destroy(void);
+  void Draw(BoundingBox const& box, Modulation const& modulation) const;
   void View(float x, float y, float zoom);
   void Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const;
   Shape Shape(void) const;

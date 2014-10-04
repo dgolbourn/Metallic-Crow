@@ -45,8 +45,6 @@ void Script::Impl::StageLoad()
   world.End(function::Bind(&Impl::View, shared_from_this(), dynamics::World::WeakPtr(world)));
   stage->world_ = world;
 
-  stage->scene_ = Scene(json::JSON(scene), window_);
-
   Choice choice(json::JSON(choice_file), window_, queue_);
   choice.Up(function::Bind(&Impl::Call, shared_from_this(), "choice_up"));
   choice.Down(function::Bind(&Impl::Call, shared_from_this(), "choice_down"));
@@ -85,7 +83,6 @@ void Script::Impl::StageLight()
   auto stage = stages_.find(name);
   if(stage != stages_.end())
   {
-    stage->second->scene_.Modulation(r, g, b);
     stage->second->world_.Ambient(r, g, b);
   }
 }

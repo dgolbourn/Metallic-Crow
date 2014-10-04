@@ -20,6 +20,7 @@ public:
   void Show(void) const;
   void View(float x, float y, float zoom);
   Shape Shape(void) const;
+  void Draw(BoundingBox const& box, Modulation const& modulation) const;
   typedef memory::WeakPtr<Window, class WindowImpl> WeakPtr;
   explicit operator bool(void) const;
 private:

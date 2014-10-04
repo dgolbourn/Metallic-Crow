@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
     
     if(config::Parse(argc, argv, event, window, script, queue))
     {
-      queue.Add(event::Bind(&event::Event::operator(), event));
+      queue.Add(function::Bind(&event::Event::operator(), event));
       queue.Add(std::bind(Render, window, script));
 
       event.Quit(Quit);

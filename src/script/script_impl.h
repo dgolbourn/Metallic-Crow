@@ -2,11 +2,12 @@
 #define SCRIPT_IMPL_H_
 #include "script.h"
 #include "actor.h"
-#include "prop.h"
+#include "set.h"
 #include "timer.h"
 #include "lua_stack.h"
 #include "choice.h"
 #include "scene.h"
+#include "screen.h"
 #include <memory>
 #include <map>
 #include <string>
@@ -18,18 +19,20 @@ namespace game
 {
 typedef std::list<Actor::WeakPtr> ActorList;
 typedef boost::optional<Position> Subject;
-typedef std::multimap<std::string, Prop> PropMap;
+typedef std::multimap<std::string, Set> SetMap;
 typedef std::multimap<std::string, Actor> ActorMap;
 typedef std::multimap<std::string, event::Timer> TimerMap;
+typedef std::multimap<std::string, Screen> ScreenMap;
 typedef std::array<bool, 2> Paused;
 
 struct Stage
 {
   Actor hero_;
-  PropMap prop_;
+  SetMap sets_;
   ActorMap actors_;
   Paused paused_;
   TimerMap timers_;
+  ScreenMap screens_;
   Subject subject_;
   ActorList subjects_;
   float zoom_;
@@ -87,10 +90,15 @@ public:
   void ActorLeft();
   void ActorRight();
 
-  void PropInit();
-  void PropLoad();
-  void PropFree();
-  void PropLight();
+  void SetInit();
+  void SetLoad();
+  void SetFree();
+  void SetLight();
+
+  void ScreenInit();
+  void ScreenLoad();
+  void ScreenFree();
+  void ScreenLight();
 
   void StageInit();
   void StageLoad();

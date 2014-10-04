@@ -8,14 +8,13 @@ namespace game
 class Fade
 {
 public:
-  Fade(float period, event::Queue& queue, display::Window const& window);
-  void Down();
-  void Up();
+  Fade(event::Queue& queue, display::Window const& window);
+  void Down(float period);
+  void Up(float period);
   void Render() const;
   void Pause();
   void Resume();
   void Add(event::Command const& command);
-  void Period(float period);
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

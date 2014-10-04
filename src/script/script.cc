@@ -3,7 +3,7 @@
 #include "exception.h"
 namespace game
 {
-Script::Impl::Impl(display::Window& window, event::Queue& queue) : window_(window), queue_(queue), paused_(true)
+Script::Impl::Impl(display::Window& window, event::Queue& queue) : window_(window), queue_(queue), paused_(true), fade_(queue, window)
 {
 }
 
@@ -20,6 +20,7 @@ void Script::Impl::Init(std::string const& file)
   TimerInit();
   ViewInit();
   CollisionInit();
+  FadeInit();
 
   Call("begin");
 }
@@ -59,6 +60,7 @@ void Script::Impl::Render(void)
   stage_->scene_.Render();
   stage_->choice_.Render();
   stage_->subtitle_.Render();
+  fade_.Render();
 }
 
 void Script::Impl::ChoiceUp(void)

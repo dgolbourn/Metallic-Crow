@@ -15,6 +15,7 @@
 #include "boost/optional.hpp"
 #include <array>
 #include "subtitle.h"
+#include "fade.h"
 namespace game
 {
 typedef std::list<Actor::WeakPtr> ActorList;
@@ -130,12 +131,17 @@ public:
   void CollisionBegin();
   void CollisionEnd();
 
+  void FadeInit();
+  void FadeUp();
+  void FadeDown();
+
   lua::Stack lua_;
   display::Window window_;
   event::Queue queue_;
   StageMap stages_;
   StagePtr stage_;
   bool paused_;
+  Fade fade_;
 };
 }
 #endif

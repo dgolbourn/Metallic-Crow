@@ -7,7 +7,7 @@ namespace json
 class JSON
 {
 public:
-  JSON(void);
+  JSON();
   explicit JSON(json_t* json);
   explicit JSON(std::string const& file);
   template<class... Args> void Unpack(std::string const& format, Args... args) const
@@ -15,18 +15,25 @@ public:
     Unpack_(format, 0, args...);
   }
 
-  ~JSON(void);
+  ~JSON();
   JSON(JSON const& other);
   JSON(JSON&& other);
   JSON& operator=(JSON other);
-  explicit operator bool(void) const;
+  explicit operator bool() const;
   bool operator==(JSON const& other) const;
   JSON operator[](int index);
   class Iterator;
-  int Size(void) const;
+  int Size() const;
+  void Write(std::string const& file) const;
 private:
   void Unpack_(std::string const& format, int dummy, ...) const;
+  struct pack_tag_ {};
+  JSON(pack_tag_, std::string const& format, int dummy, ...);
   json_t* json_;
+public:
+  template<class... Args> JSON(std::string const& format, Args... args) : JSON(pack_tag_(), format, 0, args...)
+  {
+  }
 };
 }
 #endif

@@ -16,6 +16,7 @@
 #include <array>
 #include "subtitle.h"
 #include "fade.h"
+#include "signal.h"
 namespace game
 {
 typedef std::list<Actor::WeakPtr> ActorList;
@@ -74,6 +75,7 @@ public:
   void Pause(StagePtr const& stage, bool& paused);
   bool Pause(StagePtr const& stage);
   void Resume(StagePtr const& stage, bool& paused);
+  void Add(event::Command const& command);
 
   void ActorInit();
   void ActorLoad();
@@ -142,6 +144,8 @@ public:
   StagePtr stage_;
   bool paused_;
   Fade fade_;
+  event::Signal signal_;
+  bool begun_;
 };
 }
 #endif

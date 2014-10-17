@@ -3,6 +3,7 @@
 #include <vector>
 #include "json_iterator.h"
 #include "exception.h"
+#include "log.h"
 namespace dynamics
 {
 typedef std::unique_ptr<b2Shape> Shape;
@@ -282,10 +283,17 @@ display::Modulation BodyImpl::Modulation(void) const
 
 BodyImpl::~BodyImpl(void)
 {
-  if(world_.Lock())
+  try
+  { 
+    if(world_.Lock())
+    {
+      body_->SetUserData(nullptr);
+      body_->GetWorld()->DestroyBody(body_);
+    }
+  }
+  catch(...)
   {
-    body_->SetUserData(nullptr);
-    body_->GetWorld()->DestroyBody(body_);
+    exception::Log("Swallowed exception");
   }
 }
 

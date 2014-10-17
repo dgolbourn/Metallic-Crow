@@ -1,6 +1,7 @@
 #ifndef BIND_H_
 #define BIND_H_
 #include "command.h"
+#include <memory>
 namespace function
 {
 template<class Method, class Shared, class... Args> event::Command Bind(Method&& method, Shared const& shared, Args... args)

@@ -3,7 +3,7 @@
 #include "exception.h"
 namespace game
 {
-Script::Impl::Impl(display::Window& window, event::Queue& queue) : window_(window), queue_(queue), paused_(true), fade_(queue, window)
+Script::Impl::Impl(display::Window& window, event::Queue& queue) : window_(window), queue_(queue), paused_(true), fade_(queue, window), begun_(false)
 {
 }
 
@@ -22,7 +22,10 @@ void Script::Impl::Init(std::string const& file)
   CollisionInit();
   FadeInit();
 
-  Call("begin");
+  typedef void (event::Signal::*Notify)();
+  lua_.Add(function::Bind((Notify)&event::Signal::operator(), signal_), "end", 0);
+
+  Call("initialise");
 }
 
 void Script::Impl::Call(std::string const& call)
@@ -45,6 +48,12 @@ void Script::Impl::Pause(void)
 
 void Script::Impl::Resume()
 {
+  if(!begun_)
+  {
+    begun_ = true;
+    Call("begin");
+  }
+
   if(paused_)
   {
     paused_ = false;
@@ -115,6 +124,11 @@ void Script::Impl::Right(void)
   }
 }
 
+void Script::Impl::Add(event::Command const& command)
+{
+  signal_.Add(command);
+}
+
 void Script::Pause(void)
 {
   impl_->Pause();
@@ -168,6 +182,11 @@ void Script::Left(void)
 void Script::Right(void)
 {
   impl_->Right();
+}
+
+void Script::Add(event::Command const& command)
+{
+  impl_->Add(command);
 }
 
 Script::operator bool(void) const

@@ -10,20 +10,21 @@ namespace game
 class Script
 {
 public:
-  Script(void) = default;
+  Script() = default;
   Script(std::string const& file, display::Window& window, event::Queue& queue);
-  void Pause(void);
-  void Resume(void);
-  void Render(void);
-  void ChoiceUp(void);
-  void ChoiceDown(void);
-  void ChoiceLeft(void);
-  void ChoiceRight(void);
-  void Up(void);
-  void Down(void);
-  void Left(void);
-  void Right(void);
-  explicit operator bool(void) const;
+  void Pause();
+  void Resume();
+  void Render();
+  void ChoiceUp();
+  void ChoiceDown();
+  void ChoiceLeft();
+  void ChoiceRight();
+  void Up();
+  void Down();
+  void Left();
+  void Right();
+  void Add(event::Command const& command);
+  explicit operator bool() const;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

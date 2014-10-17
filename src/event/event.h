@@ -19,15 +19,14 @@ public:
   void ChoiceDown(Command const& start, Command const& end);
   void ChoiceLeft(Command const& start, Command const& end);
   void ChoiceRight(Command const& start, Command const& end);
-  void Pause(Command const& command);
-  void Resume(Command const& command);
+  void Select(Command const& start, Command const& end);
   void Quit(Command const& command);
-  void Pause(void);
-  void Resume(void);
   explicit operator bool(void) const;
-  typedef memory::WeakPtr<Event, class EventImpl> WeakPtr;
 private:
-  std::shared_ptr<class EventImpl> impl_;
+  class Impl;
+  std::shared_ptr<Impl> impl_;
+public:
+  typedef memory::WeakPtr<Event> WeakPtr;
   friend WeakPtr;
 };
 }

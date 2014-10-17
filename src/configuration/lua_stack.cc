@@ -23,7 +23,7 @@ public:
   CommandMap map_;
 };
 
-lua_State* Init(void)
+static lua_State* Init(void)
 {
   lua_State* state = luaL_newstate();
   if(state == nullptr)

@@ -6,7 +6,7 @@
 #include "version.h"
 namespace config
 {
-bool Parse(int argc, char* argv[], event::Event& event, display::Window& window, game::Script& script, event::Queue& queue)
+Args Parse(int argc, char* argv[])
 {
   namespace options = boost::program_options;
 
@@ -17,9 +17,8 @@ bool Parse(int argc, char* argv[], event::Event& event, display::Window& window,
 
   options::options_description config("Configuration");
   config.add_options()
-    ("event,e", options::value<std::string>()->composing(), "event configuration file")
-    ("window,w", options::value<std::string>()->composing(), "window configuration file")
-    ("script,s", options::value<std::string>()->composing(), "script configuration file");
+    ("control,c", options::value<std::string>()->composing(), "control configuration file")
+    ("game,g", options::value<std::string>()->composing(), "game configuration file");
 
   options::options_description hidden("Hidden options");
   hidden.add_options()
@@ -38,7 +37,7 @@ bool Parse(int argc, char* argv[], event::Event& event, display::Window& window,
   positional.add("initialisation", -1);
 
   options::variables_map variables;
-  options::store(options::command_line_parser(argc, argv).options(command_line).positional(positional).run(), variables);
+  options::store(options::command_line_parser(argc, argv).options(command_line).positional(positional).allow_unregistered().run(), variables);
   options::notify(variables);
 
   if(variables.count("initialisation"))
@@ -47,7 +46,7 @@ bool Parse(int argc, char* argv[], event::Event& event, display::Window& window,
     std::ifstream file(initialisation_file);
     if(file)
     {
-      options::store(options::parse_config_file(file, config_file), variables);
+      options::store(options::parse_config_file(file, config_file, true), variables);
       options::notify(variables);
     }
     else
@@ -56,10 +55,9 @@ bool Parse(int argc, char* argv[], event::Event& event, display::Window& window,
     }
   }
 
-  std::string event_file;
-  std::string window_file;
-  std::string script_file;
-
+  std::string control_file;
+  std::string game_file;
+  
   bool valid = false;
   bool help = true;
   if(variables.count("help")) 
@@ -71,32 +69,26 @@ bool Parse(int argc, char* argv[], event::Event& event, display::Window& window,
     valid = false;
     help = false;
   }
-  else if(variables.count("event"))
+  else if(variables.count("control"))
   {
-    event_file = variables["event"].as<std::string>();
-    if(variables.count("window"))
+    control_file = variables["control"].as<std::string>();
+    if(variables.count("game"))
     {
-      window_file = variables["window"].as<std::string>();
-
-      if(variables.count("script"))
-      {
-        script_file = variables["script"].as<std::string>();
-        valid = true;
-        help = false;
-      }
+      game_file = variables["game"].as<std::string>();
+      valid = true;
+      help = false;
     }
   }
 
+  Args args;
   if(valid)
   {
-    event = event::Event(json::JSON(event_file));
-    window = display::Window(json::JSON(window_file));
-    script = game::Script(script_file, window, queue);
+    args = std::make_pair(control_file, game_file);
   }
   else if(help)
   {
     std::cout << visible << std::endl;
   }
-  return valid;
+  return args;
 }
 }

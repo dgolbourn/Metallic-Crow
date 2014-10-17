@@ -4,6 +4,7 @@
 #include <string>
 #include "exception.h"
 #include "body_impl.h"
+#include "log.h"
 namespace dynamics
 {
 class JointImpl
@@ -119,12 +120,19 @@ JointImpl::JointImpl(json::JSON const& json, Body& body_a, Body& body_b, World& 
 
 JointImpl::~JointImpl(void)
 {
-  if(joint_)
+  try
   {
-    if(auto world = world_.Lock())
+    if(joint_)
     {
-      world.impl_->world_.DestroyJoint(joint_);
+      if(auto world = world_.Lock())
+      {
+        world.impl_->world_.DestroyJoint(joint_);
+      }
     }
+  }
+  catch(...)
+  {
+    exception::Log("Swallowed exception");
   }
 }
 

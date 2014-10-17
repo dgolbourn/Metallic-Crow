@@ -2,6 +2,7 @@
 #include "sdl_exception.h"
 #include "flood_fill.h"
 #include "painter.h"
+#include "log.h"
 namespace sdl
 {
 class Modulator
@@ -37,16 +38,23 @@ public:
 
   ~Modulator(void)
   {
-    if(modulation_)
+    try
     {
-      if(SDL_SetTextureColorMod(texture_, original_.r, original_.g, original_.b))
+      if(modulation_)
       {
-        BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
+        if(SDL_SetTextureColorMod(texture_, original_.r, original_.g, original_.b))
+        {
+          BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
+        }
+        if(SDL_SetTextureAlphaMod(texture_, original_.a))
+        {
+          BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
+        }
       }
-      if(SDL_SetTextureAlphaMod(texture_, original_.a))
-      {
-        BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
-      }
+    }
+    catch(...)
+    {
+      exception::Log("Swallowed exception");
     }
   }
 };

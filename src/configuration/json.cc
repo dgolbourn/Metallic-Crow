@@ -4,7 +4,7 @@
 #include "json_exception.h"
 namespace json
 {
-JSON::JSON(void)
+JSON::JSON()
 {
   json_ = json_null();
 }
@@ -33,7 +33,17 @@ JSON::JSON(std::string const& filename)
   }
 }
 
-JSON::~JSON(void)
+JSON::JSON(pack_tag_, std::string const& format, int dummy, ...)
+{
+  json_error_t error;
+  json_ = json_vpack_ex(&error, 0, format.c_str(), c::VAList<int>(dummy));
+  if(!json_)
+  {
+    BOOST_THROW_EXCEPTION(Exception() << Exception::Text(error.text));
+  }
+}
+
+JSON::~JSON()
 {
   json_decref(json_);
 }
@@ -54,7 +64,7 @@ JSON& JSON::operator=(JSON other)
   return *this;
 }
 
-JSON::operator bool(void) const
+JSON::operator bool() const
 {
   return !json_is_null(json_);
 }
@@ -78,7 +88,7 @@ void JSON::Unpack_(std::string const& format, int dummy, ...) const
   }
 }
 
-int JSON::Size(void) const
+int JSON::Size() const
 {
   int ret = 0;
   if(json_is_array(json_))
@@ -99,5 +109,16 @@ JSON JSON::operator[](int index)
     }
   }
   return ret;
+}
+
+void JSON::Write(std::string const& file) const
+{
+  if(json_is_array(json_) || json_is_object(json_))
+  {
+    if(json_dump_file(json_, file.c_str(), JSON_INDENT(4) | JSON_PRESERVE_ORDER) == -1)
+    {
+      BOOST_THROW_EXCEPTION(Exception());
+    }
+  }
 }
 }

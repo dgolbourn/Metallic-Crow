@@ -77,7 +77,7 @@ void LoadOptions(Menu& menu, Saves& saves, Strings const& chapters)
         stream << chapters[progress];
       }
 
-      stream << last_played;
+      stream << " " << last_played;
     }
     options.push_back(stream.str());
   }

@@ -3,8 +3,14 @@
 #include "boost/exception/diagnostic_information.hpp"
 namespace exception
 {
-void Log(std::string const& detail)
+void Log(std::string const& detail) noexcept
 {
-  std::cerr << detail << std::endl << boost::current_exception_diagnostic_information();
+  try
+  {
+    std::cerr << detail << std::endl << boost::current_exception_diagnostic_information();
+  }
+  catch(...)
+  {
+  }
 }
 }

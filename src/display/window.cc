@@ -120,13 +120,13 @@ sdl::Texture WindowImpl::Text(std::string const& text, sdl::Font const& font)
 
 void WindowImpl::Draw(BoundingBox const& box, Modulation const& modulation) const
 {
-  SDL_Color colour;
+  SDL_Colour colour;
   if(SDL_GetRenderDrawColor(renderer_, &colour.r, &colour.g, &colour.b, &colour.a))
   {
     BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
   }
 
-  SDL_Color fill = {0, 0, 0, 255};
+  SDL_Colour fill = {0, 0, 0, 255};
   if(modulation)
   {
     fill.r = Colour(modulation.r());
@@ -219,8 +219,8 @@ void WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, 
     destination_ptr = &destination_copy;
   }
 
-  SDL_Color const* modulation_ptr = nullptr;
-  SDL_Color modulation_copy;
+  SDL_Colour const* modulation_ptr = nullptr;
+  SDL_Colour modulation_copy;
   if(modulation)
   {
     modulation_copy.r = Colour(modulation.r());

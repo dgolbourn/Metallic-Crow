@@ -7,7 +7,7 @@
 #include "boost/optional.hpp"
 namespace sdl
 {
-typedef boost::optional<SDL_Color> Colour;
+typedef boost::optional<SDL_Colour> Colour;
 
 class Font::Impl
 {
@@ -20,7 +20,7 @@ public:
   ~Impl();
   ttf::Library const ttf_;
   TTF_Font* font_;
-  SDL_Color colour_;
+  SDL_Colour colour_;
   Colour outline_;
 };
 }

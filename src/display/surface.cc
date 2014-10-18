@@ -11,7 +11,7 @@ namespace
 {
 typedef std::shared_ptr<SDL_Surface> SurfacePtr;
 
-SurfacePtr MakeText(TTF_Font *font, char const* text, SDL_Color const* colour, Uint32 length)
+SurfacePtr MakeText(TTF_Font *font, char const* text, SDL_Colour const* colour, Uint32 length)
 {
   SDL_Surface* surface = TTF_RenderText_Blended_Wrapped(font, text, *colour, length);
   if(!surface)
@@ -21,7 +21,7 @@ SurfacePtr MakeText(TTF_Font *font, char const* text, SDL_Color const* colour, U
   return SurfacePtr(surface, SDL_FreeSurface);
 }
 
-SurfacePtr MakeText(TTF_Font *font, char const* text, SDL_Color const* colour)
+SurfacePtr MakeText(TTF_Font *font, char const* text, SDL_Colour const* colour)
 {
   SDL_Surface* surface = TTF_RenderText_Blended(font, text, *colour);
   if(!surface)
@@ -62,7 +62,7 @@ public:
   }
 };
 
-void AddOutline(SDL_Surface* surface, SDL_Color const* outline)
+void AddOutline(SDL_Surface* surface, SDL_Colour const* outline)
 {
   PixelAccess pixel(surface);
 
@@ -71,7 +71,7 @@ void AddOutline(SDL_Surface* surface, SDL_Color const* outline)
     for(int x = 0; x < surface->w; ++x)
     {
       pixel.Seek(x, y);
-      SDL_Color colour;
+      SDL_Colour colour;
       pixel.Get(&colour.r, &colour.g, &colour.b, &colour.a);
       if((colour.a > 0) && (colour.a < 255))
       {

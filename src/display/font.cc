@@ -44,7 +44,7 @@ Colour MakeColour(json::JSON const& json)
   Colour colour;
   if(json)
   {
-    colour = SDL_Color();
+    colour = SDL_Colour();
     json.Unpack("[iii]", &colour->r, &colour->g, &colour->b);
     colour->a = 255;
   }

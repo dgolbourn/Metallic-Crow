@@ -7,11 +7,11 @@ namespace sdl
 {
 class Modulator
 {
-  SDL_Color const* modulation_;
-  SDL_Color original_;
+  SDL_Colour const* modulation_;
+  SDL_Colour original_;
   SDL_Texture* texture_;
 public:
-  Modulator(SDL_Texture* texture, SDL_Color const* modulation) : modulation_(nullptr)
+  Modulator(SDL_Texture* texture, SDL_Colour const* modulation) : modulation_(nullptr)
   {
     if(modulation)
     {
@@ -59,7 +59,7 @@ public:
   }
 };
 
-void Render(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, double angle, SDL_Color const* modulation)
+void Render(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, double angle, SDL_Colour const* modulation)
 {
   SDL_FPoint centre;
   centre.x = .5f * destination->w;
@@ -91,7 +91,7 @@ static float Transform(float x, float new_origin, float width, float zoom, float
   return x;
 }
 
-void Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source_ptr, SDL_FRect const* destination_ptr, SDL_FPoint const* view, float zoom, float parallax, bool tile, double angle, SDL_Color const* modulation)
+void Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source_ptr, SDL_FRect const* destination_ptr, SDL_FPoint const* view, float zoom, float parallax, bool tile, double angle, SDL_Colour const* modulation)
 {
   bool render = true;
   SDL_Rect source = {0, 0, texture->w, texture->h};

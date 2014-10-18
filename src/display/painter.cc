@@ -7,7 +7,7 @@ namespace sdl
 class PainterImpl
 {
 public:
-  PainterImpl(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, double angle, SDL_Color const* modulation);
+  PainterImpl(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, double angle, SDL_Colour const* modulation);
   bool operator()(algorithm::NodeCoordinates const& coords);
   void MovementVectors(void);
   void CollisionBox(void);
@@ -20,7 +20,7 @@ public:
   SDL_FRect view_;
   SDL_FRect collision_;
   SDL_FRect destination_;
-  SDL_Color const* modulation_;
+  SDL_Colour const* modulation_;
   double angle_;
   float c_;
   float s_;
@@ -80,7 +80,7 @@ void PainterImpl::MovementVectors(void)
   north_.y = c_ * destination_.h;
 }
 
-PainterImpl::PainterImpl(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, double angle, SDL_Color const* modulation)
+PainterImpl::PainterImpl(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, double angle, SDL_Colour const* modulation)
 {
   renderer_ = renderer;
   texture_ = texture;
@@ -126,7 +126,7 @@ bool Painter::operator()(algorithm::NodeCoordinates const& coords)
   return (*impl_)(coords);
 }
 
-Painter::Painter(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, double angle, SDL_Color const* modulation)
+Painter::Painter(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, double angle, SDL_Colour const* modulation)
 {
   impl_ = std::make_shared<PainterImpl>(window, renderer, texture, source, destination, angle, modulation);
 }

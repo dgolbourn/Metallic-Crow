@@ -20,6 +20,7 @@ public:
   void ChoiceLeft(Command const& start, Command const& end);
   void ChoiceRight(Command const& start, Command const& end);
   void Select(Command const& start, Command const& end);
+  void Back(Command const& start, Command const& end);
   void Quit(Command const& command);
   explicit operator bool(void) const;
 private:

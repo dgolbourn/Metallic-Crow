@@ -42,7 +42,7 @@ Saves::Impl::Impl(std::string const& file) : file_(file), slot_(0), playing_(fal
   char const* last_played[8];
   json::JSON json(file);
   
-  json.Unpack("s[{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}]si",
+  json.Unpack("{s[{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}]si}",
     "saves",
     "progress", &std::get<0>(progress_[0]), "current", &std::get<1>(progress_[0]), "last played", &last_played[0],
     "progress", &std::get<0>(progress_[1]), "current", &std::get<1>(progress_[1]), "last played", &last_played[1],
@@ -67,7 +67,7 @@ void Saves::Impl::Save()
     std::get<2>(progress_.at(slot_)) = calendar::Now();
   }
 
-  json::JSON("s[{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}]si",
+  json::JSON("{s[{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}]si}",
     "saves",
     "progress", std::get<0>(progress_[0]), "current", std::get<1>(progress_[0]), "last played", std::get<2>(progress_[0]).c_str(),
     "progress", std::get<0>(progress_[1]), "current", std::get<1>(progress_[1]), "last played", std::get<2>(progress_[1]).c_str(),

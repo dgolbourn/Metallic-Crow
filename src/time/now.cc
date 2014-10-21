@@ -12,7 +12,7 @@ std::string Now()
   std::time_t t = std::time(nullptr);
   std::tm tm = *std::localtime(&t);
   std::stringstream stream;
-  stream << std::put_time(&tm, "%FT%T");
+  stream << std::put_time(&tm, "%Y-%m-%dT%H:%M:%S");
   return stream.str();
 }
 }

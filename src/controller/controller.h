@@ -12,15 +12,20 @@ class Controller
 public:
   Controller() = default;
   Controller(json::JSON const& json, event::Queue& queue);
-  void Up();
-  void Down();
-  void Left();
-  void Right();
+  void UpBegin();
+  void DownBegin();
+  void LeftBegin();
+  void RightBegin();
+  void UpEnd();
+  void DownEnd();
+  void LeftEnd();
+  void RightEnd();
   void ChoiceUp();
   void ChoiceDown();
   void ChoiceLeft();
   void ChoiceRight();
   void Select();
+  void Back();
   void Add(event::Command const& command);
   explicit operator bool() const;
 private:

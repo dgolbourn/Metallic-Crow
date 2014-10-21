@@ -66,9 +66,12 @@ void Script::Impl::Resume()
 
 void Script::Impl::Render(void)
 {
-  stage_->scene_.Render();
-  stage_->choice_.Render();
-  stage_->subtitle_.Render();
+  if(stage_)
+  {
+    stage_->scene_.Render();
+    stage_->choice_.Render();
+    stage_->subtitle_.Render();
+  }
   fade_.Render();
 }
 

@@ -27,6 +27,7 @@ public:
   void ChoiceLeft(Command const& start, Command const& end);
   void ChoiceRight(Command const& start, Command const& end);
   void Select(Command const& start, Command const& end);
+  void Back(Command const& start, Command const& end);
   void Quit(Command const& command);
   void Keydown(SDL_KeyboardEvent const& keyboard_event, Uint32 type);
   sdl::Library const sdl_;
@@ -39,6 +40,7 @@ public:
   Switch choice_left_;
   Switch choice_right_;
   Switch quit_;
+  Switch back_;
   Switch select_;
   KeyMap keys_;
 };
@@ -97,6 +99,12 @@ void Event::Impl::Select(Command const& start, Command const& end)
   select_.second.Add(end);
 }
 
+void Event::Impl::Back(Command const& start, Command const& end)
+{
+  back_.first.Add(start);
+  back_.second.Add(end);
+}
+
 void Event::Impl::Quit(Command const& command)
 {
   quit_.first.Add(command);
@@ -124,7 +132,7 @@ void Event::Impl::Keydown(SDL_KeyboardEvent const& keyboard_event, Uint32 type)
 
 Event::Impl::Impl(json::JSON const& json) : sdl_(SDL_INIT_EVENTS)
 {
-  int up, down, left, right, choice_up, choice_down, choice_left, choice_right, select, quit;
+  int up, down, left, right, choice_up, choice_down, choice_left, choice_right, select, back;
   json.Unpack("{sisisisisisisisisisi}",
     "up", &up,
     "down", &down,
@@ -135,7 +143,7 @@ Event::Impl::Impl(json::JSON const& json) : sdl_(SDL_INIT_EVENTS)
     "choice left", &choice_left,
     "choice right", &choice_right,
     "select", &select,
-    "quit", &quit);
+    "back", &back);
 
   keys_[SDL_Scancode(up)] = up_;
   keys_[SDL_Scancode(down)] = down_;
@@ -146,7 +154,7 @@ Event::Impl::Impl(json::JSON const& json) : sdl_(SDL_INIT_EVENTS)
   keys_[SDL_Scancode(choice_left)] = choice_left_;
   keys_[SDL_Scancode(choice_right)] = choice_right_;
   keys_[SDL_Scancode(select)] = select_;
-  keys_[SDL_Scancode(quit)] = quit_;
+  keys_[SDL_Scancode(back)] = back_;
 }
 
 void Event::Impl::Check(void)
@@ -221,6 +229,11 @@ void Event::ChoiceRight(Command const& start, Command const& end)
 void Event::Select(Command const& start, Command const& end)
 {
   impl_->Select(start, end);
+}
+
+void Event::Back(Command const& start, Command const& end)
+{
+  impl_->Back(start, end);
 }
 
 void Event::Quit(Command const& command)

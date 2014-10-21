@@ -91,15 +91,20 @@ class Controller::Impl final : public std::enable_shared_from_this<Impl>
 public:
   Impl(json::JSON const& json, event::Queue& queue);
   void Init();
-  void Up();
-  void Down();
-  void Left();
-  void Right();
+  void UpBegin();
+  void DownBegin();
+  void LeftBegin();
+  void RightBegin();
+  void UpEnd();
+  void DownEnd();
+  void LeftEnd();
+  void RightEnd();
   void ChoiceUp();
   void ChoiceDown();
   void ChoiceLeft();
   void ChoiceRight();
   void Select();
+  void Back();
   void Render();
   void Add(event::Command const& command);
 
@@ -128,20 +133,22 @@ public:
   Strings chapter_names_;
   Strings chapter_files_;
   int slot_;
+  int chapter_;
 };
 
 void Controller::Impl::Load(int slot)
 {
   saves_.Stop();
   slot_ = slot;
-  LoadOptions(chapter_menu_, saves_, chapter_names_);
+  chapter_ = saves_.Current(slot_);
+  LoadOptions(load_menu_, saves_, chapter_names_);
   state_ = State::Start;
 }
 
 void Controller::Impl::Chapter(int chapter)
 {
   saves_.Stop();
-  saves_.Current(slot_, chapter);
+  chapter_ = chapter;
   ChapterOptions(chapter_menu_, saves_.Progress(slot_), chapter_names_);
   state_ = State::Start;
 }
@@ -174,6 +181,7 @@ Controller::Impl::Impl(json::JSON const& json, event::Queue& queue) : state_(Sta
 
   saves_ = Saves(saves);
   slot_ = saves_.LastPlayed();
+  chapter_ = saves_.Current(slot_);
 
   Chapters(json::JSON(chapters), chapter_names_, chapter_files_);
 
@@ -212,8 +220,9 @@ void Controller::Impl::Init()
 void Controller::Impl::ChapterEnd()
 {
   saves_.Current(slot_, saves_.Current(slot_) + 1);
+  chapter_ = saves_.Current(slot_);
   saves_.Save();
-  if(saves_.Current(slot_) >= int(chapter_files_.size()))
+  if(chapter_ >= int(chapter_files_.size()))
   {
     saves_.Stop();
     story_script_ = Script();
@@ -221,7 +230,7 @@ void Controller::Impl::ChapterEnd()
   }
   else
   {
-    story_script_ = Script(chapter_files_[saves_.Current(slot_)], window_, queue_);
+    story_script_ = Script(chapter_files_[chapter_], window_, queue_);
     story_script_.Add(function::Bind(&Impl::ChapterEnd, shared_from_this()));
     story_script_.Resume();
   }
@@ -246,13 +255,16 @@ void Controller::Impl::StartPlay()
 {
   state_ = State::Story;
   start_script_.Pause();
-  if(saves_.Current(slot_) >= int(chapter_files_.size()))
+  saves_.Current(slot_, chapter_);
+  chapter_ = saves_.Current(slot_);
+  if(chapter_ >= int(chapter_files_.size()))
   {
     saves_.Current(slot_, 0);
+    chapter_ = saves_.Current(slot_);
   }
   saves_.Play(slot_);
   saves_.Save();
-  story_script_ = Script(chapter_files_[saves_.Current(slot_)], window_, queue_);
+  story_script_ = Script(chapter_files_[chapter_], window_, queue_);
   story_script_.Add(function::Bind(&Impl::ChapterEnd, shared_from_this()));
   story_script_.Resume();
 }
@@ -277,7 +289,7 @@ void Controller::Impl::Add(event::Command const& command)
   signal_.Add(command);
 }
 
-void Controller::Impl::Up()
+void Controller::Impl::UpBegin()
 {
   switch(state_)
   {
@@ -301,7 +313,23 @@ void Controller::Impl::Up()
   }
 }
 
-void Controller::Impl::Down()
+void Controller::Impl::UpEnd()
+{
+  switch(state_)
+  {
+  case State::Story:
+    story_script_.Down();
+    break;
+  default:
+  case State::Load:
+  case State::Chapter:
+  case State::Pause:
+  case State::Start:
+    break;
+  }
+}
+
+void Controller::Impl::DownBegin()
 {
   switch(state_)
   {
@@ -325,7 +353,23 @@ void Controller::Impl::Down()
   }
 }
 
-void Controller::Impl::Left()
+void Controller::Impl::DownEnd()
+{
+  switch(state_)
+  {
+  case State::Story:
+    story_script_.Up();
+    break;
+  default:
+  case State::Load:
+  case State::Chapter:
+  case State::Pause:
+  case State::Start:
+    break;
+  }
+}
+
+void Controller::Impl::LeftBegin()
 {
   switch(state_)
   {
@@ -341,7 +385,7 @@ void Controller::Impl::Left()
   }
 }
 
-void Controller::Impl::Right()
+void Controller::Impl::LeftEnd()
 {
   switch(state_)
   {
@@ -353,6 +397,38 @@ void Controller::Impl::Right()
     break;
   case State::Story:
     story_script_.Right();
+    break;
+  }
+}
+
+void Controller::Impl::RightBegin()
+{
+  switch(state_)
+  {
+  default:
+  case State::Start:
+  case State::Pause:
+  case State::Chapter:
+  case State::Load:
+    break;
+  case State::Story:
+    story_script_.Right();
+    break;
+  }
+}
+
+void Controller::Impl::RightEnd()
+{
+  switch (state_)
+  {
+  default:
+  case State::Start:
+  case State::Pause:
+  case State::Chapter:
+  case State::Load:
+    break;
+  case State::Story:
+    story_script_.Left();
     break;
   }
 }
@@ -431,10 +507,8 @@ void Controller::Impl::Select()
   case State::Pause:
     pause_menu_.Select();
     break;
+  default:
   case State::Story:
-    state_ = State::Pause;
-    story_script_.Pause();
-    pause_script_.Resume();
     break;
   case State::Chapter:
     chapter_menu_.Select();
@@ -442,10 +516,33 @@ void Controller::Impl::Select()
   case State::Load:
     load_menu_.Select();
     break;
+  }
+}
+
+void Controller::Impl::Back()
+{
+  switch(state_)
+  {
   default:
+  case State::Start:
+    break;
+  case State::Pause:
+    state_ = State::Story;
+    story_script_.Resume();
+    pause_script_.Pause();
+    break;
+  case State::Story:
+    state_ = State::Pause;
+    story_script_.Pause();
+    pause_script_.Resume();
+    break;
+  case State::Load:
+  case State::Chapter:
+    state_ = State::Start;
     break;
   }
 }
+
 
 void Controller::Impl::Render()
 {
@@ -490,24 +587,44 @@ Controller::Controller(json::JSON const& json, event::Queue& queue) : impl_(std:
   impl_->Init();
 }
 
-void Controller::Up()
+void Controller::UpBegin()
 {
-  impl_->Up();
+  impl_->UpBegin();
 }
 
-void Controller::Down()
+void Controller::DownBegin()
 {
-  impl_->Down();
+  impl_->DownBegin();
 }
 
-void Controller::Left()
+void Controller::LeftBegin()
 {
-  impl_->Left();
+  impl_->LeftBegin();
 }
 
-void Controller::Right()
+void Controller::RightBegin()
 {
-  impl_->Right();
+  impl_->RightBegin();
+}
+
+void Controller::UpEnd()
+{
+  impl_->UpEnd();
+}
+
+void Controller::DownEnd()
+{
+  impl_->DownEnd();
+}
+
+void Controller::LeftEnd()
+{
+  impl_->LeftEnd();
+}
+
+void Controller::RightEnd()
+{
+  impl_->RightEnd();
 }
 
 void Controller::ChoiceUp()
@@ -533,6 +650,11 @@ void Controller::ChoiceRight()
 void Controller::Select()
 {
   impl_->Select();
+}
+
+void Controller::Back()
+{
+  impl_->Back();
 }
 
 void Controller::Add(event::Command const& command)

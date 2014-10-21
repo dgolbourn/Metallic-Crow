@@ -30,10 +30,11 @@ int main(int argc, char* argv[])
 
       event.Quit(Quit);
       event.Select(function::Bind(&game::Controller::Select, controller), event::None);
-      event.Up(function::Bind(&game::Controller::Up, controller), function::Bind(&game::Controller::Down, controller));
-      event.Down(function::Bind(&game::Controller::Down, controller), function::Bind(&game::Controller::Up, controller));
-      event.Left(function::Bind(&game::Controller::Left, controller), function::Bind(&game::Controller::Right, controller));
-      event.Right(function::Bind(&game::Controller::Right, controller), function::Bind(&game::Controller::Left, controller));
+      event.Back(function::Bind(&game::Controller::Back, controller), event::None);
+      event.Up(function::Bind(&game::Controller::UpBegin, controller), function::Bind(&game::Controller::DownEnd, controller));
+      event.Down(function::Bind(&game::Controller::DownBegin, controller), function::Bind(&game::Controller::UpEnd, controller));
+      event.Left(function::Bind(&game::Controller::LeftBegin, controller), function::Bind(&game::Controller::RightEnd, controller));
+      event.Right(function::Bind(&game::Controller::RightBegin, controller), function::Bind(&game::Controller::LeftEnd, controller));
       event.ChoiceUp(function::Bind(&game::Controller::ChoiceUp, controller), event::None);
       event.ChoiceDown(function::Bind(&game::Controller::ChoiceDown, controller), event::None);
       event.ChoiceLeft(function::Bind(&game::Controller::ChoiceLeft, controller), event::None);

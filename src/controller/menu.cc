@@ -48,13 +48,12 @@ Menu::Impl::Impl(json::JSON const& json, display::Window& window) : selection_(0
   json_t* clip;
   json_t* render_box_ref;
 
-  json.Unpack("s{soso}sssoso",
-    "fonts",
-    "idle", &idle_ref,
-    "active", &active_ref,
+  json.Unpack("{sososssoso}",
+    "idle font", &idle_ref,
+    "active font", &active_ref,
     "page", &background_file,
     "clip", &clip,
-    "render_box", &render_box_ref);
+    "render box", &render_box_ref);
 
   idle_font_ = sdl::Font(json::JSON(idle_ref));
   active_font_ = sdl::Font(json::JSON(active_ref));

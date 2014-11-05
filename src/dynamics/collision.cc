@@ -129,7 +129,7 @@ bool Collision::Impl::Link(dynamics::Body const& a, dynamics::Body const& b)
   return link;
 }
 
-Collision::Collision(event::Queue& queue) : impl_(std::make_shared<Collision::Impl>(queue))
+Collision::Collision(event::Queue& queue) : impl_(std::make_shared<Impl>(queue))
 {
 }
 

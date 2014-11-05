@@ -12,7 +12,7 @@ class Group
 {
 public:
   Group(void) = default;
-  Group(json::JSON& json, Collision const& collision);
+  Group(json::JSON const& json, Collision const& collision);
   void Begin(std::string const& group_a, std::string const& group_b, event::Command const& command);
   void End(std::string const& group_a, std::string const& group_b, event::Command const& command);
   void Link(std::string const& group_a, std::string const& group_b);

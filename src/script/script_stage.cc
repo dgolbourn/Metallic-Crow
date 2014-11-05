@@ -29,19 +29,27 @@ void Script::Impl::StageLoad()
   std::string name;
   std::string world_file;
   std::string choice_file;
-  std::string collision;
-  std::string subtitle;
+  std::string collision_file;
+  std::string subtitle_file;
   lua_.PopFront(name);
   lua_.PopFront(world_file);
   lua_.PopFront(choice_file);
-  lua_.PopFront(collision);
-  lua_.PopFront(subtitle);
+  lua_.PopFront(collision_file);
+  lua_.PopFront(subtitle_file);
   
   StagePtr stage = std::make_shared<Stage>();
   
+  stage->collision_ = collision::Collision(queue_);
+
   dynamics::World world(json::JSON(path_ / world_file), stage->collision_, queue_);
   world.End(function::Bind(&Impl::View, shared_from_this(), dynamics::World::WeakPtr(world)));
   stage->world_ = world;
+
+  stage->paused_[0] = paused_;
+  stage->paused_[1] = true;
+  stage->zoom_ = 1.f;
+
+  stage->group_ = collision::Group(json::JSON(path_ / collision_file), stage->collision_);
 
   Choice choice(json::JSON(path_ / choice_file), window_, queue_, path_);
   choice.Up(function::Bind(&Impl::Call, shared_from_this(), "choice_up"));
@@ -49,15 +57,9 @@ void Script::Impl::StageLoad()
   choice.Left(function::Bind(&Impl::Call, shared_from_this(), "choice_left"));
   choice.Right(function::Bind(&Impl::Call, shared_from_this(), "choice_right"));
   choice.Timer(function::Bind(&Impl::Call, shared_from_this(), "choice_timer"));
-  stage_->choice_ = choice;
+  stage->choice_ = choice;
 
-  stage_->subtitle_ = Subtitle(json::JSON(path_ / subtitle), window_, path_);
-
-  stage->group_ = collision::Group(json::JSON(path_ / collision), stage->collision_);
-  
-  stage->paused_[0] = paused_;
-  stage->paused_[1] = true;
-  stage->zoom_ = 1.f;
+  stage->subtitle_ = Subtitle(json::JSON(path_ / subtitle_file), window_, path_);
 
   stages_.emplace(name, stage);
 }

@@ -9,7 +9,7 @@ namespace collision
 class Collision
 {
 public:
-  Collision(void) = default;
+  Collision() = default;
   Collision(event::Queue& queue);
   void Begin(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c);
   void End(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c);
@@ -21,7 +21,7 @@ public:
   void Unlink(dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b);
 private:
   class Impl;
-  std::shared_ptr<class Impl> impl_;
+  std::shared_ptr<Impl> impl_;
 };
 }
 #endif

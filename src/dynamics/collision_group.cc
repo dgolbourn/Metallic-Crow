@@ -15,7 +15,7 @@ typedef std::map<std::string, std::map<std::string, event::Switch>> Collisions;
 class Group::Impl
 {
 public:
-  Impl(json::JSON& json, Collision const& collision);
+  Impl(json::JSON const& json, Collision const& collision);
   void Begin(std::string const& group_a, std::string const& group_b, event::Command const& command);
   void End(std::string const& group_a, std::string const& group_b, event::Command const& command);
   void Link(std::string const& group_a, std::string const& group_b);
@@ -25,7 +25,7 @@ public:
   Collision collision_;
 };
 
-Group::Impl::Impl(json::JSON& json, Collision const& collision) : collision_(collision)
+Group::Impl::Impl(json::JSON const& json, Collision const& collision) : collision_(collision)
 {
   json_t* collisions;
 
@@ -151,7 +151,7 @@ void Group::Add(std::string const& group, dynamics::Body const& body)
   impl_->Add(group, body);
 }
 
-Group::Group(json::JSON& json, Collision const& collision) : impl_(std::make_shared<Impl>(json, collision))
+Group::Group(json::JSON const& json, Collision const& collision) : impl_(std::make_shared<Impl>(json, collision))
 {
 }
 }

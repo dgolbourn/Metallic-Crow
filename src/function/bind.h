@@ -7,7 +7,7 @@ namespace function
 template<class Method, class Shared, class... Args> event::Command Bind(Method&& method, Shared const& shared, Args... args)
 {
   Shared::WeakPtr weak(shared);
-  return [=](void)
+  return [=](void) mutable
   {
     bool locked = false;
     if(auto shared_locked = weak.Lock())

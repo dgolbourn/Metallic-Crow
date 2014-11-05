@@ -10,4 +10,6 @@ function begin()
 	"res/common/subtitle.json")
 
   stage_nominate("scene00")
+
+  quit()
 end

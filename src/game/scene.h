@@ -7,6 +7,7 @@ namespace game
 class Scene
 {
 public:
+  Scene();
   void Add(event::Command const& layer, int plane);
   void Render();
 private:

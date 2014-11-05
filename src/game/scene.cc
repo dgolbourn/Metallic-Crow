@@ -44,4 +44,8 @@ void Scene::Add(event::Command const& layer, int z)
 {
   impl_->Add(layer, z);
 }
+
+Scene::Scene() : impl_(std::make_shared<Impl>())
+{
+}
 }

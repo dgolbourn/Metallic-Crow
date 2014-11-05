@@ -2,12 +2,13 @@
 #include "sdl_texture.h"
 #include "window.h"
 #include "window_impl.h"
+#include "boost/filesystem.hpp"
 namespace display
 {
 class Texture::Impl
 {
 public:
-  Impl(std::string const& file, Window& window);
+  Impl(boost::filesystem::path const& file, Window& window);
   Impl(std::string const& text, sdl::Font const& font, float width, Window& window);
   Impl(std::string const& text, sdl::Font const& font, Window& window);
   Impl(Impl const& texture, BoundingBox const& clip);
@@ -20,7 +21,7 @@ public:
   display::BoundingBox clip_;
 };
 
-Texture::Impl::Impl(std::string const& file, Window& window) : window_(window)
+Texture::Impl::Impl(boost::filesystem::path const& file, Window& window) : window_(window)
 {
   texture_ptr_ = window.impl_->Load(file);
   sdl::Texture texture = texture_ptr_.Lock();
@@ -112,7 +113,7 @@ Shape Texture::Shape(void) const
   return impl_->Shape();
 }
 
-Texture::Texture(std::string const& file, Window& window) : impl_(std::make_shared<Impl>(file, window))
+Texture::Texture(boost::filesystem::path const& file, Window& window) : impl_(std::make_shared<Impl>(file, window))
 {
 }
 

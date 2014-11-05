@@ -11,31 +11,30 @@ template<class Node> class FloodFill
 private:
   typedef std::unordered_set<NodeCoordinates, boost::hash<NodeCoordinates>> NodeSet;
 
+  Node node_;
   NodeSet set_;
   NodeCoordinates coords_;
   
-  void Fill(Node& node)
+  void Fill()
   {
     if(set_.insert(coords_).second)
     {
-      if(node(coords_))
+      if(node_(coords_))
       {
-        coords_.first -= 1; Fill(node);
-        coords_.first += 2; Fill(node);
+        coords_.first -= 1; Fill();
+        coords_.first += 2; Fill();
         coords_.first -= 1;
-        coords_.second += 1; Fill(node);
-        coords_.second -= 2; Fill(node);
+        coords_.second += 1; Fill();
+        coords_.second -= 2; Fill();
         coords_.second += 1;
       }
     }
   }
 
 public:
-  void operator()(Node& node)
+  FloodFill::FloodFill(Node&& node) : node_(std::move(node)), coords_(0, 0)
   {
-    set_.clear();
-    coords_ = NodeCoordinates(0, 0);
-    Fill(node);
+    Fill();
   }
 };
 }

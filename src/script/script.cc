@@ -3,11 +3,11 @@
 #include "exception.h"
 namespace game
 {
-Script::Impl::Impl(display::Window& window, event::Queue& queue) : window_(window), queue_(queue), paused_(true), fade_(queue, window), begun_(false)
+Script::Impl::Impl(display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : window_(window), queue_(queue), paused_(true), fade_(queue, window), begun_(false), path_(path)
 {
 }
 
-void Script::Impl::Init(std::string const& file)
+void Script::Impl::Init(boost::filesystem::path const& file)
 {
   lua_.Load(file);
 
@@ -23,7 +23,7 @@ void Script::Impl::Init(std::string const& file)
   FadeInit();
 
   typedef void (event::Signal::*Notify)();
-  lua_.Add(function::Bind((Notify)&event::Signal::operator(), signal_), "end", 0);
+  lua_.Add(function::Bind((Notify)&event::Signal::operator(), signal_), "quit", 0);
 
   Call("initialise");
 }
@@ -197,7 +197,7 @@ Script::operator bool(void) const
   return bool(impl_);
 }
 
-Script::Script(std::string const& file, display::Window& window, event::Queue& queue) : impl_(std::make_shared<Impl>(window, queue))
+Script::Script(boost::filesystem::path const& file, display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(window, queue, path))
 {
   impl_->Init(file);
 }

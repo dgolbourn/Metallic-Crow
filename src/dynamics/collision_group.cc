@@ -27,7 +27,13 @@ public:
 
 Group::Impl::Impl(json::JSON& json, Collision const& collision) : collision_(collision)
 {
-  for(auto& element : json)
+  json_t* collisions;
+
+  json.Unpack("{so}", 
+    "allowed collisions", 
+    &collisions);
+
+  for(auto& element : json::JSON(collisions))
   {
     char const* group_a;
     char const* group_b;

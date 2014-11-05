@@ -16,7 +16,7 @@ typedef std::array<Save, 8> SaveArray;
 class Saves::Impl
 {
 public:
-  Impl(std::string const& file);
+  Impl(boost::filesystem::path const& file);
   ~Impl();
 
   bool Playing() const;
@@ -33,11 +33,11 @@ public:
   
   SaveArray progress_;
   SaveArray::size_type slot_;
-  std::string file_;
+  boost::filesystem::path file_;
   bool playing_;
 };
 
-Saves::Impl::Impl(std::string const& file) : file_(file), slot_(0), playing_(false)
+Saves::Impl::Impl(boost::filesystem::path const& file) : file_(file), slot_(0), playing_(false)
 {
   char const* last_played[8];
   json::JSON json(file);
@@ -211,7 +211,7 @@ void Saves::Save()
   impl_->Save();
 }
 
-Saves::Saves(std::string const& file) : impl_(std::make_shared<Impl>(file))
+Saves::Saves(boost::filesystem::path const& file) : impl_(std::make_shared<Impl>(file))
 {
 }
 }

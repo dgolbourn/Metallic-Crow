@@ -5,13 +5,14 @@
 #include "queue.h"
 #include "command.h"
 #include "weak_ptr.h"
+#include "boost/filesystem.hpp"
 namespace game
 {
 class Controller
 {
 public:
   Controller() = default;
-  Controller(json::JSON const& json, event::Queue& queue);
+  Controller(json::JSON const& json, event::Queue& queue, boost::filesystem::path const& path);
   void UpBegin();
   void DownBegin();
   void LeftBegin();

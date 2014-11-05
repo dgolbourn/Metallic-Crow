@@ -4,7 +4,7 @@
 #include "jansson.h"
 #include "lua.h"
 #include "sdl.h"
-#include "sdl_mixer.h"
+//#include "sdl_mixer.h"
 #include "sdl_image.h"
 #include "sdl_ttf.h"
 #include "Box2D/Box2D.h"
@@ -39,7 +39,7 @@ std::string Version(void)
   stream << "Jansson: " << JANSSON_MAJOR_VERSION << "." << JANSSON_MINOR_VERSION << "." << JANSSON_MICRO_VERSION << std::endl;
   stream << "Lua: " << LUA_VERSION_MAJOR << "." << LUA_VERSION_MINOR << "." << LUA_VERSION_RELEASE << std::endl;
   stream << "SDL: " << SDL_MAJOR_VERSION << "." << SDL_MINOR_VERSION << "." << SDL_PATCHLEVEL << std::endl;
-  stream << "SDL Mixer: " << SDL_MIXER_MAJOR_VERSION << "." << SDL_MIXER_MINOR_VERSION << "." << SDL_MIXER_PATCHLEVEL << std::endl;
+  //stream << "SDL Mixer: " << SDL_MIXER_MAJOR_VERSION << "." << SDL_MIXER_MINOR_VERSION << "." << SDL_MIXER_PATCHLEVEL << std::endl;
   stream << "SDL Image: " << SDL_IMAGE_MAJOR_VERSION << "." << SDL_IMAGE_MINOR_VERSION << "." << SDL_IMAGE_PATCHLEVEL << std::endl;
   stream << "SDL TTF: " << SDL_TTF_MAJOR_VERSION << "." << SDL_TTF_MINOR_VERSION << "." << SDL_TTF_PATCHLEVEL << std::endl;
   stream << "Box2D: " << b2_version.major << "." << b2_version.minor << "." << b2_version.revision << std::endl;

@@ -30,7 +30,7 @@ public:
   void Back(Command const& start, Command const& end);
   void Quit(Command const& command);
   void Keydown(SDL_KeyboardEvent const& keyboard_event, Uint32 type);
-  sdl::Library const sdl_;
+  sdl::Library sdl_;
   Switch up_;
   Switch down_;
   Switch left_;

@@ -17,6 +17,7 @@
 #include "subtitle.h"
 #include "fade.h"
 #include "signal.h"
+#include "boost/filesystem.hpp"
 namespace game
 {
 typedef std::list<Actor::WeakPtr> ActorList;
@@ -54,8 +55,8 @@ typedef std::map<std::string, StagePtr> StageMap;
 class Script::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(display::Window& window, event::Queue& queue);
-  void Init(std::string const& file);
+  Impl(display::Window& window, event::Queue& queue, boost::filesystem::path const& path);
+  void Init(boost::filesystem::path const& file);
   
   void Pause();
   void Resume();
@@ -146,6 +147,7 @@ public:
   Fade fade_;
   event::Signal signal_;
   bool begun_;
+  boost::filesystem::path path_;
 };
 }
 #endif

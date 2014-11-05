@@ -19,9 +19,9 @@ int Style(bool bold, bool italic)
   return style;
 }
 
-TTF_Font* Open(std::string const& file, int point)
+TTF_Font* Open(boost::filesystem::path const& file, int point)
 {
-  TTF_Font* font = TTF_OpenFont(file.c_str(), point);
+  TTF_Font* font = TTF_OpenFont(file.string().c_str(), point);
   if(!font)
   {
     BOOST_THROW_EXCEPTION(ttf::Exception() << ttf::Exception::What(ttf::Error()));
@@ -34,7 +34,7 @@ Colour MakeColour(bool valid, int r, int g, int b)
   Colour colour;
   if(valid)
   {
-    colour = {r, g, b, 255};
+    colour = {Uint8(r), Uint8(g), Uint8(b), 255u};
   }
   return colour;
 }
@@ -44,20 +44,20 @@ Colour MakeColour(json::JSON const& json)
   Colour colour;
   if(json)
   {
-    colour = SDL_Colour();
-    json.Unpack("[iii]", &colour->r, &colour->g, &colour->b);
-    colour->a = 255;
+    int r, g, b;
+    json.Unpack("[iii]", &r, &g, &b);
+    colour = MakeColour(true, r, g, b);
   }
   return colour;
 }
 }
 
-void Font::Impl::Init(std::string const& file, int point, int r, int g, int b, bool bold, bool italic, Colour const& outline)
+void Font::Impl::Init(boost::filesystem::path const& file, int point, int r, int g, int b, bool bold, bool italic, Colour const& outline)
 {
   font_ = nullptr;
   try
   {
-    colour_ = {r, g, b, 255};
+    colour_ = {Uint8(r), Uint8(g), Uint8(b), 255u};
     outline_ = outline;
     font_ = Open(file, point);
     TTF_SetFontStyle(font_, Style(bold, italic));
@@ -76,12 +76,12 @@ void Font::Impl::Destroy(void)
   }
 }
 
-Font::Impl::Impl(std::string const& file, int point, int r, int g, int b, bool bold, bool italic, bool outline, int or, int og, int ob)
+Font::Impl::Impl(boost::filesystem::path const& file, int point, int r, int g, int b, bool bold, bool italic, bool outline, int or, int og, int ob)
 {
   Init(file, point, r, g, b, bold, italic, MakeColour(outline, or, og, ob));
 }
 
-Font::Impl::Impl(json::JSON const& json)
+Font::Impl::Impl(json::JSON const& json, boost::filesystem::path const& path)
 {
   char const* file;
   int point;
@@ -100,7 +100,7 @@ Font::Impl::Impl(json::JSON const& json)
     "italic", &italic,
     "outline", &outline);
 
-  Init(file, point, r, g, b, bold != 0, italic != 0, MakeColour(json::JSON(outline)));
+  Init(path / file, point, r, g, b, bold != 0, italic != 0, MakeColour(json::JSON(outline)));
 }
 
 Font::Impl::~Impl(void)
@@ -118,11 +118,11 @@ float Font::LineSpacing() const
   return impl_->LineSpacing();
 }
 
-Font::Font(std::string const& file, int point, int r, int g, int b, bool bold, bool italic, bool outline, int or, int og, int ob) : impl_(std::make_shared<Impl>(file, point, r, g, b, bold, italic, outline, or, og, ob))
+Font::Font(boost::filesystem::path const& file, int point, int r, int g, int b, bool bold, bool italic, bool outline, int or, int og, int ob) : impl_(std::make_shared<Impl>(file, point, r, g, b, bold, italic, outline, or, og, ob))
 {
 }
 
-Font::Font(json::JSON const& json) : impl_(std::make_shared<Impl>(json))
+Font::Font(json::JSON const& json, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, path))
 {
 }
 }

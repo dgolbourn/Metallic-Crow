@@ -5,7 +5,6 @@
 #include "mix_library.h"
 #include <vector>
 #include "decoder.h"
-
 namespace mix
 {
 class ChunkImpl
@@ -13,12 +12,15 @@ class ChunkImpl
 public:
   ChunkImpl(std::string const& filename);
   ~ChunkImpl(void);
-  Library const mix_;
+  Library mix_;
   Mix_Chunk* chunk_;
   std::vector<Uint8> data_;
 };
 
-static std::unordered_map<std::string, std::shared_ptr<ChunkImpl>> chunks;
+namespace
+{
+std::unordered_map<std::string, std::shared_ptr<ChunkImpl>> chunks;
+}
 
 void Free(void)
 {

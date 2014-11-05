@@ -11,7 +11,7 @@ class StackImpl
 public:
   StackImpl(void);
   ~StackImpl(void);
-  void Load(std::string const& file);
+  void Load(boost::filesystem::path const& file);
   void Call(int in, int out);
   void Pop(int& out, bool front);
   void Pop(float& out, bool front);
@@ -42,9 +42,9 @@ StackImpl::~StackImpl(void)
   lua_close(state_);
 }
 
-void StackImpl::Load(std::string const& file)
+void StackImpl::Load(boost::filesystem::path const& file)
 {
-  int ret = luaL_dofile(state_, file.c_str());
+  int ret = luaL_dofile(state_, file.string().c_str());
   if(ret)
   {
     std::string error(lua_tostring(state_, -1));
@@ -205,7 +205,7 @@ void StackImpl::Add(event::Command const& command, std::string const& name, int 
   }
 }
 
-void Stack::Load(std::string const& file)
+void Stack::Load(boost::filesystem::path const& file)
 {
   impl_->Load(file);
 }
@@ -300,8 +300,7 @@ void Stack::Add(event::Command const& command, std::string const& name, int out)
   impl_->Add(command, name, out);
 }
 
-Stack::Stack(void)
+Stack::Stack() : impl_(std::make_shared<StackImpl>())
 {
-  impl_ = std::make_shared<StackImpl>();
 }
 }

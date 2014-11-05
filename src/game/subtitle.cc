@@ -4,7 +4,7 @@ namespace game
 class Subtitle::Impl
 {
 public:
-  Impl(json::JSON const& json, display::Window& window);
+  Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path);
   void Subtitle(std::string const& text);
   void Modulate(float r, float g, float b);
   void Render(void) const;
@@ -17,7 +17,7 @@ public:
   display::Window window_;
 };
 
-Subtitle::Impl::Impl(json::JSON const& json, display::Window& window) : window_(window)
+Subtitle::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path) : window_(window)
 {
   json_t* font;
   json_t* clip;
@@ -26,7 +26,7 @@ Subtitle::Impl::Impl(json::JSON const& json, display::Window& window) : window_(
     "font", &font,
     "render box", &clip);
 
-  font_ = sdl::Font(json::JSON(font));
+  font_ = sdl::Font(json::JSON(font), path);
   clip_ = display::BoundingBox(json::JSON(clip));
 }
 
@@ -63,7 +63,7 @@ void Subtitle::Modulate(float r, float g, float b)
   impl_->Modulate(r, g, b);
 }
 
-Subtitle::Subtitle(json::JSON const& json, display::Window& window) : impl_(std::make_shared<Impl>(json, window))
+Subtitle::Subtitle(json::JSON const& json, display::Window& window, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, window, path))
 {
 }
 }

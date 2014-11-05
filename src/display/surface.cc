@@ -102,9 +102,9 @@ Surface::Surface(std::string const& text, Font const& font)
   impl_ = surface;
 }
 
-Surface::Surface(std::string const& file)
+Surface::Surface(boost::filesystem::path const& file)
 {
-  SDL_Surface* surface = IMG_Load(file.c_str());
+  SDL_Surface* surface = IMG_Load(file.string().c_str());
   if(!surface)
   {
     BOOST_THROW_EXCEPTION(img::Exception() << img::Exception::What(img::Error()));

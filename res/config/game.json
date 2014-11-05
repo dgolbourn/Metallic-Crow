@@ -1,0 +1,47 @@
+{
+    "window" : 
+	{
+		"name" : "Adventure Cat!",
+		"width" : 1024,
+		"height" : 768,
+		"mode" : "windowed"
+	},
+    "menu" : 
+	{
+		"idle font" : 
+		{
+			"file" : "ext/menu.ttf",
+			"point" : 35,
+			"colour" : [255, 255, 255],
+			"bold" : false,
+			"italic" : false,
+			"outline" : [0, 0, 0]
+		},
+		"active font" :
+		{
+			"file" : "ext/menu.ttf",
+			"point" : 40,
+			"colour" : [255, 0, 0],
+			"bold" : false,
+			"italic" : false,
+			"outline" : [0, 0, 0]
+		},
+		"page" : "res/menu/menu.png",
+		"clip" : null,
+		"render box" : [256.0, 192.0, 512.0, 384.0]
+	},
+    "pause menu script" : "res/menu/pause/pause.lua",
+    "start menu script" : "res/menu/start/start.lua",
+    "saves" : "res/saves/saves.json",
+    "chapters" : 
+	[
+		{ 
+			"name" : "introduction",
+			"file" : "res/story/chapter0/chapter0.lua"
+		},
+		{ 
+			"name" : "chapter 1",
+			"file" : "res/story/chapter1/chapter1.lua"
+		}
+	]
+}

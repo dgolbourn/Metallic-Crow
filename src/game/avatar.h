@@ -5,13 +5,14 @@
 #include "json.h"
 #include "queue.h"
 #include "position.h"
+#include "boost/filesystem.hpp"
 namespace game
 {
 class Avatar
 {
 public:
   Avatar(void) = default;
-  Avatar(json::JSON const& json, display::Window& window, event::Queue& queue);
+  Avatar(json::JSON const& json, display::Window& window, event::Queue& queue, boost::filesystem::path const& path);
   void Eyes(std::string const& expression);
   void Mouth(std::string const& expression);
   void Body(std::string const& expression);

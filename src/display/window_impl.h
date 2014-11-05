@@ -12,13 +12,15 @@
 #include "ttf_library.h"
 #include "SDL_sysrender.h"
 #include "shape.h"
+#include "boost/filesystem.hpp"
+#include "boost/functional/hash.hpp"
 namespace display
 {
 class WindowImpl
 {
 public:
   WindowImpl(json::JSON const& json);
-  sdl::Texture Load(std::string const& file);
+  sdl::Texture Load(boost::filesystem::path const& file);
   sdl::Texture Text(std::string const& text, sdl::Font const& font, float length);
   sdl::Texture Text(std::string const& text, sdl::Font const& font);
   void Free(void);
@@ -30,12 +32,12 @@ public:
   void Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const;
   Shape Shape(void) const;
   ~WindowImpl(void);
-  sdl::Library const sdl_;
-  img::Library const img_;
-  ttf::Library const ttf_;
+  sdl::Library sdl_;
+  img::Library img_;
+  ttf::Library ttf_;
   SDL_Window* window_;
   SDL_Renderer* renderer_;
-  std::unordered_map<std::string, sdl::Texture> textures_;
+  std::unordered_map<boost::filesystem::path, sdl::Texture, boost::hash<boost::filesystem::path>> textures_;
   SDL_FPoint view_;
   float zoom_;
 };

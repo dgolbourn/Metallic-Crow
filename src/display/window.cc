@@ -30,7 +30,7 @@ void WindowImpl::Destroy(void)
   }
 }
 
-WindowImpl::WindowImpl(json::JSON const& json) : sdl_(SDL_INIT_VIDEO), img_(IMG_INIT_PNG), ttf_()
+WindowImpl::WindowImpl(json::JSON const& json) : sdl_(SDL_INIT_VIDEO), img_(IMG_INIT_PNG)
 {
   renderer_ = nullptr;
   window_ = nullptr;
@@ -92,7 +92,7 @@ WindowImpl::~WindowImpl(void)
   Destroy();
 }
 
-sdl::Texture WindowImpl::Load(std::string const& file)
+sdl::Texture WindowImpl::Load(boost::filesystem::path const& file)
 {
   sdl::Texture texture;
   auto fileiter = textures_.find(file);

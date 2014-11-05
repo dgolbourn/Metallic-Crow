@@ -17,10 +17,10 @@ JSON::JSON(json_t* json) : JSON()
   }
 }
 
-JSON::JSON(std::string const& filename)
+JSON::JSON(boost::filesystem::path const& file)
 {
   json_error_t error;
-  json_ = json_load_file(filename.c_str(), 0, &error);
+  json_ = json_load_file(file.string().c_str(), 0, &error);
   if(!json_)
   {
     BOOST_THROW_EXCEPTION(Exception() 
@@ -29,7 +29,7 @@ JSON::JSON(std::string const& filename)
       << Exception::Line(error.line)
       << Exception::Column(error.column)
       << Exception::Position(error.position)
-      << Exception::File(filename));
+      << Exception::File(file.string()));
   }
 }
 
@@ -111,11 +111,11 @@ JSON JSON::operator[](int index)
   return ret;
 }
 
-void JSON::Write(std::string const& file) const
+void JSON::Write(boost::filesystem::path const& file) const
 {
   if(json_is_array(json_) || json_is_object(json_))
   {
-    if(json_dump_file(json_, file.c_str(), JSON_INDENT(4) | JSON_PRESERVE_ORDER) == -1)
+    if(json_dump_file(json_, file.string().c_str(), JSON_INDENT(4) | JSON_PRESERVE_ORDER) == -1)
     {
       BOOST_THROW_EXCEPTION(Exception());
     }

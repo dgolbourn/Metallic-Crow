@@ -7,7 +7,7 @@ namespace game
 class Screen::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(json::JSON const& json, display::Window& window, int& plane);
+  Impl(json::JSON const& json, display::Window& window, int& plane, boost::filesystem::path const& path);
   void Init(Scene& scene, event::Queue& queue, int plane);
   void Pause();
   void Resume();
@@ -25,7 +25,7 @@ public:
   double angle_;
 };
 
-Screen::Impl::Impl(json::JSON const& json, display::Window& window, int& plane) : modulation_(1.f, 1.f, 1.f, 1.f)
+Screen::Impl::Impl(json::JSON const& json, display::Window& window, int& plane, boost::filesystem::path const& path) : modulation_(1.f, 1.f, 1.f, 1.f)
 {
   json_t* animation;
   json_t* render_box;
@@ -41,7 +41,7 @@ Screen::Impl::Impl(json::JSON const& json, display::Window& window, int& plane) 
     "angle", &angle_);
 
   parallax_ = float(parallax);
-  animation_ = display::MakeAnimation(json::JSON(animation), window);
+  animation_ = display::MakeAnimation(json::JSON(animation), window, path);
   iterator_ = animation_.begin();
   texture_ = *iterator_;
   render_box_ = display::BoundingBox(json::JSON(render_box));
@@ -87,10 +87,10 @@ void Screen::Impl::Modulation(float r, float g, float b)
   modulation_.b(b);
 }
 
-Screen::Screen(json::JSON const& json, display::Window& window, Scene& scene, event::Queue& queue)
+Screen::Screen(json::JSON const& json, display::Window& window, Scene& scene, event::Queue& queue, boost::filesystem::path const& path)
 {
   int plane;
-  impl_ = std::make_shared<Impl>(json, window, plane);
+  impl_ = std::make_shared<Impl>(json, window, plane, path);
   impl_->Init(scene, queue, plane);
 }
 

@@ -6,39 +6,38 @@
 #include "version.h"
 namespace config
 {
-Args Parse(int argc, char* argv[])
+OptionalArgs Parse(int argc, char* argv[])
 {
-  namespace options = boost::program_options;
-
-  options::options_description general("General options");
+  boost::program_options::options_description general("General options");
   general.add_options()
     ("version,v", "display version string")
     ("help,h", "display help message");
 
-  options::options_description config("Configuration");
+  boost::program_options::options_description config("Configuration");
   config.add_options()
-    ("control,c", options::value<std::string>()->composing(), "control configuration file")
-    ("game,g", options::value<std::string>()->composing(), "game configuration file");
+    ("control,c", boost::program_options::value<std::string>()->composing(), "control configuration file")
+    ("root,r", boost::program_options::value<std::string>()->composing(), "root filesystem path")
+    ("game,g", boost::program_options::value<std::string>()->composing(), "game configuration file");
 
-  options::options_description hidden("Hidden options");
+  boost::program_options::options_description hidden("Hidden options");
   hidden.add_options()
-    ("initialisation", options::value<std::string>(), "initialisation file");
+    ("initialisation", boost::program_options::value<std::string>(), "initialisation file");
 
-  options::options_description command_line;
+  boost::program_options::options_description command_line;
   command_line.add(general).add(config).add(hidden);
 
-  options::options_description config_file;
+  boost::program_options::options_description config_file;
   config_file.add(config);
 
-  options::options_description visible("Allowed options");
+  boost::program_options::options_description visible("Allowed options");
   visible.add(general).add(config);
 
-  options::positional_options_description positional;
+  boost::program_options::positional_options_description positional;
   positional.add("initialisation", -1);
 
-  options::variables_map variables;
-  options::store(options::command_line_parser(argc, argv).options(command_line).positional(positional).allow_unregistered().run(), variables);
-  options::notify(variables);
+  boost::program_options::variables_map variables;
+  boost::program_options::store(boost::program_options::command_line_parser(argc, argv).options(command_line).positional(positional).allow_unregistered().run(), variables);
+  boost::program_options::notify(variables);
 
   if(variables.count("initialisation"))
   {
@@ -46,8 +45,8 @@ Args Parse(int argc, char* argv[])
     std::ifstream file(initialisation_file);
     if(file)
     {
-      options::store(options::parse_config_file(file, config_file, true), variables);
-      options::notify(variables);
+      boost::program_options::store(boost::program_options::parse_config_file(file, config_file, true), variables);
+      boost::program_options::notify(variables);
     }
     else
     {
@@ -55,9 +54,8 @@ Args Parse(int argc, char* argv[])
     }
   }
 
-  std::string control_file;
-  std::string game_file;
-  
+  OptionalArgs args;
+
   bool valid = false;
   bool help = true;
   if(variables.count("help")) 
@@ -69,23 +67,29 @@ Args Parse(int argc, char* argv[])
     valid = false;
     help = false;
   }
-  else if(variables.count("control"))
+  else if(variables.count("root"))
   {
-    control_file = variables["control"].as<std::string>();
-    if(variables.count("game"))
+    args = Args();
+    args->path = variables["root"].as<std::string>();
+    
+    if(variables.count("control"))
     {
-      game_file = variables["game"].as<std::string>();
-      valid = true;
-      help = false;
+      args->control = args->path / variables["control"].as<std::string>();
+
+      if(variables.count("game"))
+      {
+        args->game = args->path / variables["game"].as<std::string>();
+        valid = true;
+        help = false;
+      }
     }
   }
 
-  Args args;
-  if(valid)
+  if(!valid)
   {
-    args = std::make_pair(control_file, game_file);
-  }
-  else if(help)
+    args.reset();
+  }  
+  if(help)
   {
     std::cout << visible << std::endl;
   }

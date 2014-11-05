@@ -6,13 +6,14 @@
 #include "position.h"
 #include "boost/optional/optional.hpp"
 #include "command.h"
+#include "boost/filesystem.hpp"
 namespace game
 {
 class Body
 {
 public:
   Body() = default;
-  Body(json::JSON const& json, display::Window& window);
+  Body(json::JSON const& json, display::Window& window, boost::filesystem::path const& path);
   void Expression(std::string const& expression, bool left_facing);
   void Next();
   typedef boost::optional<Position> OptionalPosition;

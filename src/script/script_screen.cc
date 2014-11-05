@@ -15,7 +15,7 @@ void Script::Impl::ScreenLoad()
   std::string file;
   lua_.PopFront(name);
   lua_.PopFront(file);
-  stage_->screens_.emplace(name, Screen(json::JSON(file), window_, stage_->scene_, queue_));
+  stage_->screens_.emplace(name, Screen(json::JSON(path_ / file), window_, stage_->scene_, queue_, path_));
 }
 
 void Script::Impl::ScreenFree()

@@ -8,7 +8,7 @@ namespace game
 class Avatar::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(json::JSON const& json, display::Window& window);
+  Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path);
   void Init(event::Queue& queue);
   void Eyes(std::string const& expression);
   void Mouth(std::string const& expression);
@@ -40,7 +40,7 @@ public:
   event::Timer timer_;
 };
 
-Avatar::Impl::Impl(json::JSON const& json, display::Window& window) :
+Avatar::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path) :
   eyes_open_(0),
   mouth_open_(0),
   facing_(false)
@@ -57,9 +57,9 @@ Avatar::Impl::Impl(json::JSON const& json, display::Window& window) :
     "mouth", &mouth);
 
   timer_ = event::Timer(interval, -1);
-  body_ = game::Body(json::JSON(body), window);
-  eyes_ = game::Feature(json::JSON(eyes), window);
-  mouth_ = game::Feature(json::JSON(mouth), window);
+  body_ = game::Body(json::JSON(body), window, path);
+  eyes_ = game::Feature(json::JSON(eyes), window, path);
+  mouth_ = game::Feature(json::JSON(mouth), window, path);
 }
 
 void Avatar::Impl::Init(event::Queue& queue)
@@ -214,7 +214,7 @@ void Avatar::Render(void) const
   impl_->Render();
 }
 
-Avatar::Avatar(json::JSON const& json, display::Window& window, event::Queue& queue) : impl_(std::make_shared<Impl>(json, window))
+Avatar::Avatar(json::JSON const& json, display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, window, path))
 {
   impl_->Init(queue);
 }

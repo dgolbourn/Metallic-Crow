@@ -18,7 +18,7 @@ typedef std::map<int, event::Signal> Signals;
 class Menu::Impl
 {
 public:
-  Impl(json::JSON const& json, display::Window& window);
+  Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path);
   void Add(int index, event::Command const& command);
   void Previous();
   void Next();
@@ -38,9 +38,10 @@ public:
   sdl::Font idle_font_;
   sdl::Font active_font_;
   display::Window window_;
+  boost::filesystem::path path_;
 };
 
-Menu::Impl::Impl(json::JSON const& json, display::Window& window) : selection_(0), selections_(0), window_(window)
+Menu::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path) : selection_(0), selections_(0), window_(window), path_(path)
 {
   json_t* idle_ref;
   json_t* active_ref;
@@ -55,10 +56,10 @@ Menu::Impl::Impl(json::JSON const& json, display::Window& window) : selection_(0
     "clip", &clip,
     "render box", &render_box_ref);
 
-  idle_font_ = sdl::Font(json::JSON(idle_ref));
-  active_font_ = sdl::Font(json::JSON(active_ref));
+  idle_font_ = sdl::Font(json::JSON(idle_ref), path);
+  active_font_ = sdl::Font(json::JSON(active_ref), path);
 
-  background_ = Texture(display::Texture(display::Texture(background_file, window), display::BoundingBox(json::JSON(clip))), display::BoundingBox(json::JSON(render_box_ref)));
+  background_ = Texture(display::Texture(display::Texture(path_ / background_file, window), display::BoundingBox(json::JSON(clip))), display::BoundingBox(json::JSON(render_box_ref)));
 }
 
 void Menu::Impl::Choice(Options const& options)
@@ -206,7 +207,7 @@ void Menu::operator()(Options const& options)
   impl_->Choice(options);
 }
 
-Menu::Menu(json::JSON const& json, display::Window& window) : impl_(std::make_shared<Impl>(json, window))
+Menu::Menu(json::JSON const& json, display::Window& window, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, window, path))
 {
 }
 }

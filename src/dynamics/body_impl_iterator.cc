@@ -13,9 +13,11 @@ void BodyImpl::Iterator::increment(void)
 {
   if(impl_)
   {
-    if(b2Body* body = impl_->body_)
+    b2Body* body = impl_->body_;
+    if(body)
     {
-      if(body = body->GetNext())
+      body = body->GetNext();
+      if(body)
       {
         impl_ = (BodyImpl*)body->GetUserData();
       }

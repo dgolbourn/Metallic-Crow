@@ -3,13 +3,14 @@
 #include <string>
 #include <memory>
 #include "boost/optional.hpp"
+#include "boost/filesystem.hpp"
 namespace game
 { 
 class Saves
 {
 public:
   Saves() = default;
-  Saves(std::string const& file);
+  Saves(boost::filesystem::path const& file);
   typedef boost::optional<int> Slot;
   bool Playing() const;
   int LastPlayed() const;

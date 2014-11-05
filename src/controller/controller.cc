@@ -8,7 +8,7 @@
 #include "saves.h"
 #include "json_iterator.h"
 #include <sstream>
-#include "time.h"
+#include <algorithm>
 namespace game
 {
 namespace
@@ -23,8 +23,9 @@ enum class State : int
 };
 
 typedef std::vector<std::string> Strings;
+typedef std::vector<boost::filesystem::path> Paths;
 
-void Chapters(json::JSON& json, Strings& names, Strings& files)
+void Chapters(json::JSON json, Strings& names, Paths& files, boost::filesystem::path const& path)
 {
   for(json::JSON const& element : json)
   {
@@ -34,13 +35,22 @@ void Chapters(json::JSON& json, Strings& names, Strings& files)
       "name", &name,
       "file", &file);
     names.emplace_back(name);
-    files.emplace_back(file);
+    files.emplace_back(path / file);
   }
 }
 
 void ChapterOptions(Menu& menu, int progress, Strings const& chapters)
 {
   Strings options;
+  int max = int(chapters.size()) - 1;
+  if(progress > max)
+  {
+    progress = max;
+  }
+  if(progress < 0)
+  {
+    progress = 0;
+  }
   for(int i = 0; i <= progress; ++i)
   {
     options.push_back(chapters[i]);
@@ -89,7 +99,7 @@ void LoadOptions(Menu& menu, Saves& saves, Strings const& chapters)
 class Controller::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(json::JSON const& json, event::Queue& queue);
+  Impl(json::JSON const& json, event::Queue& queue, boost::filesystem::path const& path);
   void Init();
   void UpBegin();
   void DownBegin();
@@ -131,9 +141,10 @@ public:
   event::Signal signal_;
   Saves saves_;
   Strings chapter_names_;
-  Strings chapter_files_;
+  Paths chapter_files_;
   int slot_;
   int chapter_;
+  boost::filesystem::path path_;
 };
 
 void Controller::Impl::Load(int slot)
@@ -153,7 +164,7 @@ void Controller::Impl::Chapter(int chapter)
   state_ = State::Start;
 }
 
-Controller::Impl::Impl(json::JSON const& json, event::Queue& queue) : state_(State::Start), queue_(queue)
+Controller::Impl::Impl(json::JSON const& json, event::Queue& queue, boost::filesystem::path const& path) : state_(State::Start), queue_(queue), path_(path)
 {
   json_t* window;
   json_t* menu;
@@ -171,24 +182,24 @@ Controller::Impl::Impl(json::JSON const& json, event::Queue& queue) : state_(Sta
 
   window_ = display::Window(json::JSON(window));
 
-  pause_menu_ = Menu(json::JSON(menu), window_);
+  pause_menu_ = Menu(json::JSON(menu), window_, path_);
   pause_menu_({"Continue", "Main Menu"});
-  pause_script_ = Script(pause, window_, queue_);
+  pause_script_ = Script(path_ / pause, window_, queue_, path_);
 
-  start_menu_ = Menu(json::JSON(menu), window_);
+  start_menu_ = Menu(json::JSON(menu), window_, path_);
   start_menu_({"Play", "Chapters", "Load", "Quit"});
-  start_script_ = Script(start, window_, queue_);
+  start_script_ = Script(path_ / start, window_, queue_, path_);
 
-  saves_ = Saves(saves);
+  saves_ = Saves(path_ / saves);
   slot_ = saves_.LastPlayed();
   chapter_ = saves_.Current(slot_);
 
-  Chapters(json::JSON(chapters), chapter_names_, chapter_files_);
+  Chapters(json::JSON(chapters), chapter_names_, chapter_files_, path_);
 
-  chapter_menu_ = Menu(json::JSON(menu), window_);
+  chapter_menu_ = Menu(json::JSON(menu), window_, path_);
   ChapterOptions(chapter_menu_, saves_.Progress(slot_), chapter_names_);
 
-  load_menu_ = Menu(json::JSON(menu), window_);
+  load_menu_ = Menu(json::JSON(menu), window_, path_);
   LoadOptions(load_menu_, saves_, chapter_names_);
 }
 
@@ -230,7 +241,7 @@ void Controller::Impl::ChapterEnd()
   }
   else
   {
-    story_script_ = Script(chapter_files_[chapter_], window_, queue_);
+    story_script_ = Script(chapter_files_[chapter_], window_, queue_, path_);
     story_script_.Add(function::Bind(&Impl::ChapterEnd, shared_from_this()));
     story_script_.Resume();
   }
@@ -264,7 +275,7 @@ void Controller::Impl::StartPlay()
   }
   saves_.Play(slot_);
   saves_.Save();
-  story_script_ = Script(chapter_files_[chapter_], window_, queue_);
+  story_script_ = Script(chapter_files_[chapter_], window_, queue_, path_);
   story_script_.Add(function::Bind(&Impl::ChapterEnd, shared_from_this()));
   story_script_.Resume();
 }
@@ -419,7 +430,7 @@ void Controller::Impl::RightBegin()
 
 void Controller::Impl::RightEnd()
 {
-  switch (state_)
+  switch(state_)
   {
   default:
   case State::Start:
@@ -582,7 +593,7 @@ void Controller::Impl::Render()
   }
 }
 
-Controller::Controller(json::JSON const& json, event::Queue& queue) : impl_(std::make_shared<Impl>(json, queue))
+Controller::Controller(json::JSON const& json, event::Queue& queue, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, queue, path))
 {
   impl_->Init();
 }

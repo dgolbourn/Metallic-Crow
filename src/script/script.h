@@ -5,13 +5,14 @@
 #include "window.h"
 #include "weak_ptr.h"
 #include "queue.h"
+#include "boost/filesystem.hpp"
 namespace game
 {
 class Script
 {
 public:
   Script() = default;
-  Script(std::string const& file, display::Window& window, event::Queue& queue);
+  Script(boost::filesystem::path const& file, display::Window& window, event::Queue& queue, boost::filesystem::path const& path);
   void Pause();
   void Resume();
   void Render();

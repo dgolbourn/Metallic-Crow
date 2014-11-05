@@ -18,7 +18,7 @@ public:
   void Resume(void);
   void Volume(double volume);
 
-  mix::Library const mix_;
+  mix::Library mix_;
   ffmpeg::Decoder music_;
   std::atomic<bool> playing_;
 };  

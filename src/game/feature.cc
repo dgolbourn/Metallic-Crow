@@ -13,7 +13,7 @@ typedef std::unordered_map<Key, display::Texture, boost::hash<Key>> TextureMap;
 class Feature::Impl
 {
 public:
-  Impl(json::JSON const& json, display::Window& window);
+  Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path);
   void Expression(std::string const& expression, int index, bool left_facing);
   void Render(Position const& position, display::Modulation const& modulation) const;
   TextureMap textures_;
@@ -21,7 +21,7 @@ public:
   display::BoundingBox render_box_;
 };
 
-Feature::Impl::Impl(json::JSON const& json, display::Window& window)
+Feature::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path)
 {
   json_t* expressions;
   json_t* render_box;
@@ -47,7 +47,7 @@ Feature::Impl::Impl(json::JSON const& json, display::Window& window)
       "page", &page,
       "clip", &clip);
 
-    textures_.emplace(Key(expression, index, (facing != 0)), display::Texture(display::Texture(page, window), display::BoundingBox(json::JSON(clip))));
+    textures_.emplace(Key(expression, index, (facing != 0)), display::Texture(display::Texture(path / page, window), display::BoundingBox(json::JSON(clip))));
   }
 }
 
@@ -68,7 +68,7 @@ void Feature::Impl::Render(Position const& position, display::Modulation const& 
   texture_(display::BoundingBox(), box, 1.f, false, 0., modulation);
 }
 
-Feature::Feature(json::JSON const& json, display::Window& window) : impl_(std::make_shared<Impl>(json, window))
+Feature::Feature(json::JSON const& json, display::Window& window, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, window, path))
 {
 }
 

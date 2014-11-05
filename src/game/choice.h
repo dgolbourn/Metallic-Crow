@@ -10,22 +10,22 @@ namespace game
 class Choice
 {
 public:
-  Choice(void) = default;
-  Choice(json::JSON const& json, display::Window& window, event::Queue& queue);
+  Choice() = default;
+  Choice(json::JSON const& json, display::Window& window, event::Queue& queue, boost::filesystem::path const& path);
   void operator()(std::string const& up, std::string const& down, std::string const& left, std::string const& right, double timer);
   void Up(event::Command const& command);
   void Down(event::Command const& command);
   void Left(event::Command const& command);
   void Right(event::Command const& command);
   void Timer(event::Command const& command);
-  void Pause(void);
-  void Resume(void);
-  void Render(void) const;
-  void Up(void);
-  void Down(void);
-  void Left(void);
-  void Right(void);
-  explicit operator bool(void) const;
+  void Pause();
+  void Resume();
+  void Render() const;
+  void Up();
+  void Down();
+  void Left();
+  void Right();
+  explicit operator bool() const;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

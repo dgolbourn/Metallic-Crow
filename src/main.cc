@@ -18,11 +18,11 @@ int main(int argc, char* argv[])
   int ret = EXIT_FAILURE;
   try
   {
-    if(config::Args args = config::Parse(argc, argv))
+    if(config::OptionalArgs args = config::Parse(argc, argv))
     {
-      event::Event event(json::JSON(args->first));
+      event::Event event(json::JSON(args->control));
       event::Queue queue;
-      game::Controller controller(json::JSON(args->second), queue);
+      game::Controller controller(json::JSON(args->game), queue, args->path);
 
       queue.Add(function::Bind(&event::Event::operator(), event));
       

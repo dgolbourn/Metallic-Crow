@@ -2,17 +2,17 @@
 #include "json_iterator.h"
 namespace display
 {
-Animation MakeAnimation(json::JSON const& json, display::Window& window)
+Animation MakeAnimation(json::JSON&& json, display::Window& window, boost::filesystem::path const& path)
 {
   Animation animation;
-  for(json::JSON const& value : json::JSON(json))
+  for(json::JSON const& value : json)
   {
     char const* page;
     json_t* clip;
     value.Unpack("{ssso}", 
       "page", &page, 
       "clip", &clip);
-    animation.emplace_back(display::Texture(page, window) , display::BoundingBox(json::JSON(clip)));
+    animation.emplace_back(display::Texture(path / page, window) , display::BoundingBox(json::JSON(clip)));
   }
   return animation;
 }

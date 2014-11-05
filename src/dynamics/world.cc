@@ -10,7 +10,7 @@ void WorldImpl::SayGoodbye(b2Joint* joint)
   joint->SetUserData(nullptr);
 }
 
-void WorldImpl::SayGoodbye(b2Fixture* fixture)
+void WorldImpl::SayGoodbye(b2Fixture*)
 {
 }
 

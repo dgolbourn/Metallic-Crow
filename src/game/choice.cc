@@ -30,7 +30,7 @@ game::Position MakeVector(json::JSON const& json)
 class Choice::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(json::JSON const& json, display::Window& window, event::Queue& queue);
+  Impl(json::JSON const& json, display::Window& window, event::Queue& queue, boost::filesystem::path const& path);
   
   void Render() const;
   void Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right, double timer);
@@ -67,7 +67,7 @@ public:
   double interval_;
 };
 
-Choice::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue& queue) : window_(window), paused_(true), count_(0), queue_(queue)
+Choice::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : window_(window), paused_(true), count_(0), queue_(queue)
 {
   json_t* font;
   json_t* icon[5];
@@ -95,11 +95,11 @@ Choice::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue
     "right", &vector[3],
     "interval", &interval_);
 
-  font_ = sdl::Font(json::JSON(font));
+  font_ = sdl::Font(json::JSON(font), path);
 
   for(int i = 0; i < 5; ++i)
   {
-    icons_[i] = display::MakeAnimation(json::JSON(icon[i]), window_);
+    icons_[i] = display::MakeAnimation(json::JSON(icon[i]), window_, path);
     current_icons_[i] = icons_[i].cbegin();
     icon_boxes_[i] = display::BoundingBox(json::JSON(box[i]));
   }
@@ -152,7 +152,8 @@ void Choice::Impl::Choice(std::string const& up, std::string const& down, std::s
   std::array<std::string const*, 4> text = {&up, &down, &left, &right};
   for(int i = 0; i < 4; ++i)
   {
-    if(choices_[i] = (*text[i] != ""))
+    choices_[i] = (*text[i] != "");
+    if(choices_[i])
     {
       text_[i] = display::Texture(*text[i], font_, window_);
       
@@ -325,7 +326,7 @@ Choice::operator bool() const
   return bool(impl_);
 }
 
-Choice::Choice(json::JSON const& json, display::Window& window, event::Queue& queue) : impl_(std::make_shared<Impl>(json, window, queue))
+Choice::Choice(json::JSON const& json, display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, window, queue, path))
 {
 }
 }

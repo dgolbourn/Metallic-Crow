@@ -3,13 +3,14 @@
 #include <memory>
 #include <string>
 #include "command.h"
+#include "boost/filesystem.hpp"
 namespace lua
 {
 class Stack
 {
 public:
-  Stack(void);
-  void Load(std::string const& file);
+  Stack();
+  void Load(boost::filesystem::path const& file);
   void Call(int in, int out);
   void PopBack(int& out);
   void PopBack(float& out);

@@ -5,13 +5,14 @@
 #include <memory>
 #include <command.h>
 #include <vector>
+#include "boost/filesystem.hpp"
 namespace game
 {
 class Menu
 {
 public:
   Menu() = default;
-  Menu(json::JSON const& json, display::Window& window);
+  Menu(json::JSON const& json, display::Window& window, boost::filesystem::path const& path);
   void Add(int index, event::Command const& command);
   void Previous();
   void Next();

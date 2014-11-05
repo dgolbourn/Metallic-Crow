@@ -47,7 +47,7 @@ void MakeSet(json::JSON const& json, collision::Group& collision, dynamics::Worl
 class Set::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(json::JSON const& json, display::Window& window, collision::Group& dcollision, dynamics::World& world, int& plane);
+  Impl(json::JSON const& json, display::Window& window, collision::Group& dcollision, dynamics::World& world, int& plane, boost::filesystem::path const& path);
   void Init(Scene& scene, dynamics::World& world, int plane);
   void End();
   void Render(void) const;
@@ -84,7 +84,7 @@ void Set::Impl::Modulation(float r, float g, float b)
   modulation_ = display::Modulation(r, g, b, 1.f);
 }
 
-Set::Impl::Impl(json::JSON const& json, display::Window& window, collision::Group& collision, dynamics::World& world, int& plane)
+Set::Impl::Impl(json::JSON const& json, display::Window& window, collision::Group& collision, dynamics::World& world, int& plane, boost::filesystem::path const& path)
 {
   json_t* textures;
   json_t* set;
@@ -110,7 +110,7 @@ Set::Impl::Impl(json::JSON const& json, display::Window& window, collision::Grou
       "page", &page,
       "clip", &clip,
       "render box", &render_box);
-    textures_.emplace_back(display::Texture(display::Texture(page, window), display::BoundingBox(json::JSON(clip))), display::BoundingBox(json::JSON(render_box)));
+    textures_.emplace_back(display::Texture(display::Texture(path / page, window), display::BoundingBox(json::JSON(clip))), display::BoundingBox(json::JSON(render_box)));
   }
 }
 
@@ -123,10 +123,10 @@ void Set::Impl::Init(Scene& scene, dynamics::World& world, int plane)
   }
 }
 
-Set::Set(json::JSON const& json, display::Window& window, Scene& scene, collision::Group& collision, dynamics::World& world)
+Set::Set(json::JSON const& json, display::Window& window, Scene& scene, collision::Group& collision, dynamics::World& world, boost::filesystem::path const& path)
 {
   int plane;
-  impl_ = std::make_shared<Set::Impl>(json, window, collision, world, plane);
+  impl_ = std::make_shared<Impl>(json, window, collision, world, plane, path);
   impl_->Init(scene, world, plane);
 }
 

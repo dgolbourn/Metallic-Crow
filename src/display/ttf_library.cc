@@ -27,15 +27,15 @@ Library::~Library(void)
   }
 }
 
-Library::Library(Library const& other) : Library()
+Library::Library(Library const&) : Library()
 {
 }
 
-Library::Library(Library&& other) : Library()
+Library::Library(Library&&) : Library()
 {
 }
 
-Library& Library::operator=(Library other)
+Library& Library::operator=(Library)
 {
   return *this;
 }

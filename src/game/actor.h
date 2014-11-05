@@ -10,13 +10,14 @@
 #include "queue.h"
 #include "collision_group.h"
 #include "world.h"
+#include "boost/filesystem.hpp"
 namespace game
 {
 class Actor
 {
 public:
   Actor(void) = default;
-  Actor(json::JSON const& json, display::Window& window, Scene& scene, collision::Group& collision, event::Queue& queue, dynamics::World& world);
+  Actor(json::JSON const& json, display::Window& window, Scene& scene, collision::Group& collision, event::Queue& queue, dynamics::World& world, boost::filesystem::path const& path);
   void Position(game::Position const& position);
   game::Position Position(void) const;
   void Velocity(game::Position const& velocity);

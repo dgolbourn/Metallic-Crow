@@ -143,7 +143,7 @@ void Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
 
     if(tile)
     {
-      algorithm::FloodFill<Painter>()(Painter(window, renderer, texture, &source, &destination, angle, modulation));
+      algorithm::FloodFill<Painter>((Painter(window, renderer, texture, &source, &destination, angle, modulation)));
     }
     else
     {

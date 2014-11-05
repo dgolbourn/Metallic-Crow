@@ -1,6 +1,7 @@
 #ifndef JSON_H_
 #define JSON_H_
 #include <string>
+#include "boost/filesystem.hpp"
 struct json_t;
 namespace json
 {
@@ -9,7 +10,7 @@ class JSON
 public:
   JSON();
   explicit JSON(json_t* json);
-  explicit JSON(std::string const& file);
+  explicit JSON(boost::filesystem::path const& file);
   template<class... Args> void Unpack(std::string const& format, Args... args) const
   {
     Unpack_(format, 0, args...);
@@ -24,7 +25,7 @@ public:
   JSON operator[](int index);
   class Iterator;
   int Size() const;
-  void Write(std::string const& file) const;
+  void Write(boost::filesystem::path const& file) const;
 private:
   void Unpack_(std::string const& format, int dummy, ...) const;
   struct pack_tag_ {};

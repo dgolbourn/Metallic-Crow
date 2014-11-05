@@ -15,7 +15,7 @@ void Script::Impl::SetLoad()
   std::string file;
   lua_.PopFront(name);
   lua_.PopFront(file);
-  stage_->sets_.emplace(name, Set(json::JSON(file), window_, stage_->scene_, stage_->group_, stage_->world_));
+  stage_->sets_.emplace(name, Set(json::JSON(path_ / file), window_, stage_->scene_, stage_->group_, stage_->world_, path_));
 }
 
 void Script::Impl::SetFree()

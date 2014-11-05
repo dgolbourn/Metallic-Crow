@@ -16,7 +16,7 @@ namespace game
 class Actor::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, int& plane);
+  Impl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, int& plane, boost::filesystem::path const& path);
   void Init(Scene& scene, dynamics::World& world, int plane);
   void Render(void) const;
   void Pause(void);
@@ -216,7 +216,7 @@ void Actor::Impl::Blink()
   avatar_.Eyes(open_);
 }
 
-Actor::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, int& plane) :
+Actor::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, int& plane, boost::filesystem::path const& path) :
   paused_(true), 
   x_sign_(0), 
   y_sign_(0), 
@@ -234,7 +234,7 @@ Actor::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue&
 
   body_ = MakeBody(json::JSON(body), world, collision);
 
-  avatar_ = Avatar(json::JSON(avatar), window, queue);
+  avatar_ = Avatar(json::JSON(avatar), window, queue, path);
   avatar_.Body("idle");
   avatar_.Eyes("idle");
   avatar_.Eyes(open_);
@@ -336,10 +336,10 @@ Actor::operator bool(void) const
   return bool(impl_);
 }
 
-Actor::Actor(json::JSON const& json, display::Window& window, Scene& scene, collision::Group& collision, event::Queue& queue, dynamics::World& world)
+Actor::Actor(json::JSON const& json, display::Window& window, Scene& scene, collision::Group& collision, event::Queue& queue, dynamics::World& world, boost::filesystem::path const& path)
 {
   int plane;
-  impl_ = std::make_shared<Impl>(json, window, queue, world, collision, plane);
+  impl_ = std::make_shared<Impl>(json, window, queue, world, collision, plane, path);
   impl_->Init(scene, world, plane);
 }
 }

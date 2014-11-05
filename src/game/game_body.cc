@@ -11,7 +11,7 @@ namespace
 typedef std::vector<Position> Positions;
 typedef std::pair<std::string, bool> NextExpression;
 
-Positions MakePositions(json::JSON& json)
+Positions MakePositions(json::JSON&& json)
 {
   Positions positions;
   if(json)
@@ -43,7 +43,7 @@ NextExpression MakeNextExpression(json::JSON const& json)
 
 struct Animation
 {
-  Animation(json::JSON const& back, json::JSON const& front, json::JSON& eyes, json::JSON& mouth, json::JSON const& render_box, json::JSON const& next, bool left_facing, display::Window& window);
+  Animation(json::JSON&& back, json::JSON&& front, json::JSON&& eyes, json::JSON&& mouth, json::JSON const& render_box, json::JSON const& next, bool left_facing, display::Window& window, boost::filesystem::path const& path);
   display::Animation back_;
   display::Animation front_;
   Positions eyes_;
@@ -53,11 +53,11 @@ struct Animation
   bool left_facing_;
 };
 
-Animation::Animation(json::JSON const& back, json::JSON const& front, json::JSON& eyes, json::JSON& mouth, json::JSON const& render_box, json::JSON const& next, bool left_facing, display::Window& window) :
-  back_(display::MakeAnimation(back, window)),
-  front_(display::MakeAnimation(front, window)),
-  eyes_(MakePositions(eyes)),
-  mouth_(MakePositions(mouth)),
+Animation::Animation(json::JSON&& back, json::JSON&& front, json::JSON&& eyes, json::JSON&& mouth, json::JSON const& render_box, json::JSON const& next, bool left_facing, display::Window& window, boost::filesystem::path const& path) :
+  back_(display::MakeAnimation(std::move(back), window, path)),
+  front_(display::MakeAnimation(std::move(front), window, path)),
+  eyes_(MakePositions(std::move(eyes))),
+  mouth_(MakePositions(std::move(mouth))),
   render_box_(render_box),
   next_(MakeNextExpression(next)),
   left_facing_(left_facing)
@@ -113,7 +113,7 @@ template<class A, class B, class C> void Begin(A& texture, B& iterator, C& anima
 class Body::Impl
 {
 public:
-  Impl(json::JSON const& json, display::Window& window);
+  Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path);
   void Expression(std::string const& expression, bool left_facing);
   void Next();
   void Reset();
@@ -129,13 +129,14 @@ public:
   event::Signal facing_;
 };
 
-Body::Impl::Impl(json::JSON const& json, display::Window& window)
+Body::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path)
 {
-  json_t* expressions;
+  json_t* expressions_ref;
   json.Unpack("{so}",
-    "expressions", &expressions);
+    "expressions", &expressions_ref);
 
-  for(json::JSON const& value : json::JSON(expressions))
+  json::JSON expressions(expressions_ref);
+  for(json::JSON const& value : expressions)
   {
     char const* expression;
     int facing;
@@ -160,7 +161,7 @@ Body::Impl::Impl(json::JSON const& json, display::Window& window)
     animations_.emplace
     (
       Key(std::string(expression), left_facing),
-      Animation(json::JSON(back), json::JSON(front), json::JSON(eyes), json::JSON(mouth), json::JSON(render_box), json::JSON(next), left_facing, window)
+      Animation(json::JSON(back), json::JSON(front), json::JSON(eyes), json::JSON(mouth), json::JSON(render_box), json::JSON(next), left_facing, window, path)
     );
   }
 }
@@ -247,7 +248,7 @@ void Body::Impl::Render(Position const& position, display::Modulation const& mod
   texture(display::BoundingBox(), box, 1.f, false, 0., modulation);
 }
 
-Body::Body(json::JSON const& json, display::Window& window) : impl_(std::make_shared<Impl>(json, window))
+Body::Body(json::JSON const& json, display::Window& window, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, window, path))
 {
 }
 

@@ -26,7 +26,7 @@ void Script::Impl::ActorLoad()
   std::string file;
   lua_.PopFront(name);
   lua_.PopFront(file);
-  Actor actor(json::JSON(file), window_, stage_->scene_, stage_->group_, queue_, stage_->world_);
+  Actor actor(json::JSON(path_ / file), window_, stage_->scene_, stage_->group_, queue_, stage_->world_, path_);
   if(!Pause(stage_))
   {
     actor.Resume();

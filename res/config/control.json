@@ -1,0 +1,12 @@
+{
+	"up" : 82,
+	"down" :  81,
+	"left" : 80,
+	"right" : 79,
+	"choice up" : 26,
+	"choice down" : 22,
+	"choice left" : 4,
+	"choice right" : 7,
+	"select" : 40,
+    "back" : 41
+}

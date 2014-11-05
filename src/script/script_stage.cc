@@ -39,11 +39,11 @@ void Script::Impl::StageLoad()
   
   StagePtr stage = std::make_shared<Stage>();
   
-  dynamics::World world(json::JSON(world_file), stage->collision_, queue_);
+  dynamics::World world(json::JSON(path_ / world_file), stage->collision_, queue_);
   world.End(function::Bind(&Impl::View, shared_from_this(), dynamics::World::WeakPtr(world)));
   stage->world_ = world;
 
-  Choice choice(json::JSON(choice_file), window_, queue_);
+  Choice choice(json::JSON(path_ / choice_file), window_, queue_, path_);
   choice.Up(function::Bind(&Impl::Call, shared_from_this(), "choice_up"));
   choice.Down(function::Bind(&Impl::Call, shared_from_this(), "choice_down"));
   choice.Left(function::Bind(&Impl::Call, shared_from_this(), "choice_left"));
@@ -51,9 +51,9 @@ void Script::Impl::StageLoad()
   choice.Timer(function::Bind(&Impl::Call, shared_from_this(), "choice_timer"));
   stage_->choice_ = choice;
 
-  stage_->subtitle_ = Subtitle(json::JSON(subtitle), window_);
+  stage_->subtitle_ = Subtitle(json::JSON(path_ / subtitle), window_, path_);
 
-  stage->group_ = collision::Group(json::JSON(collision), stage->collision_);
+  stage->group_ = collision::Group(json::JSON(path_ / collision), stage->collision_);
   
   stage->paused_[0] = paused_;
   stage->paused_[1] = true;

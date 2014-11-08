@@ -554,7 +554,6 @@ void Controller::Impl::Back()
   }
 }
 
-
 void Controller::Impl::Render()
 {
   switch(state_)

@@ -1,6 +1,6 @@
-function initialise()
+function script_initialise()
 end
 
-function begin()
-	quit()
+function script_begin()
+	script_end()
 end

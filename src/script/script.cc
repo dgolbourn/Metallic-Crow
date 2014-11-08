@@ -22,10 +22,10 @@ void Script::Impl::Init(boost::filesystem::path const& file)
   CollisionInit();
   FadeInit();
 
-  typedef void (event::Signal::*Notify)(event::Queue& queue);
-  lua_.Add(function::Bind((Notify)&event::Signal::operator(), signal_, queue_), "quit", 0);
+  typedef void (event::Signal::*Notify)();
+  lua_.Add(function::Bind((Notify)&event::Signal::operator(), signal_), "script_end", 0);
 
-  Call("initialise");
+  Call("script_initialise");
 }
 
 void Script::Impl::Call(std::string const& call)
@@ -48,10 +48,12 @@ void Script::Impl::Pause(void)
 
 void Script::Impl::Resume()
 {
+  std::shared_ptr<Impl> guard = shared_from_this(); 
+
   if(!begun_)
   {
     begun_ = true;
-    Call("begin");
+    Call("script_begin");
   }
 
   if(paused_)

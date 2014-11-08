@@ -1,7 +1,7 @@
-function initialise()
+function script_initialise()
 end
 
-function begin()
+function script_begin()
   stage_load(
 	"scene00", 
 	"res/common/world.json", 
@@ -11,5 +11,5 @@ function begin()
 
   stage_nominate("scene00")
 
-  quit()
+  script_end()
 end

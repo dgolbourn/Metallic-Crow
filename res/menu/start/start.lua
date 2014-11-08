@@ -1,5 +1,5 @@
-function initialise()
+function script_initialise()
 end
 
-function begin()
+function script_begin()
 end

@@ -1,22 +1,19 @@
-.. Metallic Crow documentation master file, created by
-   sphinx-quickstart on Sun Nov 09 20:35:35 2014.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to Metallic Crow's documentation!
-=========================================
+Metallic Crow Story Game Engine
+===============================
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
+   designersapi
+   developersapi
+   schemas
 
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 

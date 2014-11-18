@@ -1,0 +1,1 @@
+require "res/lib/stage"

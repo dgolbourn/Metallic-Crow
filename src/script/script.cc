@@ -3,7 +3,7 @@
 #include "exception.h"
 namespace game
 {
-Script::Impl::Impl(display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : window_(window), queue_(queue), paused_(true), fade_(queue, window), begun_(false), path_(path)
+Script::Impl::Impl(display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : window_(window), queue_(queue), paused_(true), fade_(queue, window), begun_(false), path_(path), lua_(path)
 {
 }
 

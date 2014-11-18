@@ -29,6 +29,8 @@ set (CONFIGURATION_SOURCES
 	"${PROJECT_SOURCE_DIR}/src/configuration/lua_exception.h"
 	"${PROJECT_SOURCE_DIR}/src/configuration/lua_stack.cc"
 	"${PROJECT_SOURCE_DIR}/src/configuration/lua_stack.h"
+	"${PROJECT_SOURCE_DIR}/src/configuration/lua_command.cc"
+	"${PROJECT_SOURCE_DIR}/src/configuration/lua_command.h"
 	"${PROJECT_SOURCE_DIR}/src/configuration/parse.cc"
 	"${PROJECT_SOURCE_DIR}/src/configuration/parse.h"
 	"${PROJECT_SOURCE_DIR}/src/configuration/version.cc"

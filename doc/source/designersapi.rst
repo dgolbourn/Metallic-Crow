@@ -7,18 +7,21 @@ Designers' API
 **************
 
 This section describes the Application Programming Interface exposed by the
-Metallic Crow Story Engine for creating stories.  The interface is in the Lua
-scripting language.
+Metallic Crow Story Engine for creating stories.  The designer creates a 
+story as a series of scripts which correspond roughly to chapters or scenes 
+within a story.
+
+The interface provided by the engine is in the Lua scripting language.
 
 Timer
 =====
 
-Timers allow the designer to trigger a specified Lua function call() after a 
-certain time interval.
+Timers allow the designer to trigger a specified Lua function with name 
+call() after a certain time interval.
 
 .. function:: timer_load(call, interval, loops)
 
-Start a new timer.  After interval seconds invoke call, and repeat loops times.
+Start a new timer.  After interval seconds invoke call(), repeat loops times.
 
 .. function:: timer_free(call)
 
@@ -71,13 +74,19 @@ Resume the stage called name
 Set
 ===
 
-Set items are simple props or background and foreground items.
+Set items are simple props, background items or foreground items.
 
 .. function:: set_load(name, file)
 
+load a prop from file and give it specified name
+
 .. function:: set_free(name)
 
+free the props called name
+
 .. function:: set_light(name, r, g, b)
+
+set the ambient lighting of props called name to (r, g, b)
 
 Screen
 ======

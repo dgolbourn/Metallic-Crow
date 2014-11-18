@@ -9,7 +9,7 @@ namespace lua
 class Stack
 {
 public:
-  Stack();
+  Stack(boost::filesystem::path const& path);
   void Load(boost::filesystem::path const& file);
   void Call(int in, int out);
   void PopBack(int& out);
@@ -17,11 +17,13 @@ public:
   void PopBack(double& out);
   void PopBack(std::string& out);
   void PopBack(bool& out);
+  void PopBack(event::Command& out);
   void PopFront(int& out);
   void PopFront(float& out);
   void PopFront(double& out);
   void PopFront(std::string& out);
   void PopFront(bool& out);
+  void PopFront(event::Command& out);
   void Get(std::string const& global);
   void Push(int in);
   void Push(float in);

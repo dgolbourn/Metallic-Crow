@@ -1,43 +1,44 @@
 #include "lua_stack.h"
 #include "lua_exception.h"
 #include "lua.hpp"
-#include <map>
+#include <sstream>
+#include "log.h"
+#include "lua_stack_impl.h"
+#include "lua_command.h"
 namespace lua
 {
-typedef std::map<std::string, event::Command> CommandMap;
-
-class StackImpl
+static void Path(lua_State* state, boost::filesystem::path const& path)
 {
-public:
-  StackImpl(void);
-  ~StackImpl(void);
-  void Load(boost::filesystem::path const& file);
-  void Call(int in, int out);
-  void Pop(int& out, bool front);
-  void Pop(float& out, bool front);
-  void Pop(double& out, bool front);
-  void Pop(std::string& out, bool front);
-  void Pop(bool& out, bool front);
-  void Add(event::Command const& command, std::string const& name, int out);
-  lua_State* state_;
-  CommandMap map_;
-};
+  std::stringstream stream;
+  stream << (path / "?").string() << ";" << (path / "?.lua").string();
+  std::string string = stream.str();
 
-static lua_State* Init(void)
+  lua_getglobal(state, "package");
+  lua_pushstring(state, string.c_str());
+  lua_setfield(state, -2, "path");
+  lua_pop(state, 1);
+}
+
+static lua_State* Init(boost::filesystem::path const& path)
 {
   lua_State* state = luaL_newstate();
   if(state == nullptr)
   {
     BOOST_THROW_EXCEPTION(Exception());
   }
+
+  luaL_openlibs(state);
+  
+  Path(state, path);
+
   return state;
 }
 
-StackImpl::StackImpl(void) : state_(Init())
+StackImpl::StackImpl(boost::filesystem::path const& path) : state_(Init(path))
 {
 }
 
-StackImpl::~StackImpl(void)
+StackImpl::~StackImpl()
 {
   lua_close(state_);
 }
@@ -80,6 +81,21 @@ static int Index(bool front)
     index = -1;
   }
   return index;
+}
+
+void StackImpl::Pop(event::Command& out, bool front)
+{
+  int index = Index(front);
+  if(!lua_isfunction(state_, index))
+  {
+    lua_remove(state_, index);
+    BOOST_THROW_EXCEPTION(Exception());
+  }
+  
+  lua_pushvalue(state_, index);
+  lua_remove(state_, index);
+
+  out = Command(shared_from_this());
 }
 
 void StackImpl::Pop(int& out, bool front)
@@ -240,6 +256,11 @@ void Stack::PopBack(bool& out)
   impl_->Pop(out, false);
 }
 
+void Stack::PopBack(event::Command& out)
+{
+  impl_->Pop(out, false);
+}
+
 void Stack::PopFront(int& out)
 {
   impl_->Pop(out, true);
@@ -261,6 +282,11 @@ void Stack::PopFront(std::string& out)
 }
 
 void Stack::PopFront(bool& out)
+{
+  impl_->Pop(out, true);
+}
+
+void Stack::PopFront(event::Command& out)
 {
   impl_->Pop(out, true);
 }
@@ -300,7 +326,7 @@ void Stack::Add(event::Command const& command, std::string const& name, int out)
   impl_->Add(command, name, out);
 }
 
-Stack::Stack() : impl_(std::make_shared<StackImpl>())
+Stack::Stack(boost::filesystem::path const& path) : impl_(std::make_shared<StackImpl>(path))
 {
 }
 }

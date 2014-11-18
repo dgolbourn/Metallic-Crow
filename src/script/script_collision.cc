@@ -22,21 +22,21 @@ void Script::Impl::CollisionBegin()
 {
   std::string group_a;
   std::string group_b;
-  std::string call;
+  event::Command command;
   lua_.PopFront(group_a);
   lua_.PopFront(group_b);
-  lua_.PopFront(call);
-  stage_->group_.Begin(group_a, group_b, function::Bind(&Impl::Call, shared_from_this(), call));
+  lua_.PopFront(command);
+  stage_->group_.Begin(group_a, group_b, command);
 }
 
 void Script::Impl::CollisionEnd()
 {
   std::string group_a;
   std::string group_b;
-  std::string call;
+  event::Command command;
   lua_.PopFront(group_a);
   lua_.PopFront(group_b);
-  lua_.PopFront(call);
-  stage_->group_.End(group_a, group_b, function::Bind(&Impl::Call, shared_from_this(), call));
+  lua_.PopFront(command);
+  stage_->group_.End(group_a, group_b, command);
 }
 }

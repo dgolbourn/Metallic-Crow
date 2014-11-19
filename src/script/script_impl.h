@@ -130,7 +130,6 @@ public:
   void ViewZoom();
 
   void CollisionInit();
-  void CollisionLink();
   void CollisionBegin();
   void CollisionEnd();
 

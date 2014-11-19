@@ -6,6 +6,23 @@ namespace collision
 namespace
 {
 typedef std::map<dynamics::Body::WeakPtr, std::map<dynamics::Body::WeakPtr, event::Switch>> CollisionMap;
+
+void Remove(CollisionMap& collisions, dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b)
+{
+  auto iter_a = collisions.find(a);
+  if(iter_a != collisions.end())
+  {
+    auto iter_b = iter_a->second.find(b);
+    if(iter_b != iter_a->second.end())
+    {
+      iter_a->second.erase(iter_b);
+      if(iter_a->second.empty())
+      {
+        collisions.erase(iter_a);
+      }
+    }
+  }
+}
 }
 
 class Collision::Impl
@@ -31,20 +48,41 @@ Collision::Impl::Impl(event::Queue& queue) : queue_(queue)
 {
 }
 
-void Collision::Impl::Unlink(dynamics::Body::WeakPtr const& a)
+void Collision::Impl::Unlink(dynamics::Body::WeakPtr const& body_a)
 {
-  auto iter_a = collisions_.find(a);
+  auto iter_a = collisions_.find(body_a);
   if(iter_a != collisions_.end())
   {
-    for(auto element : iter_a->second)
+    std::list<CollisionMap::const_iterator> erase;
+    erase.push_back(iter_a);
+
+    for(auto body_b : iter_a->second)
     {
-      collisions_[element.first].erase(a);
+      auto iter_b = collisions_.find(body_b.first);
+      if(iter_b != collisions_.end())
+      {
+        iter_b->second.erase(body_a);
+        if(iter_b->second.empty())
+        {
+          erase.push_back(iter_b);
+        }
+      }
     }
-    collisions_.erase(iter_a);
+
+    for(auto body : erase)
+    {
+      collisions_.erase(body);
+    }
   }
 }
 
 void Collision::Impl::Unlink(dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b)
+{
+  Remove(collisions_, a, b);
+  Remove(collisions_, b, a);
+}
+
+void Collision::Impl::Begin(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c)
 {
   auto iter_a = collisions_.find(a);
   if(iter_a != collisions_.end())
@@ -52,28 +90,21 @@ void Collision::Impl::Unlink(dynamics::Body::WeakPtr const& a, dynamics::Body::W
     auto iter_b = iter_a->second.find(b);
     if(iter_b != iter_a->second.end())
     {
-      iter_a->second.erase(iter_b);
+      iter_b->second.first.Add(c);
     }
-    if(iter_a->second.empty())
-    {
-      collisions_.erase(iter_a);
-    }
-  }
-}
-
-void Collision::Impl::Begin(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c)
-{
-  if(Link(a, b))
-  {
-    collisions_[a][b].first.Add(c);
   }
 }
 
 void Collision::Impl::End(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c)
 {
-  if(Link(a, b))
+  auto iter_a = collisions_.find(a);
+  if(iter_a != collisions_.end())
   {
-    collisions_[a][b].second.Add(c);
+    auto iter_b = iter_a->second.find(b);
+    if(iter_b != iter_a->second.end())
+    {
+      iter_b->second.second.Add(c);
+    }
   }
 }
 
@@ -171,6 +202,5 @@ void Collision::Unlink(dynamics::Body::WeakPtr const& a)
 void Collision::Unlink(dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b)
 {
   impl_->Unlink(a, b);
-  impl_->Unlink(b, a);
 }
 }

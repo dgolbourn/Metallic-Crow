@@ -11,11 +11,10 @@ namespace collision
 class Group
 {
 public:
-  Group(void) = default;
+  Group() = default;
   Group(json::JSON const& json, Collision const& collision);
   void Begin(std::string const& group_a, std::string const& group_b, event::Command const& command);
   void End(std::string const& group_a, std::string const& group_b, event::Command const& command);
-  void Link(std::string const& group_a, std::string const& group_b);
   void Add(std::string const& group, dynamics::Body const& body);
 private:
   class Impl;

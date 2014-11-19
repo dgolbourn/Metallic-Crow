@@ -16,10 +16,8 @@ class Group::Impl
 {
 public:
   Impl(json::JSON const& json, Collision const& collision);
-  void Begin(std::string const& group_a, std::string const& group_b, event::Command const& command);
-  void End(std::string const& group_a, std::string const& group_b, event::Command const& command);
-  void Link(std::string const& group_a, std::string const& group_b);
-  void Add(std::string const& group, dynamics::Body const& body);
+  void Add(std::string const& group_a, std::string const& group_b, event::Command const& command, bool begin);
+  void Add(std::string const& group_a, dynamics::Body const& body_a);
   Members members_;
   Collisions collisions_;
   Collision collision_;
@@ -42,89 +40,58 @@ Group::Impl::Impl(json::JSON const& json, Collision const& collision) : collisio
   }
 }
 
-void Group::Impl::Begin(std::string const& group_a, std::string const& group_b, event::Command const& command)
+void Group::Impl::Add(std::string const& group_a, std::string const& group_b, event::Command const& command, bool begin)
 {
-  Link(group_a, group_b);
-  collisions_[group_a][group_b].first.Add(command);
-}
-
-void Group::Impl::End(std::string const& group_a, std::string const& group_b, event::Command const& command)
-{
-  Link(group_a, group_b);
-  collisions_[group_a][group_b].second.Add(command);
-}
-
-void Group::Impl::Link(std::string const& group_a, std::string const& group_b)
-{
-  bool link = true;
-
   auto iter_a = collisions_.find(group_a);
   if(iter_a != collisions_.end())
   {
-    auto iter_b = collisions_.find(group_b);
-    if(iter_b != collisions_.end())
+    auto iter_b = iter_a->second.find(group_b);
+    if(iter_b != iter_a->second.end())
     {
-      link = false;
-    }
-  }
-
-  if(link)
-  {
-    collisions_[group_a][group_b] = collisions_[group_b][group_a];
-
-    auto& member_a_set = members_[group_a];
-    for(auto iter_aa = member_a_set.begin(); iter_aa != member_a_set.end();)
-    {
-      if(auto body_a = iter_aa->Lock())
+      if(begin)
       {
-        auto& member_b_set = members_[group_b];
-        for(auto iter_bb = member_b_set.begin(); iter_bb != member_b_set.end();)
-        {
-          if(auto body_b = iter_bb->Lock())
-          {
-            auto signals = collisions_[group_b][group_a];
-            typedef void (event::Signal::*Notify)();
-            collision_.Begin(body_a, body_b, function::Bind((Notify)&event::Signal::operator(), signals.first));
-            collision_.End(body_a, body_b, function::Bind((Notify)&event::Signal::operator(), signals.second));
-            ++iter_bb;
-          }
-          else
-          {
-            iter_bb = member_a_set.erase(iter_bb);
-            collision_.Unlink(*iter_bb);
-          }
-        }
-        ++iter_aa;
+        iter_b->second.first.Add(command);
       }
       else
       {
-        iter_aa = member_a_set.erase(iter_aa);
-        collision_.Unlink(*iter_aa);
+        iter_b->second.second.Add(command);
       }
     }
   }
 }
 
-void Group::Impl::Add(std::string const& group, dynamics::Body const& body)
+void Group::Impl::Add(std::string const& group_a, dynamics::Body const& body_a)
 {
-  if(members_[group].insert(body).second)
-  {
-    for(auto iter : collisions_[group])
+  auto members_iter = members_.find(group_a);
+  if(members_iter != members_.end())
+  { 
+    if(members_iter->second.insert(body_a).second)
     {
-      auto& body_set = members_[iter.first];
-      for(auto other_iter = body_set.begin(); other_iter != body_set.end();)
-      {
-        if(auto other = other_iter->Lock())
+      auto body_a_iter = collisions_.find(group_a);
+      if(body_a_iter != collisions_.end())
+      { 
+        for(auto group_b : body_a_iter->second)
         {
-          typedef void (event::Signal::*Notify)();
-          collision_.Begin(body, other, function::Bind((Notify)&event::Signal::operator(), iter.second.first));
-          collision_.End(body, other, function::Bind((Notify)&event::Signal::operator(), iter.second.first));
-          ++other_iter;
-        }
-        else
-        {
-          other_iter = body_set.erase(other_iter);
-          collision_.Unlink(*other_iter);
+          auto body_b_set = members_.find(group_b.first);
+          if(body_b_set != members_.end())
+          {
+            for(auto body_b_iter = body_b_set->second.begin(); body_b_iter != body_b_set->second.end();)
+            {
+              if(auto body_b = body_b_iter->Lock())
+              {
+                typedef void(event::Signal::*Notify)();
+                collision_.Link(body_a, body_b);
+                collision_.Begin(body_a, body_b, function::Bind((Notify)&event::Signal::operator(), group_b.second.first));
+                collision_.End(body_a, body_b, function::Bind((Notify)&event::Signal::operator(), group_b.second.second));
+                ++body_b_iter;
+              }
+              else
+              {
+                collision_.Unlink(body_b);
+                body_b_iter = body_b_set->second.erase(body_b_iter);
+              }
+            }
+          }
         }
       }
     }
@@ -133,22 +100,17 @@ void Group::Impl::Add(std::string const& group, dynamics::Body const& body)
 
 void Group::Begin(std::string const& group_a, std::string const& group_b, event::Command const& command)
 {
-  impl_->Begin(group_a, group_b, command);
+  impl_->Add(group_a, group_b, command, true);
 }
 
 void Group::End(std::string const& group_a, std::string const& group_b, event::Command const& command)
 {
-  impl_->End(group_a, group_b, command);
+  impl_->Add(group_a, group_b, command, false);
 }
 
-void Group::Link(std::string const& group_a, std::string const& group_b)
+void Group::Add(std::string const& group_a, dynamics::Body const& body_a)
 {
-  impl_->Link(group_a, group_b);
-}
-
-void Group::Add(std::string const& group, dynamics::Body const& body)
-{
-  impl_->Add(group, body);
+  impl_->Add(group_a, body_a);
 }
 
 Group::Group(json::JSON const& json, Collision const& collision) : impl_(std::make_shared<Impl>(json, collision))

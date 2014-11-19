@@ -113,8 +113,6 @@ Collision
 
 Collision allows the designer to trigger events when groups of objects touch.
 
-.. function:: collision_link(group_a, group_b)
-
 .. function:: collision_begin(group_a, group_b, call)
 
 .. function:: collision_end(group_a, group_b, call)

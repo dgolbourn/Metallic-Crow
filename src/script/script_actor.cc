@@ -22,180 +22,235 @@ void Script::Impl::ActorInit()
 
 void Script::Impl::ActorLoad()
 {
+  StagePtr stage = StagePop();
   std::string name;
   std::string file;
   lua_.PopFront(name);
   lua_.PopFront(file);
-  Actor actor(json::JSON(path_ / file), window_, stage_->scene_, stage_->group_, queue_, stage_->world_, path_);
-  if(!Pause(stage_))
+  if(stage)
   {
-    actor.Resume();
+    Actor actor(json::JSON(path_ / file), window_, stage->scene_, stage->group_, queue_, stage->world_, path_);
+    if(!Pause(stage))
+    {
+      actor.Resume();
+    }
+    stage->actors_.emplace(name, actor);
   }
-  stage_->actors_.emplace(name, actor);
 }
 
 void Script::Impl::ActorFree()
 {
+  StagePtr stage = StagePop();
   std::string name;
   lua_.PopFront(name);
-  stage_->actors_.erase(name);
+  if(stage)
+  {
+    stage->actors_.erase(name);
+  }
 }
 
 void Script::Impl::ActorBody()
 {
+  StagePtr stage = StagePop();
   std::string name;
   std::string expression;
   lua_.PopFront(name);
   lua_.PopFront(expression);
-  auto range = stage_->actors_.equal_range(name);
-  for(auto& actor = range.first; actor != range.second; ++actor)
+  if(stage)
   {
-    actor->second.Body(expression);
+    auto range = stage->actors_.equal_range(name);
+    for(auto& actor = range.first; actor != range.second; ++actor)
+    {
+      actor->second.Body(expression);
+    }
   }
 }
 
 void Script::Impl::ActorEyes()
 {
+  StagePtr stage = StagePop();
   std::string name;
   std::string expression;
   lua_.PopFront(name);
   lua_.PopFront(expression);
-  auto range = stage_->actors_.equal_range(name);
-  for(auto& actor = range.first; actor != range.second; ++actor)
+  if(stage)
   {
-    actor->second.Eyes(expression);
+    auto range = stage->actors_.equal_range(name);
+    for(auto& actor = range.first; actor != range.second; ++actor)
+    {
+      actor->second.Eyes(expression);
+    }
   }
 }
 
 void Script::Impl::ActorMouth()
 {
+  StagePtr stage = StagePop();
   std::string name;
   std::string expression;
   lua_.PopFront(name);
   lua_.PopFront(expression);
-  auto range = stage_->actors_.equal_range(name);
-  for(auto& actor = range.first; actor != range.second; ++actor)
+  if(stage)
   {
-    actor->second.Mouth(expression);
+    auto range = stage->actors_.equal_range(name);
+    for(auto& actor = range.first; actor != range.second; ++actor)
+    {
+      actor->second.Mouth(expression);
+    }
   }
 }
 
 void Script::Impl::ActorNominate()
 {
+  StagePtr stage = StagePop();
   std::string name;
   lua_.PopFront(name);
-  
-  Actor hero;
-  auto iter = stage_->actors_.find(name);
-  if(iter != stage_->actors_.end())
-  {
-    hero = iter->second;
-  }
 
-  stage_->hero_ = hero;
+  if(stage)
+  {
+    Actor hero;
+    auto iter = stage->actors_.find(name);
+    if(iter != stage->actors_.end())
+    {
+      hero = iter->second;
+    }
+    stage->hero_ = hero;
+  }
 }
 
 void Script::Impl::ActorPosition()
 {
+  StagePtr stage = StagePop();
   std::string name;
   float x;
   float y;
   lua_.PopFront(name);
   lua_.PopFront(x);
   lua_.PopFront(y);
-  auto range = stage_->actors_.equal_range(name);
-  for(auto& actor = range.first; actor != range.second; ++actor)
+  if(stage)
   {
-    actor->second.Position(Position(x, y));
+    auto range = stage->actors_.equal_range(name);
+    for(auto& actor = range.first; actor != range.second; ++actor)
+    {
+      actor->second.Position(Position(x, y));
+    }
   }
 }
 
 void Script::Impl::ActorVelocity()
 {
+  StagePtr stage = StagePop();
   std::string name;
   float u;
   float v;
   lua_.PopFront(name);
   lua_.PopFront(u);
   lua_.PopFront(v);
-  auto range = stage_->actors_.equal_range(name);
-  for(auto& actor = range.first; actor != range.second; ++actor)
+  if(stage)
   {
-    actor->second.Velocity(Position(u, v));
+    auto range = stage->actors_.equal_range(name);
+    for(auto& actor = range.first; actor != range.second; ++actor)
+    {
+      actor->second.Velocity(Position(u, v));
+    }
   }
 }
 
 void Script::Impl::ActorForce()
 {
+  StagePtr stage = StagePop();
   std::string name;
   float f;
   float g;
   lua_.PopFront(name);
   lua_.PopFront(f);
   lua_.PopFront(g);
-  auto range = stage_->actors_.equal_range(name);
-  for(auto& actor = range.first; actor != range.second; ++actor)
+  if(stage)
   {
-    actor->second.Force(Position(f, g));
+    auto range = stage->actors_.equal_range(name);
+    for(auto& actor = range.first; actor != range.second; ++actor)
+    {
+      actor->second.Force(Position(f, g));
+    }
   }
 }
 
 void Script::Impl::ActorImpulse()
 {
+  StagePtr stage = StagePop();
   std::string name;
   float i;
   float j;
   lua_.PopFront(name);
   lua_.PopFront(i);
   lua_.PopFront(j);
-  auto range = stage_->actors_.equal_range(name);
-  for(auto& actor = range.first; actor != range.second; ++actor)
+  if(stage)
   {
-    actor->second.Impulse(Position(i, j));
+    auto range = stage->actors_.equal_range(name);
+    for (auto& actor = range.first; actor != range.second; ++actor)
+    {
+      actor->second.Impulse(Position(i, j));
+    }
   }
 }
 
 void Script::Impl::ActorUp()
 {
+  StagePtr stage = StagePop();
   std::string name;
   lua_.PopFront(name);
-  auto range = stage_->actors_.equal_range(name);
-  for(auto& actor = range.first; actor != range.second; ++actor)
+  if(stage)
   {
-    actor->second.Up();
+    auto range = stage->actors_.equal_range(name);
+    for(auto& actor = range.first; actor != range.second; ++actor)
+    {
+      actor->second.Up();
+    }
   }
 }
 
 void Script::Impl::ActorDown()
 {
+  StagePtr stage = StagePop();
   std::string name;
   lua_.PopFront(name);
-  auto range = stage_->actors_.equal_range(name);
-  for(auto& actor = range.first; actor != range.second; ++actor)
+  if(stage)
   {
-    actor->second.Down();
+    auto range = stage->actors_.equal_range(name);
+    for(auto& actor = range.first; actor != range.second; ++actor)
+    {
+      actor->second.Down();
+    }
   }
 }
 
 void Script::Impl::ActorLeft()
 {
+  StagePtr stage = StagePop();
   std::string name;
   lua_.PopFront(name);
-  auto range = stage_->actors_.equal_range(name);
-  for(auto& actor = range.first; actor != range.second; ++actor)
+  if(stage)
   {
-    actor->second.Left();
+    auto range = stage->actors_.equal_range(name);
+    for(auto& actor = range.first; actor != range.second; ++actor)
+    {
+      actor->second.Left();
+    }
   }
 }
 
 void Script::Impl::ActorRight()
 {
+  StagePtr stage = StagePop();
   std::string name;
   lua_.PopFront(name);
-  auto range = stage_->actors_.equal_range(name);
-  for(auto& actor = range.first; actor != range.second; ++actor)
+  if(stage)
   {
-    actor->second.Right();
+    auto range = stage->actors_.equal_range(name);
+    for(auto& actor = range.first; actor != range.second; ++actor)
+    {
+      actor->second.Right();
+    }
   }
 }
 }

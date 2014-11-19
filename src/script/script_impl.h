@@ -111,6 +111,7 @@ public:
   void StageNominate();
   void StagePause();
   void StageResume();
+  StagePtr StagePop();
 
   void ChoiceInit();
   void ChoiceChoice();

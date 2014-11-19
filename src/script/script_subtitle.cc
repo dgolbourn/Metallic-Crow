@@ -10,17 +10,25 @@ void Script::Impl::SubtitleInit()
 
 void Script::Impl::SubtitleText()
 {
+  StagePtr stage = StagePop();
   std::string text;
   lua_.PopFront(text);
-  stage_->subtitle_(text);
+  if(stage)
+  {
+    stage->subtitle_(text);
+  }
 }
 
 void Script::Impl::SubtitleLight()
 {
+  StagePtr stage = StagePop();
   float r, g, b;
   lua_.PopFront(r);
   lua_.PopFront(g);
   lua_.PopFront(b);
-  stage_->subtitle_.Modulate(r, g, b);
+  if(stage)
+  { 
+    stage->subtitle_.Modulate(r, g, b);
+  }
 }
 }

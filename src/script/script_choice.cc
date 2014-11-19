@@ -9,6 +9,7 @@ void Script::Impl::ChoiceInit()
 
 void Script::Impl::ChoiceChoice()
 {
+  StagePtr stage = StagePop();
   std::string up;
   lua_.PopFront(up);
   std::string down;
@@ -19,6 +20,9 @@ void Script::Impl::ChoiceChoice()
   lua_.PopFront(right);
   double interval;
   lua_.PopFront(interval);
-  stage_->choice_(up, down, left, right, interval);
+  if(stage)
+  {
+    stage->choice_(up, down, left, right, interval);
+  }
 }
 }

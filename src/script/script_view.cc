@@ -12,42 +12,58 @@ void Script::Impl::ViewInit()
 
 void Script::Impl::ViewAddActor()
 {
+  StagePtr stage = StagePop();
   std::string name;
   lua_.PopFront(name);
-  auto actor = stage_->actors_.find(name);
-  if(actor != stage_->actors_.end())
+  if(stage)
   {
-    stage_->subjects_.push_back(actor->second);
+    auto actor = stage->actors_.find(name);
+    if(actor != stage->actors_.end())
+    {
+      stage->subjects_.push_back(actor->second);
+    }
   }
 }
 
 void Script::Impl::ViewActor()
 {
+  StagePtr stage = StagePop();
   std::string name;
   lua_.PopFront(name);
-  auto actor = stage_->actors_.find(name);
-  if(actor != stage_->actors_.end())
+  if(stage)
   {
-    stage_->subjects_.clear();
-    stage_->subjects_.push_back(actor->second);
+    auto actor = stage->actors_.find(name);
+    if(actor != stage->actors_.end())
+    {
+      stage->subjects_.clear();
+      stage->subjects_.push_back(actor->second);
+    }
   }
 }
 
 void Script::Impl::ViewPoint()
 {
+  StagePtr stage = StagePop();
   float x;
   float y;
   lua_.PopFront(x);
   lua_.PopFront(y);
-  stage_->subject_ = Position(x, y);
-  stage_->subjects_.clear();
+  if(stage)
+  {
+    stage->subject_ = Position(x, y);
+    stage->subjects_.clear();
+  }
 }
 
 void Script::Impl::ViewZoom()
 {
+  StagePtr stage = StagePop();
   float z;
   lua_.PopFront(z);
-  stage_->zoom_ = z;
+  if(stage)
+  {
+    stage->zoom_ = z;
+  }
 }
 
 void Script::Impl::View(dynamics::World::WeakPtr world)

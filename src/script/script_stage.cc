@@ -3,6 +3,19 @@
 #include <algorithm>
 namespace game
 {
+StagePtr Script::Impl::StagePop()
+{
+  StagePtr ptr;
+  std::string name;
+  lua_.PopFront(name);
+  auto stage = stages_.find(name);
+  if(stage != stages_.end())
+  {
+    ptr = stage->second;
+  }
+  return ptr;
+}
+
 void Script::Impl::StageInit()
 {
   lua_.Add(function::Bind(&Impl::StageNominate, shared_from_this()), "stage_nominate", 0);

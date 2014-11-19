@@ -11,32 +11,44 @@ void Script::Impl::ScreenInit()
 
 void Script::Impl::ScreenLoad()
 {
+  StagePtr stage = StagePop();
   std::string name;
   std::string file;
   lua_.PopFront(name);
   lua_.PopFront(file);
-  stage_->screens_.emplace(name, Screen(json::JSON(path_ / file), window_, stage_->scene_, queue_, path_));
+  if(stage)
+  {
+    stage->screens_.emplace(name, Screen(json::JSON(path_ / file), window_, stage->scene_, queue_, path_));
+  }
 }
 
 void Script::Impl::ScreenFree()
 {
+  StagePtr stage = StagePop();
   std::string name;
   lua_.PopFront(name);
-  stage_->screens_.erase(name);
+  if(stage)
+  {
+    stage->screens_.erase(name);
+  }
 }
 
 void Script::Impl::ScreenLight()
 {
+  StagePtr stage = StagePop();
   std::string name;
   float r, g, b;
   lua_.PopFront(name);
   lua_.PopFront(r);
   lua_.PopFront(g);
   lua_.PopFront(b);
-  auto range = stage_->screens_.equal_range(name);
-  for(auto& screen = range.first; screen != range.second; ++screen)
+  if(stage)
   {
-    screen->second.Modulation(r, g, b);
+    auto range = stage->screens_.equal_range(name);
+    for(auto& screen = range.first; screen != range.second; ++screen)
+    {
+      screen->second.Modulation(r, g, b);
+    }
   }
 }
 }

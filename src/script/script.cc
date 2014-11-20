@@ -68,64 +68,64 @@ void Script::Impl::Resume()
 
 void Script::Impl::Render(void)
 {
-  if(stage_)
+  if(stage_.second)
   {
-    stage_->scene_.Render();
-    stage_->choice_.Render();
-    stage_->subtitle_.Render();
+    stage_.second->scene_.Render();
+    stage_.second->choice_.Render();
+    stage_.second->subtitle_.Render();
   }
   fade_.Render();
 }
 
 void Script::Impl::ChoiceUp(void)
 {
-  stage_->choice_.Up();
+  stage_.second->choice_.Up();
 }
 
 void Script::Impl::ChoiceDown(void)
 {
-  stage_->choice_.Down();
+  stage_.second->choice_.Down();
 }
 
 void Script::Impl::ChoiceLeft(void)
 {
-  stage_->choice_.Left();
+  stage_.second->choice_.Left();
 }
 
 void Script::Impl::ChoiceRight(void)
 {
-  stage_->choice_.Right();
+  stage_.second->choice_.Right();
 }
 
 void Script::Impl::Up(void)
 {
-  if(stage_->hero_)
+  if(stage_.second->hero_)
   {
-    stage_->hero_.Up();
+    stage_.second->hero_.Up();
   }
 }
 
 void Script::Impl::Down(void)
 {
-  if(stage_->hero_)
+  if(stage_.second->hero_)
   {
-    stage_->hero_.Down();
+    stage_.second->hero_.Down();
   }
 }
 
 void Script::Impl::Left(void)
 {
-  if(stage_->hero_)
+  if(stage_.second->hero_)
   {
-    stage_->hero_.Left();
+    stage_.second->hero_.Left();
   }
 }
 
 void Script::Impl::Right(void)
 {
-  if(stage_->hero_)
+  if(stage_.second->hero_)
   {
-    stage_->hero_.Right();
+    stage_.second->hero_.Right();
   }
 }
 

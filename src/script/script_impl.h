@@ -51,6 +51,7 @@ struct Stage
 
 typedef std::shared_ptr<Stage> StagePtr;
 typedef std::map<std::string, StagePtr> StageMap;
+typedef std::pair<std::string, StagePtr> StagePair;
 
 class Script::Impl final : public std::enable_shared_from_this<Impl>
 {
@@ -142,7 +143,7 @@ public:
   display::Window window_;
   event::Queue queue_;
   StageMap stages_;
-  StagePtr stage_;
+  StagePair stage_;
   bool paused_;
   Fade fade_;
   event::Signal signal_;

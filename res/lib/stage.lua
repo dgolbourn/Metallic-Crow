@@ -20,12 +20,12 @@ function Stage:resume()
 	stage_resume(self.name)
 end
 
-function Stage:collision_begin(group_a, group_b, command)
-	collision_begin(self.name, group_a, group_b, command)
-end
-
-function Stage:collision_end(group_a, group_b, command)
-	collision_end(self.name, group_a, group_b, command)
+function Stage:collision(begin, group_a, group_b, command)
+	if(begin == true) then
+		collision_begin(self.name, group_a, group_b, command)
+	else
+		collision_end(self.name, group_a, group_b, command)	
+	end
 end
 
 function Stage:choice(up, down, left, right, interval)
@@ -46,7 +46,7 @@ end
 
 function Stage:new(world, choice, collision, subtitle)
 	if(self.number == nil) then
-		self.__gc = Stage.finalise
+		self.__gc = self.finalise
 		self.__index = self
 		self.number = 0
 	end

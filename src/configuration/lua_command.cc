@@ -25,16 +25,9 @@ Command::Impl::Impl(StackPtr const& stack) : stack_(stack)
 
 Command::Impl::~Impl()
 {
-  try
+  if(StackPtr stack = stack_.lock())
   {
-    if(StackPtr stack = stack_.lock())
-    {
-      luaL_unref(stack->state_, LUA_REGISTRYINDEX, reference_);
-    }
-  }
-  catch(...)
-  {
-    exception::Log("Swallowed Exception");
+    luaL_unref(stack->state_, LUA_REGISTRYINDEX, reference_);
   }
 }
 

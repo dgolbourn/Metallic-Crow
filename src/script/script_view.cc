@@ -17,8 +17,8 @@ void Script::Impl::ViewAddActor()
   lua_.PopFront(name);
   if(stage)
   {
-    auto actor = stage->actors_.find(name);
-    if(actor != stage->actors_.end())
+    auto range = stage->actors_.equal_range(name);
+    for(auto& actor = range.first; actor != range.second; ++actor)
     {
       stage->subjects_.push_back(actor->second);
     }
@@ -68,19 +68,19 @@ void Script::Impl::ViewZoom()
 
 void Script::Impl::View(dynamics::World::WeakPtr world)
 {
-  if(world.Lock() == stage_->world_)
+  if(world.Lock() == stage_.second->world_)
   {
     game::Position view(0.f, 0.f);
     int count = 0;
 
-    if(stage_->subject_)
+    if(stage_.second->subject_)
     {
-      view.first += stage_->subject_->first;
-      view.second += stage_->subject_->second;
+      view.first += stage_.second->subject_->first;
+      view.second += stage_.second->subject_->second;
       ++count;
     }
 
-    for(auto iter = stage_->subjects_.begin(); iter != stage_->subjects_.end();)
+    for(auto iter = stage_.second->subjects_.begin(); iter != stage_.second->subjects_.end();)
     {
       if(Actor subject = iter->Lock())
       {
@@ -92,11 +92,11 @@ void Script::Impl::View(dynamics::World::WeakPtr world)
       }
       else
       {
-        iter = stage_->subjects_.erase(iter);
+        iter = stage_.second->subjects_.erase(iter);
       }
     }
 
-    window_.View(view.first / count, view.second / count, stage_->zoom_);
+    window_.View(view.first / count, view.second / count, stage_.second->zoom_);
   }
 }
 }

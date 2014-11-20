@@ -8,10 +8,17 @@ StagePtr Script::Impl::StagePop()
   StagePtr ptr;
   std::string name;
   lua_.PopFront(name);
-  auto stage = stages_.find(name);
-  if(stage != stages_.end())
+  if(name == stage_.first)
   {
-    ptr = stage->second;
+    ptr = stage_.second;
+  }
+  else
+  {
+    auto stage = stages_.find(name);
+    if(stage != stages_.end())
+    {
+      ptr = stage->second;
+    }
   }
   return ptr;
 }
@@ -30,10 +37,14 @@ void Script::Impl::StageNominate()
 {
   std::string name;
   lua_.PopFront(name);
-  auto stage = stages_.find(name);
-  if(stage != stages_.end())
+  if(name != stage_.first)
   {
-    stage_ = stage->second;
+    auto stage = stages_.find(name);
+    if(stage != stages_.end())
+    {
+      stage_.first = stage->first;
+      stage_.second = stage->second;
+    }
   }
 }
 
@@ -86,41 +97,32 @@ void Script::Impl::StageFree()
 
 void Script::Impl::StageLight()
 {
-  std::string name;
+  StagePtr stage = StagePop();
   float r, g, b;
-  lua_.PopFront(name);
   lua_.PopFront(r);
   lua_.PopFront(g);
   lua_.PopFront(b);
-
-  auto stage = stages_.find(name);
-  if(stage != stages_.end())
+  if(stage)
   {
-    stage->second->world_.Ambient(r, g, b);
+    stage->world_.Ambient(r, g, b);
   }
 }
 
 void Script::Impl::StagePause()
 {
-  std::string name;
-  lua_.PopFront(name);
-
-  auto stage = stages_.find(name);
-  if(stage != stages_.end())
+  StagePtr stage = StagePop();
+  if(stage)
   {
-    Pause(stage->second, stage->second->paused_[1]);
+    Pause(stage, stage->paused_[1]);
   }
 }
 
 void Script::Impl::StageResume()
 {
-  std::string name;
-  lua_.PopFront(name);
-
-  auto stage = stages_.find(name);
-  if(stage != stages_.end())
+  StagePtr stage = StagePop();
+  if(stage)
   {
-    Resume(stage->second, stage->second->paused_[1]);
+    Resume(stage, stage->paused_[1]);
   }
 }
 

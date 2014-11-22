@@ -15,7 +15,7 @@ dynamics::Body MakeBody(json::JSON const& json, dynamics::World& world, collisio
 
     body = dynamics::Body(json::JSON(body_ptr), world);
 
-    for(json::JSON const& name_ptr : json::JSON(names))
+    for(json::JSON name_ptr : json::JSON(names))
     {
       char const* name;
       name_ptr.Unpack("s", &name);

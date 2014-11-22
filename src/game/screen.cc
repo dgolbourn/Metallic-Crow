@@ -45,6 +45,10 @@ Screen::Impl::Impl(json::JSON const& json, display::Window& window, int& plane, 
   iterator_ = animation_.begin();
   texture_ = *iterator_;
   render_box_ = display::BoundingBox(json::JSON(render_box));
+  if(animation_.empty())
+  {
+    interval = -1.;
+  }
   timer_ = event::Timer(interval, -1);
 }
 

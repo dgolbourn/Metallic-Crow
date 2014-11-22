@@ -1,6 +1,18 @@
 {
 	"allowed collisions" :
 	[
-		["world", "hero"]
+		["Hero", "World"],
+		["Hero", "Ensign"],
+		["Hero", "Carl"],
+		["Hero", "Ambrose"],
+		["Hero", "Matilda"],
+		["Hero", "Reynard"],
+		["Hero", "Tybalt"],
+		["World", "Ensign"],
+		["World", "Carl"],
+		["World", "Ambrose"],
+		["World", "Matilda"],
+		["World", "Reynard"],
+		["World", "Tybalt"]
 	]
 }

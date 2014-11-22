@@ -33,9 +33,9 @@ Timer::Impl::Impl(double interval, int loops)
 
 void Timer::Impl::Reset(double interval, int loops)
 {
-  if(interval <= 0.f)
+  if(interval <= 0.)
   { 
-    interval = 0.f;
+    interval = 0.;
     loops = 0;
   }
   else if(loops >= 0)

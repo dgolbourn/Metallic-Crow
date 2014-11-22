@@ -217,13 +217,13 @@ void Actor::Impl::Blink()
 }
 
 Actor::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, int& plane, boost::filesystem::path const& path) :
-  paused_(true), 
-  x_sign_(0), 
-  y_sign_(0), 
-  force_(0.f, 0.f), 
-  thrust_(2000.f),
-  blink_(interval(), 0),
-  open_(true)
+paused_(true),
+x_sign_(0),
+y_sign_(0),
+force_(0.f, 0.f),
+thrust_(2000.f),
+blink_(interval(), 0),
+open_(true)
 {
   json_t* avatar;
   json_t* body;
@@ -240,7 +240,10 @@ Actor::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue&
   avatar_.Eyes(open_);
   avatar_.Mouth("idle");
 
-  queue.Add(function::Bind(&event::Timer::operator(), blink_));
+  if(avatar_.Eyes())
+  {
+    queue.Add(function::Bind(&event::Timer::operator(), blink_));
+  }
 }
 
 void Actor::Impl::Init(Scene& scene, dynamics::World& world, int plane)
@@ -248,7 +251,10 @@ void Actor::Impl::Init(Scene& scene, dynamics::World& world, int plane)
   world.Begin(function::Bind(&Impl::Begin, shared_from_this()));
   world.End(function::Bind(&Impl::End, shared_from_this()));
   scene.Add(function::Bind(&Impl::Render, shared_from_this()), plane);
-  blink_.End(function::Bind(&Impl::Blink, shared_from_this()));
+  if(avatar_.Eyes())
+  {
+    blink_.End(function::Bind(&Impl::Blink, shared_from_this()));
+  }
 }
 
 void Actor::Position(game::Position const& position)

@@ -177,10 +177,10 @@ set (GAME_SOURCES
 	"${PROJECT_SOURCE_DIR}/src/game/position.h"
 	"${PROJECT_SOURCE_DIR}/src/game/scene.cc"
 	"${PROJECT_SOURCE_DIR}/src/game/scene.h"
+	"${PROJECT_SOURCE_DIR}/src/game/scenery.cc"
+	"${PROJECT_SOURCE_DIR}/src/game/scenery.h"
 	"${PROJECT_SOURCE_DIR}/src/game/screen.cc"
 	"${PROJECT_SOURCE_DIR}/src/game/screen.h"
-	"${PROJECT_SOURCE_DIR}/src/game/set.cc"
-	"${PROJECT_SOURCE_DIR}/src/game/set.h"
 	"${PROJECT_SOURCE_DIR}/src/game/subtitle.cc"
 	"${PROJECT_SOURCE_DIR}/src/game/subtitle.h")
 
@@ -203,8 +203,8 @@ set (SCRIPT_SOURCES
 	"${PROJECT_SOURCE_DIR}/src/script/script_collision.cc"
 	"${PROJECT_SOURCE_DIR}/src/script/script_fade.cc"
 	"${PROJECT_SOURCE_DIR}/src/script/script_impl.h"
+	"${PROJECT_SOURCE_DIR}/src/script/script_scenery.cc"
 	"${PROJECT_SOURCE_DIR}/src/script/script_screen.cc"
-	"${PROJECT_SOURCE_DIR}/src/script/script_set.cc"
 	"${PROJECT_SOURCE_DIR}/src/script/script_stage.cc"
 	"${PROJECT_SOURCE_DIR}/src/script/script_subtitle.cc"
 	"${PROJECT_SOURCE_DIR}/src/script/script_timer.cc"

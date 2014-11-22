@@ -3,7 +3,7 @@
 	{
 		"file" : "ext/menu.ttf",
 		"point" : 32,
-		"colour" : [255, 255, 0],
+		"colour" : [255, 255, 255],
 		"bold" : false,
 		"italic" : false,
 		"outline" : [0, 0, 0]

@@ -32,7 +32,7 @@ Feature::Impl::Impl(json::JSON const& json, display::Window& window, boost::file
 
   render_box_ = display::BoundingBox(json::JSON(render_box));
 
-  for(json::JSON const& value : json::JSON(expressions))
+  for(json::JSON value : json::JSON(expressions))
   {
     char const* expression;
     int index;

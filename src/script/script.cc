@@ -13,7 +13,7 @@ void Script::Impl::Init(boost::filesystem::path const& file)
 
   ActorInit();
   StageInit();
-  SetInit();
+  SceneryInit();
   ScreenInit();
   ChoiceInit();
   SubtitleInit();

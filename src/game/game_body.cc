@@ -87,11 +87,10 @@ typedef AnimationMap::iterator AnimationPtr;
 template<class A, class B, class C> bool Increment(A& texture, B& iterator, C const& animation)
 {
   bool end = true;
-  auto end_iter = animation.end();
-  if(iterator != end_iter)
+  if(iterator != animation.end())
   {
     ++iterator;
-    if(iterator != end_iter)
+    if(iterator != animation.end())
     {
       texture = *iterator;
       end = false;

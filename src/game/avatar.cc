@@ -23,6 +23,7 @@ public:
   void Resume(void);
   void Render(void) const;
   void Next();
+  bool Eyes() const;
 
   game::Body body_;
   game::Feature eyes_;
@@ -159,6 +160,11 @@ void Avatar::Impl::Next()
   body_.Next();
 }
 
+bool Avatar::Impl::Eyes() const
+{
+  return bool(body_.Eyes());
+}
+
 void Avatar::Eyes(std::string const& expression)
 {
   impl_->Eyes(expression);
@@ -182,6 +188,11 @@ void Avatar::Mouth(int open)
 void Avatar::Eyes(int open)
 {
   impl_->Eyes(open);
+}
+
+bool Avatar::Eyes() const
+{
+  return impl_->Eyes();
 }
 
 void Avatar::Facing(bool left_facing)

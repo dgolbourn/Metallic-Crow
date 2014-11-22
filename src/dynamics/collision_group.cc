@@ -31,12 +31,14 @@ Group::Impl::Impl(json::JSON const& json, Collision const& collision) : collisio
     "allowed collisions", 
     &collisions);
 
-  for(auto& element : json::JSON(collisions))
+  for(json::JSON element : json::JSON(collisions))
   {
     char const* group_a;
     char const* group_b;
     element.Unpack("[ss]", &group_a, &group_b);
     collisions_[group_a][group_b] = collisions_[group_b][group_a];
+    members_[group_a];
+    members_[group_b];
   }
 }
 

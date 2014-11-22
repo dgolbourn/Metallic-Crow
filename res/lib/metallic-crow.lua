@@ -1,5 +1,5 @@
 require "res/lib/stage"
 require "res/lib/actor"
 require "res/lib/timer"
-require "res/lib/set"
+require "res/lib/scenery"
 require "res/lib/screen"

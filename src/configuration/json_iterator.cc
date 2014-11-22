@@ -1,12 +1,12 @@
 #include "json_iterator.h"
 namespace json
 { 
-JSON::Iterator begin(JSON& json) 
+JSON::Iterator begin(JSON json) 
 {
   return JSON::Iterator(json);
 }
 
-JSON::Iterator end(JSON const&)
+JSON::Iterator end(JSON)
 {
   return JSON::Iterator();
 }
@@ -15,7 +15,7 @@ JSON::Iterator::Iterator(void) : index_(0)
 {
 }
 
-JSON::Iterator::Iterator(JSON& json) : json_(json), value_(json_[0]), index_(0)
+JSON::Iterator::Iterator(JSON json) : json_(json), value_(json_[0]), index_(0)
 {
 }
 

@@ -2,7 +2,7 @@
 #define SCRIPT_IMPL_H_
 #include "script.h"
 #include "actor.h"
-#include "set.h"
+#include "scenery.h"
 #include "timer.h"
 #include "lua_stack.h"
 #include "choice.h"
@@ -22,7 +22,7 @@ namespace game
 {
 typedef std::list<Actor::WeakPtr> ActorList;
 typedef boost::optional<Position> Subject;
-typedef std::multimap<std::string, Set> SetMap;
+typedef std::multimap<std::string, Scenery> SceneryMap;
 typedef std::multimap<std::string, Actor> ActorMap;
 typedef std::multimap<std::string, event::Timer> TimerMap;
 typedef std::multimap<std::string, Screen> ScreenMap;
@@ -31,7 +31,7 @@ typedef std::array<bool, 2> Paused;
 struct Stage
 {
   Actor hero_;
-  SetMap sets_;
+  SceneryMap scenery_;
   ActorMap actors_;
   Paused paused_;
   TimerMap timers_;
@@ -95,10 +95,10 @@ public:
   void ActorLeft();
   void ActorRight();
 
-  void SetInit();
-  void SetLoad();
-  void SetFree();
-  void SetLight();
+  void SceneryInit();
+  void SceneryLoad();
+  void SceneryFree();
+  void SceneryLight();
 
   void ScreenInit();
   void ScreenLoad();

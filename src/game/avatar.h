@@ -18,6 +18,7 @@ public:
   void Body(std::string const& expression);
   void Mouth(int open);
   void Eyes(int open);
+  bool Eyes() const;
   void Facing(bool left_facing);
   void Position(game::Position const& position);
   void Modulation(display::Modulation const& modulation);

@@ -4,10 +4,6 @@ function Actor:finalise()
 	actor_free(self.stage, self.name)
 end
 
-function Actor:light(r, g, b)
-	actor_light(self.stage, self.name, r, g, b)
-end
-
 function Actor:body(expression)
 	actor_body(self.stage, self.name, expression)
 end

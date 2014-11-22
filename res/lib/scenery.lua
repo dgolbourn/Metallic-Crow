@@ -1,14 +1,14 @@
-Set = {}
+Scenery = {}
 
-function Set:finalise()
-	set_free(self.stage, self.name)
+function Scenery:finalise()
+	scenery_free(self.stage, self.name)
 end
 
-function Set:light(r, g, b)
-	set_light(self.stage, self.name, r, g, b)
+function Scenery:light(r, g, b)
+	scenery_light(self.stage, self.name, r, g, b)
 end
 
-function Set:new(stage, set, scenery)
+function Scenery:new(stage, set, scenery)
 	if(self.number == nil) then
 		self.__gc = self.finalise
 		self.__index = self
@@ -24,6 +24,6 @@ function Set:new(stage, set, scenery)
 	end
 	setmetatable(object, self)
 	object.stage = stage.name
-	set_load(object.stage, object.name, set)
+	scenery_load(object.stage, object.name, set)
 	return object
 end

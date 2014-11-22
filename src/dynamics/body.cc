@@ -9,7 +9,7 @@ namespace dynamics
 typedef std::unique_ptr<b2Shape> Shape;
 typedef std::pair<Shape, float32> ShapePair;
 
-static ShapePair Box(WorldImpl const& world, json::JSON& json)
+static ShapePair Box(WorldImpl const& world, json::JSON json)
 {
   double x, y, w, h;
   json.Unpack("[ffff]", &x, &y, &w, &h);
@@ -26,7 +26,7 @@ static ShapePair Box(WorldImpl const& world, json::JSON& json)
   return shape;
 }
 
-static ShapePair Circle(WorldImpl const& world, json::JSON& json)
+static ShapePair Circle(WorldImpl const& world, json::JSON json)
 {
   double x, y, radius;
   json.Unpack("[fff]", &x, &y, &radius);
@@ -41,10 +41,10 @@ static ShapePair Circle(WorldImpl const& world, json::JSON& json)
   return shape;
 }
 
-static ShapePair Chain(WorldImpl const& world, json::JSON& json)
+static ShapePair Chain(WorldImpl const& world, json::JSON json)
 {
   std::vector<b2Vec2> vertices;
-  for(json::JSON const& value : json)
+  for(json::JSON value : json)
   {
     double x, y;
     value.Unpack("[ff]", &x, &y);
@@ -69,7 +69,7 @@ static ShapePair Chain(WorldImpl const& world, json::JSON& json)
   return shape;
 }
 
-static b2BodyDef BodyDefinition(WorldImpl const& world, json::JSON& velocity, float32 damping, float32 x, float32 y)
+static b2BodyDef BodyDefinition(WorldImpl const& world, json::JSON velocity, float32 damping, float32 x, float32 y)
 {
   b2BodyDef body_def;
   if(velocity)
@@ -137,7 +137,7 @@ BodyImpl::BodyImpl(json::JSON const& json, World& world)
   std::vector<Shape> shapes(json::JSON(shapes_ref).Size());
 
   auto shape = shapes.begin();
-  for(json::JSON const& fixture_ref : json::JSON(shapes_ref))
+  for(json::JSON fixture_ref : json::JSON(shapes_ref))
   {
     char const* type_ref;
     json_t* shape_ref;

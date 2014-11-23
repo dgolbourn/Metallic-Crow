@@ -21,6 +21,7 @@ void Script::Impl::Init(boost::filesystem::path const& file)
   ViewInit();
   CollisionInit();
   FadeInit();
+  JointInit();
 
   typedef void (event::Signal::*Notify)();
   lua_.Add(function::Bind((Notify)&event::Signal::operator(), signal_), "script_end", 0);

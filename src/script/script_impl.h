@@ -18,10 +18,12 @@
 #include "fade.h"
 #include "signal.h"
 #include "boost/filesystem.hpp"
+#include "game_joint.h"
 namespace game
 {
 typedef std::list<Actor::WeakPtr> ActorList;
 typedef boost::optional<Position> Subject;
+typedef std::multimap<std::string, Joint> JointMap;
 typedef std::multimap<std::string, Scenery> SceneryMap;
 typedef std::multimap<std::string, Actor> ActorMap;
 typedef std::multimap<std::string, event::Timer> TimerMap;
@@ -31,6 +33,7 @@ typedef std::array<bool, 2> Paused;
 struct Stage
 {
   Actor hero_;
+  JointMap joints_;
   SceneryMap scenery_;
   ActorMap actors_;
   Paused paused_;
@@ -138,6 +141,10 @@ public:
   void FadeInit();
   void FadeUp();
   void FadeDown();
+
+  void JointInit();
+  void JointLoad();
+  void JointFree();
 
   lua::Stack lua_;
   display::Window window_;

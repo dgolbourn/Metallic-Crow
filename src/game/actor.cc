@@ -1,11 +1,10 @@
 #include "actor.h"
 #include "bounding_box.h"
 #include "bind.h"
-#include "avatar.h"
 #include "json_iterator.h"
-#include "timer.h"
 #include <random>
 #include "make_body.h"
+#include "actor_impl.h"
 namespace
 {
 auto interval = std::bind(std::uniform_real_distribution<double>(2., 20.), std::default_random_engine());
@@ -13,46 +12,6 @@ auto interval = std::bind(std::uniform_real_distribution<double>(2., 20.), std::
 
 namespace game
 {
-class Actor::Impl final : public std::enable_shared_from_this<Impl>
-{
-public:
-  Impl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, int& plane, boost::filesystem::path const& path);
-  void Init(Scene& scene, dynamics::World& world, int plane);
-  void Render(void) const;
-  void Pause(void);
-  void Resume(void);
-  void Up(void);
-  void Down(void);
-  void Left(void);
-  void Right(void);
-  void Body(std::string const& expression);
-  void Eyes(std::string const& expression);
-  void Mouth(std::string const& expression);
-  void Mouth(int open);
-  void Update(void);
-  void Position(game::Position const& position);
-  game::Position Position(void) const;
-  void Velocity(game::Position const& velocity);
-  game::Position Velocity(void) const;
-  void Force(game::Position const& force);
-  void Impulse(game::Position const& impulse);
-  void Begin(void);
-  void End(void);
-  void Blink(void);
-
-  Avatar avatar_;
-  dynamics::Body body_;
-  
-  bool paused_;
-  int x_sign_;
-  int y_sign_;
-  game::Position force_;
-  float thrust_;
-
-  event::Timer blink_;
-  bool open_;
-};
-
 void Actor::Impl::Pause(void)
 {
   paused_ = true;
@@ -222,7 +181,6 @@ x_sign_(0),
 y_sign_(0),
 force_(0.f, 0.f),
 thrust_(2000.f),
-blink_(interval(), 0),
 open_(true)
 {
   json_t* avatar;
@@ -242,6 +200,7 @@ open_(true)
 
   if(avatar_.Eyes())
   {
+    blink_ = event::Timer(interval(), 0);
     queue.Add(function::Bind(&event::Timer::operator(), blink_));
   }
 }

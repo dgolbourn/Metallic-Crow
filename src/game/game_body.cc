@@ -230,10 +230,6 @@ void Body::Impl::Facing(event::Command const& command)
 
 void Body::Impl::Render(Position const& position, display::Modulation const& modulation, bool front) const
 {
-  display::BoundingBox box = display::BoundingBox(animation_->second.render_box_, display::BoundingBox());
-  box.x(box.x() + position.first);
-  box.y(box.y() + position.second);
-  
   display::Texture texture;
   if(front)
   {
@@ -243,8 +239,14 @@ void Body::Impl::Render(Position const& position, display::Modulation const& mod
   {
     texture = texture_.back_;
   }
-  
-  texture(display::BoundingBox(), box, 1.f, false, 0., modulation);
+
+  if(texture)
+  {
+    display::BoundingBox box = display::BoundingBox(animation_->second.render_box_, display::BoundingBox());
+    box.x(box.x() + position.first);
+    box.y(box.y() + position.second);
+    texture(display::BoundingBox(), box, 1.f, false, 0., modulation);
+  }
 }
 
 Body::Body(json::JSON const& json, display::Window& window, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, window, path))

@@ -41,6 +41,7 @@ private:
 public:
   typedef memory::WeakPtr<Actor> WeakPtr;
   friend WeakPtr;
+  friend class JointImpl;
 };
 }
 #endif

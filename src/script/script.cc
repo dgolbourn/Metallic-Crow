@@ -44,6 +44,7 @@ void Script::Impl::Pause(void)
     {
       Pause(stage.second, stage.second->paused_[0]);
     }
+    fade_.Pause();
   }
 }
 

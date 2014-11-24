@@ -23,8 +23,8 @@ bool Intersection(float l0, float w0, float l1, float w1, float* l_out, float* w
     std::swap(r1, r0);
   }
 
-  bool intersection = false;
-  if(l1 <= r0)
+  bool intersection = (l1 <= r0);
+  if(intersection)
   {
     if(l_out)
     {
@@ -32,9 +32,8 @@ bool Intersection(float l0, float w0, float l1, float w1, float* l_out, float* w
     }
     if(w_out)
     {
-      *w_out = l1 - std::min(r0, r1);
+      *w_out = std::min(r0, r1) - l1;
     }
-    intersection = true;
   }
   return intersection;
 }

@@ -3,7 +3,7 @@
 	{
 		"file" : "res/ext/menu.ttf",
 		"point" : 32,
-		"colour" : [0, 255, 255],
+		"colour" : [255, 255, 255],
 		"bold" : false,
 		"italic" : false,
 		"outline" : [0, 0, 0]
@@ -79,5 +79,7 @@
 		"left" : [-1.0, 0.0],
 		"right" : [1.0, 0.0]
 	},
-    "interval" : 500.0
+    "interval" : 0.5,
+    "start modulation" : [0.0, 1.0, 1.0, 1.0],
+    "end modulation" : [1.0, 0.0, 0.0, 1.0]
 }

@@ -26,11 +26,14 @@ function script_begin()
 
   sky = Screen:new(stage00, "res/story/chapter0/sky.json")
 
-  fade_up(3)
+  fade_up(30)
   fade_end(function() print "hi" end)
   fade_end(script_end)
   collectgarbage()
+  
   stage00:subtitle("test")
+
+  stage00:choice("up", "down", "", "...", 3)
 
   stage00:show()
   stage00:resume()

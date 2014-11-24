@@ -106,11 +106,6 @@ SurfacePtr AddOutline(SDL_Surface* surface, SDL_Colour const* outline)
     }
   }
   
-  if(SDL_SetSurfaceBlendMode(outlined.get(), SDL_BLENDMODE_BLEND)) 
-  {
-    BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
-  }
-
   SDL_Rect dest = {1u, 1u, surface->w, surface->h};
   if(SDL_BlitSurface(surface, nullptr, outlined.get(), &dest))
   {

@@ -62,19 +62,23 @@ public:
   Boxes text_boxes_;
   Vectors text_vectors_;
   display::Modulation modulation_;
+  display::Modulation end_;
+  display::Modulation start_;
   int count_;
   event::Queue queue_;
   double interval_;
 };
 
-Choice::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : window_(window), paused_(true), count_(0), queue_(queue)
+Choice::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : window_(window), paused_(true), count_(0), queue_(queue), modulation_(1.f, 1.f, 1.f, 1.f)
 {
   json_t* font;
   json_t* icon[5];
   json_t* box[5];
   json_t* vector[4];
+  double sr, sg, sb, sa;
+  double er, eg, eb, ea;
   
-  json.Unpack("{sos{sososososo}s{sososososo}s{sosososo}sf}",
+  json.Unpack("{sos{sososososo}s{sososososo}s{sosososo}sfs[ffff]s[ffff]}",
     "font", &font,
     "icons", 
     "up", &icon[0],
@@ -93,7 +97,9 @@ Choice::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue
     "down", &vector[1],
     "left", &vector[2],
     "right", &vector[3],
-    "interval", &interval_);
+    "interval", &interval_,
+    "start modulation", &sr, &sg, &sb, &sa,
+    "end modulation", &er, &eg, &eb, &ea);
 
   font_ = sdl::Font(json::JSON(font), path);
 
@@ -108,6 +114,9 @@ Choice::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue
   {
     text_vectors_[i] = MakeVector(json::JSON(vector[i]));
   }
+
+  start_ = display::Modulation(float(sr), float(sg), float(sb), float(sa));
+  end_ = display::Modulation(float(er), float(eg), float(eb), float(ea));
 }
 
 void Choice::Impl::Reset()
@@ -116,7 +125,10 @@ void Choice::Impl::Reset()
   {
     choice = false;
   }
-  modulation_ = display::Modulation();
+  modulation_.r(start_.r());
+  modulation_.g(start_.g());
+  modulation_.b(start_.b());
+  modulation_.a(start_.a());
   count_ = 0;
   animation_timer_ = event::Timer();
   fade_timer_ = event::Timer();
@@ -132,7 +144,7 @@ void Choice::Impl::Render() const
   {
     if(choices_[i] && (current_icons_[i] != icons_[i].cend()))
     {
-      (*current_icons_[i])(display::BoundingBox(), icon_boxes_[i], 0.f, false, 0., modulation_);
+      (*current_icons_[i])(display::BoundingBox(), icon_boxes_[i], 0.f, false, 0., display::Modulation());
     }
   }
 
@@ -159,17 +171,19 @@ void Choice::Impl::Choice(std::string const& up, std::string const& down, std::s
       
       display::Shape shape = text_[i].Shape();
       
-      icon_boxes_[i].x(icon_boxes_[i].x() + .5f * (icon_boxes_[i].w() * (1.f + text_vectors_[i].first) + shape.first * (text_vectors_[i].first - 1.f)));
-      icon_boxes_[i].y(icon_boxes_[i].y() + .5f * (icon_boxes_[i].h() * (1.f + text_vectors_[i].second) + shape.second * (text_vectors_[i].second - 1.f)));
-
-      icon_boxes_[i].w(shape.first);
-      icon_boxes_[i].h(shape.second);
+      text_boxes_[i] = display::BoundingBox
+      (
+        icon_boxes_[i].x() + .5f * (icon_boxes_[i].w() * (1.f + text_vectors_[i].first) + shape.first * (text_vectors_[i].first - 1.f)),
+        icon_boxes_[i].y() + .5f * (icon_boxes_[i].h() * (1.f + text_vectors_[i].second) + shape.second * (text_vectors_[i].second - 1.f)),
+        shape.first, 
+        shape.second
+      );
     }
   }
 
   if(choices_[4] = (timer > 0.))
   {
-    fade_timer_ = event::Timer(timer / 256., 255);
+    fade_timer_ = event::Timer(timer / 255., 255);
     fade_timer_.Add(function::Bind(&Impl::Fade, shared_from_this()));
     typedef void (Impl::*Notify)();
     fade_timer_.End(function::Bind((Notify)&Impl::Event<4>, shared_from_this()));
@@ -198,7 +212,6 @@ template<int T> void Choice::Impl::Event()
       animation_timer_.Add(function::Bind(&Impl::Step<T>, shared_from_this()));
       animation_timer_.End(function::Bind(&Impl::Reset, shared_from_this()));
       queue_.Add(function::Bind(&event::Timer::operator(), animation_timer_));
-      modulation_ = display::Modulation();
       fade_timer_ = event::Timer();
       if(!paused_)
       {
@@ -215,8 +228,15 @@ template<int T> void Choice::Impl::Event()
 void Choice::Impl::Fade()
 {
   ++count_;
-  float factor = (256 - count_) / 256.f;
-  modulation_ = display::Modulation(1.f, factor, factor, 1.f);
+  float f = count_ / 255.f;
+  float g = 1.f - f;
+  modulation_ = display::Modulation
+  (
+    f * end_.r() + g * start_.r(),
+    f * end_.g() + g * start_.g(),
+    f * end_.b() + g * start_.b(),
+    f * end_.a() + g * start_.a()
+  );
 }
 
 void Choice::Impl::Pause()

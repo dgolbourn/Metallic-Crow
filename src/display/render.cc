@@ -3,7 +3,7 @@
 #include "flood_fill.h"
 #include "painter.h"
 #include "log.h"
-namespace sdl
+namespace
 {
 class Modulator
 {
@@ -19,19 +19,19 @@ public:
       modulation_ = modulation;
       if(SDL_GetTextureColorMod(texture_, &original_.r, &original_.g, &original_.b))
       {
-        BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
+        BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
       }
       if(SDL_GetTextureAlphaMod(texture_, &original_.a))
       {
-        BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
+        BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
       }
       if(SDL_SetTextureColorMod(texture_, modulation->r, modulation->g, modulation->b))
       {
-        BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
+        BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
       }
       if(SDL_SetTextureAlphaMod(texture_, modulation->a))
       {
-        BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
+        BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
       }
     }
   }
@@ -44,11 +44,11 @@ public:
       {
         if(SDL_SetTextureColorMod(texture_, original_.r, original_.g, original_.b))
         {
-          BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
+          BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
         }
         if(SDL_SetTextureAlphaMod(texture_, original_.a))
         {
-          BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
+          BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
         }
       }
     }
@@ -59,6 +59,19 @@ public:
   }
 };
 
+float Transform(float x, float new_origin, float width, float zoom, float parallax)
+{
+  float w = .5f * width;
+  x -= parallax * new_origin;
+  x -= w;
+  x *= zoom;
+  x += w;
+  return x;
+}
+}
+
+namespace sdl
+{
 void Render(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, double angle, SDL_Colour const* modulation)
 {
   SDL_FPoint centre;
@@ -79,16 +92,6 @@ void Render(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source
       BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
     }
   }
-}
-
-static float Transform(float x, float new_origin, float width, float zoom, float parallax)
-{
-  float w = .5f * width;
-  x -= parallax * new_origin;
-  x -= w;
-  x *= zoom;
-  x += w;
-  return x;
 }
 
 void Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source_ptr, SDL_FRect const* destination_ptr, SDL_FPoint const* view, float zoom, float parallax, bool tile, double angle, SDL_Colour const* modulation)

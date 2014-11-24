@@ -22,13 +22,14 @@ void Script::Impl::JointLoad()
 
   if(stage)
   {
+    json::JSON json(path_ / file);
     auto range_a = stage->actors_.equal_range(actor_a_name);
     auto range_b = stage->actors_.equal_range(actor_b_name);
     for(auto& actor_a = range_a.first; actor_a != range_a.second; ++actor_a)
     {
       for(auto& actor_b = range_b.first; actor_b != range_b.second; ++actor_b)
       {
-        stage->joints_.emplace(name, Joint(json::JSON(path_ / file), actor_a->second, actor_b->second, stage->world_));
+        stage->joints_.emplace(name, Joint(json, actor_a->second, actor_b->second, stage->world_));
       }
     }
   }

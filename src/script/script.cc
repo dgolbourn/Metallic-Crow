@@ -64,6 +64,7 @@ void Script::Impl::Resume()
     {
       Resume(stage.second, stage.second->paused_[0]);
     }
+    fade_.Resume();
   }
 }
 

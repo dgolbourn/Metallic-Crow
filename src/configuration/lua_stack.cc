@@ -19,6 +19,17 @@ static void Path(lua_State* state, boost::filesystem::path const& path)
   lua_pop(state, 1);
 }
 
+static int WeakRegistry(lua_State* state)
+{
+  lua_newtable(state);
+  lua_newtable(state);
+  lua_pushliteral(state, "__mode");
+  lua_pushliteral(state, "v");
+  lua_rawset(state, -3);
+  lua_setmetatable(state, -2);
+  return luaL_ref(state, LUA_REGISTRYINDEX);
+}
+
 static lua_State* Init(boost::filesystem::path const& path)
 {
   lua_State* state = luaL_newstate();
@@ -36,6 +47,7 @@ static lua_State* Init(boost::filesystem::path const& path)
 
 StackImpl::StackImpl(boost::filesystem::path const& path) : state_(Init(path))
 {
+  weak_registry_ = WeakRegistry(state_);
 }
 
 StackImpl::~StackImpl()

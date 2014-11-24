@@ -25,6 +25,7 @@ public:
   void Add(event::Command const& command, std::string const& name, int out);
   lua_State* state_;
   CommandMap map_;
+  int weak_registry_;
 };
 }
 #endif

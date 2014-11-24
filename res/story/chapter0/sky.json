@@ -1,0 +1,11 @@
+{
+    "animation" :
+    [
+    	{"page" : "res/ext/sky.png", "clip" : null}
+    ],
+    "render box" : [-8192.0, -2048.0, 16384.0, 4098.0],
+    "interval" :  -1.0,
+    "plane" : -1000,
+    "parallax" : 0.03125,
+    "angle" : 0.0
+}

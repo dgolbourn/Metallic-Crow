@@ -96,6 +96,7 @@ void Script::Impl::View(dynamics::World::WeakPtr world)
       }
     }
 
+    count = std::max(count, 1);
     window_.View(view.first / count, view.second / count, stage_.second->zoom_);
   }
 }

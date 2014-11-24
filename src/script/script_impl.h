@@ -141,6 +141,7 @@ public:
   void FadeInit();
   void FadeUp();
   void FadeDown();
+  void FadeEnd();
 
   void JointInit();
   void JointLoad();

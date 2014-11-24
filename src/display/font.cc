@@ -29,9 +29,9 @@ TTF_Font* Open(boost::filesystem::path const& file, int point)
   return font;
 }
 
-Colour MakeColour(bool valid, int r, int g, int b)
+OptionalColour MakeColour(bool valid, int r, int g, int b)
 {
-  Colour colour;
+  OptionalColour colour;
   if(valid)
   {
     colour = {Uint8(r), Uint8(g), Uint8(b), 255u};
@@ -39,9 +39,9 @@ Colour MakeColour(bool valid, int r, int g, int b)
   return colour;
 }
 
-Colour MakeColour(json::JSON const& json)
+OptionalColour MakeColour(json::JSON const& json)
 {
-  Colour colour;
+  OptionalColour colour;
   if(json)
   {
     int r, g, b;
@@ -52,7 +52,7 @@ Colour MakeColour(json::JSON const& json)
 }
 }
 
-void Font::Impl::Init(boost::filesystem::path const& file, int point, int r, int g, int b, bool bold, bool italic, Colour const& outline)
+void Font::Impl::Init(boost::filesystem::path const& file, int point, int r, int g, int b, bool bold, bool italic, OptionalColour const& outline)
 {
   font_ = nullptr;
   try

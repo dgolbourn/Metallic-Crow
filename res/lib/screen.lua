@@ -8,7 +8,7 @@ function Screen:light(r, g, b)
 	screen_light(self.stage, self.name, r, g, b)
 end
 
-function Screen:new(stage, screen, setting)
+function Screen:new(stage, screen, screens)
 	if(self.number == nil) then
 		self.__gc = self.finalise
 		self.__index = self
@@ -16,11 +16,11 @@ function Screen:new(stage, screen, setting)
 	end
 	
 	object = {}
-	if(setting == nil) then
+	if(screens == nil) then
 		self.number = self.number + 1
 		object.name = tostring(self.number)
 	else
-		object.name = setting.name
+		object.name = screens.name
 	end
 	setmetatable(object, self)
 	object.stage = stage.name

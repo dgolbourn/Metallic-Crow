@@ -19,16 +19,19 @@ function script_initialise()
 end
 
 function script_begin()
-	stage00 = Stage:new(
-		"res/common/world.json", 
-		"res/common/choice.json", 
-		"res/common/collision.json", 
-		"res/common/subtitle.json")	
-  
+	stage00 = Stage:new("res/common/world.json", "res/common/choice.json", "res/common/collision.json", "res/common/subtitle.json")	
   	stage00:collision(true, "Hero", "Ensign", function() print "Hero - Ensign - Begin" end)
 
-  	timer = Timer:new(stage00, script_end, 1, 0)
+  	--timer = Timer:new(stage00, script_end, 5, 0)
 
+  	sky = Screen:new(stage00, "res/story/chapter0/sky.json")
+
+  	fade_up(3)
+  	fade_end(function() print "hi" end)
+  	fade_end(script_end)
+  	collectgarbage()
+  	stage00:subtitle("test")
+
+	stage00:show()
   	stage00:resume()
-  	stage00:show()
 end

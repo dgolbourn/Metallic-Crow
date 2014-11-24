@@ -1,6 +1,7 @@
 #include "lua_command.h"
 #include "lua_stack_impl.h"
 #include "log.h"
+#include "lua_exception.h"
 namespace lua
 {
 namespace
@@ -20,14 +21,19 @@ public:
 
 Command::Impl::Impl(StackPtr const& stack) : stack_(stack)
 {
-  reference_ = luaL_ref(stack->state_, LUA_REGISTRYINDEX);
+  lua_rawgeti(stack->state_, LUA_REGISTRYINDEX, stack->weak_registry_);
+  lua_pushvalue(stack->state_, -2);
+  reference_ = luaL_ref(stack->state_, -2);
+  lua_pop(stack->state_, 2);
 }
 
 Command::Impl::~Impl()
 {
   if(StackPtr stack = stack_.lock())
   {
-    luaL_unref(stack->state_, LUA_REGISTRYINDEX, reference_);
+    lua_rawgeti(stack->state_, LUA_REGISTRYINDEX, stack->weak_registry_);
+    luaL_unref(stack->state_, -1, reference_);
+    lua_pop(stack->state_, 1);
   }
 }
 
@@ -36,9 +42,25 @@ bool Command::Impl::Notify()
   bool ret = false;
   if(StackPtr stack = stack_.lock())
   {
-    lua_rawgeti(stack->state_, LUA_REGISTRYINDEX, reference_);
-    stack->Call(0, 0);
-    ret = true;
+    lua_rawgeti(stack->state_, LUA_REGISTRYINDEX, stack->weak_registry_);
+    lua_rawgeti(stack->state_, -1, reference_);
+
+    ret = (lua_isnil(stack->state_, -1) == 0);
+  
+    if(ret)
+    {
+      if(lua_pcall(stack->state_, 0, 0, 0))
+      {
+        std::string error(lua_tostring(stack->state_, -1));
+        lua_pop(stack->state_, 2);
+        BOOST_THROW_EXCEPTION(Exception() << Exception::What(error) << Exception::Code(ret));
+      }
+    }
+    else
+    {
+      lua_pop(stack->state_, 1);
+    }
+    lua_pop(stack->state_, 1);
   }
   return ret;
 }

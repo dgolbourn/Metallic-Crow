@@ -13,16 +13,16 @@ namespace display
 class Window
 {
 public:
-  Window(void) = default;
+  Window() = default;
   Window(json::JSON const& json);
-  void Free(void);
-  void Clear(void) const;
-  void Show(void) const;
+  void Free();
+  void Clear() const;
+  void Show() const;
   void View(float x, float y, float zoom);
-  Shape Shape(void) const;
+  Shape Shape() const;
   void Draw(BoundingBox const& box, Modulation const& modulation) const;
   typedef memory::WeakPtr<Window, class WindowImpl> WeakPtr;
-  explicit operator bool(void) const;
+  explicit operator bool() const;
 private:
   std::shared_ptr<class WindowImpl> impl_;
   friend WeakPtr;

@@ -4,21 +4,51 @@
 #include "render.h"
 #include "window_impl.h"
 #include "sdl_exception.h"
+#include "log.h"
+#include "colour.h"
 namespace display
 {
 namespace
 {
-Uint8 Colour(float colour)
+class Modulator
 {
-  colour *= 255.f;
-  colour = std::round(colour);
-  colour = std::min(colour, 255.f);
-  colour = std::max(colour, 0.f);
-  return Uint8(colour);
-}
+  SDL_Colour original_;
+  SDL_Renderer* renderer_;
+public:
+  Modulator(SDL_Renderer* renderer, SDL_Colour const* modulation)
+  {
+    if(modulation)
+    {
+      renderer_ = renderer; 
+      if(SDL_GetRenderDrawColor(renderer_, &original_.r, &original_.g, &original_.b, &original_.a))
+      {
+        BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
+      }
+      if(SDL_SetRenderDrawColor(renderer_, modulation->r, modulation->g, modulation->b, modulation->a))
+      {
+        BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
+      }
+    }
+  }
+
+  ~Modulator()
+  {
+    try
+    {
+      if(SDL_SetRenderDrawColor(renderer_, original_.r, original_.g, original_.b, original_.a))
+      {
+        BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
+      }
+    }
+    catch(...)
+    {
+      exception::Log("Swallowed exception");
+    }
+  }
+};
 }
 
-void WindowImpl::Destroy(void)
+void WindowImpl::Destroy()
 {
   if(renderer_)
   {
@@ -30,14 +60,12 @@ void WindowImpl::Destroy(void)
   }
 }
 
-WindowImpl::WindowImpl(json::JSON const& json) : sdl_(SDL_INIT_VIDEO), img_(IMG_INIT_PNG)
+WindowImpl::WindowImpl(json::JSON const& json) : sdl_(SDL_INIT_VIDEO), img_(IMG_INIT_PNG), renderer_(nullptr), window_(nullptr)
 {
-  renderer_ = nullptr;
-  window_ = nullptr;
   try
   {
-    (void)SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
-    (void)SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+    SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 
     char const* name;
     int width;
@@ -77,6 +105,11 @@ WindowImpl::WindowImpl(json::JSON const& json) : sdl_(SDL_INIT_VIDEO), img_(IMG_
       BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
     }
 
+    if(SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_BLEND))
+    {
+      BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
+    }
+
     view_ = {0.f, 0.f};
     zoom_ = 1.f;
   }
@@ -87,7 +120,7 @@ WindowImpl::WindowImpl(json::JSON const& json) : sdl_(SDL_INIT_VIDEO), img_(IMG_
   }
 }
 
-WindowImpl::~WindowImpl(void)
+WindowImpl::~WindowImpl()
 {
   Destroy();
 }
@@ -120,25 +153,15 @@ sdl::Texture WindowImpl::Text(std::string const& text, sdl::Font const& font)
 
 void WindowImpl::Draw(BoundingBox const& box, Modulation const& modulation) const
 {
-  SDL_Colour colour;
-  if(SDL_GetRenderDrawColor(renderer_, &colour.r, &colour.g, &colour.b, &colour.a))
-  {
-    BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
-  }
-
-  SDL_Colour fill = {0, 0, 0, 255};
+  SDL_Colour fill = {0, 0, 0, SDL_ALPHA_OPAQUE};
   if(modulation)
   {
-    fill.r = Colour(modulation.r());
-    fill.g = Colour(modulation.g());
-    fill.b = Colour(modulation.b());
-    fill.a = Colour(modulation.a());
+    fill.r = sdl::Colour(modulation.r());
+    fill.g = sdl::Colour(modulation.g());
+    fill.b = sdl::Colour(modulation.b());
+    fill.a = sdl::Colour(modulation.a());
   }
-  if(SDL_SetRenderDrawColor(renderer_, fill.r, fill.g, fill.b, fill.a))
-  {
-    BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
-  }
-
+  
   SDL_Rect* rect_ptr = nullptr;
   SDL_Rect rect;
   if(box)
@@ -150,18 +173,14 @@ void WindowImpl::Draw(BoundingBox const& box, Modulation const& modulation) cons
     rect_ptr = &rect;
   }
 
+  Modulator modulator(renderer_, &fill);
   if(SDL_RenderFillRect(renderer_, rect_ptr))
-  {
-    BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
-  }
-
-  if(SDL_SetRenderDrawColor(renderer_, colour.r, colour.g, colour.b, colour.a))
   {
     BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
   }
 }
 
-void WindowImpl::Clear(void) const
+void WindowImpl::Clear() const
 {
   if(SDL_RenderClear(renderer_))
   {
@@ -169,12 +188,12 @@ void WindowImpl::Clear(void) const
   }
 }
 
-void WindowImpl::Show(void) const
+void WindowImpl::Show() const
 {
   SDL_RenderPresent(renderer_);
 }
 
-void WindowImpl::Free(void)
+void WindowImpl::Free()
 {
   textures_.clear();
 }
@@ -188,7 +207,7 @@ void WindowImpl::View(float x, float y, float zoom)
   zoom_ = zoom;
 }
 
-Shape WindowImpl::Shape(void) const
+Shape WindowImpl::Shape() const
 {
   int w, h;
   SDL_GetWindowSize(window_, &w, &h);
@@ -223,17 +242,17 @@ void WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, 
   SDL_Colour modulation_copy;
   if(modulation)
   {
-    modulation_copy.r = Colour(modulation.r());
-    modulation_copy.g = Colour(modulation.g());
-    modulation_copy.b = Colour(modulation.b());
-    modulation_copy.a = Colour(modulation.a());
+    modulation_copy.r = sdl::Colour(modulation.r());
+    modulation_copy.g = sdl::Colour(modulation.g());
+    modulation_copy.b = sdl::Colour(modulation.b());
+    modulation_copy.a = sdl::Colour(modulation.a());
     modulation_ptr = &modulation_copy;
   }
 
   sdl::Render(window_, renderer_, (SDL_Texture*)texture, source_ptr, destination_ptr, &view_, zoom_, parallax, tile, angle, modulation_ptr);
 }
 
-Shape Window::Shape(void) const
+Shape Window::Shape() const
 {
   return impl_->Shape();
 }
@@ -243,12 +262,12 @@ Window::Window(json::JSON const& json)
   impl_ = std::make_shared<WindowImpl>(json);
 }
 
-void Window::Clear(void) const
+void Window::Clear() const
 {
   return impl_->Clear();
 }
 
-void Window::Show(void) const
+void Window::Show() const
 {
   return impl_->Show();
 }
@@ -258,7 +277,7 @@ void Window::Draw(BoundingBox const& box, Modulation const& modulation) const
   impl_->Draw(box, modulation);
 }
 
-void Window::Free(void)
+void Window::Free()
 {
   impl_->Free();
 }
@@ -268,7 +287,7 @@ void Window::View(float x, float y, float zoom)
   impl_->View(x, y, zoom);
 }
 
-Window::operator bool(void) const
+Window::operator bool() const
 {
   return bool(impl_);
 }

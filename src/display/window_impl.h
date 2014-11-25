@@ -11,7 +11,6 @@
 #include "img_library.h"
 #include "ttf_library.h"
 #include "SDL_sysrender.h"
-#include "shape.h"
 #include "boost/filesystem.hpp"
 #include "boost/functional/hash.hpp"
 namespace display
@@ -30,7 +29,6 @@ public:
   void Draw(BoundingBox const& box, Modulation const& modulation) const;
   void View(float x, float y, float zoom);
   void Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const;
-  Shape Shape() const;
   ~WindowImpl();
   sdl::Library sdl_;
   img::Library img_;
@@ -40,6 +38,7 @@ public:
   std::unordered_map<boost::filesystem::path, sdl::Texture, boost::hash<boost::filesystem::path>> textures_;
   SDL_FPoint view_;
   float zoom_;
+  float scale_;
 };
 }
 #endif

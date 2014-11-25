@@ -78,7 +78,7 @@ WindowImpl::WindowImpl(json::JSON const& json) : sdl_(SDL_INIT_VIDEO), img_(IMG_
       "height", &height,
       "mode", &mode);
 
-    Uint32 flags = 0;
+    Uint32 flags = 0u;
     if(std::string(mode) == "full screen")
     {
       flags |= SDL_WINDOW_FULLSCREEN;
@@ -88,7 +88,7 @@ WindowImpl::WindowImpl(json::JSON const& json) : sdl_(SDL_INIT_VIDEO), img_(IMG_
       flags |= SDL_WINDOW_BORDERLESS | SDL_WINDOW_MAXIMIZED;
     }
 
-    window_ = SDL_CreateWindow(name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, flags);
+    window_ = SDL_CreateWindow(name, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, flags);
     if(!window_)
     {
       BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
@@ -112,6 +112,10 @@ WindowImpl::WindowImpl(json::JSON const& json) : sdl_(SDL_INIT_VIDEO), img_(IMG_
 
     view_ = {0.f, 0.f};
     zoom_ = 1.f;
+    
+    int w, h;
+    SDL_GetWindowSize(window_, &w, &h);
+    scale_ = float(std::min(w, h)) / 1024.f;
   }
   catch(...)
   {
@@ -200,18 +204,9 @@ void WindowImpl::Free()
 
 void WindowImpl::View(float x, float y, float zoom)
 {
-  int w, h;
-  SDL_GetWindowSize(window_, &w, &h);
-  view_.x = x - .5f * float(w);
-  view_.y = y - .5f * float(h);
+  view_.x = x;
+  view_.y = y;
   zoom_ = zoom;
-}
-
-Shape WindowImpl::Shape() const
-{
-  int w, h;
-  SDL_GetWindowSize(window_, &w, &h);
-  return display::Shape(float(w), float(h));
 }
 
 void WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const
@@ -249,12 +244,7 @@ void WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, 
     modulation_ptr = &modulation_copy;
   }
 
-  sdl::Render(window_, renderer_, (SDL_Texture*)texture, source_ptr, destination_ptr, &view_, zoom_, parallax, tile, angle, modulation_ptr);
-}
-
-Shape Window::Shape() const
-{
-  return impl_->Shape();
+  sdl::Render(window_, renderer_, (SDL_Texture*)texture, source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, modulation_ptr, scale_);
 }
 
 Window::Window(json::JSON const& json)

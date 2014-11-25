@@ -7,7 +7,6 @@
 #include "json.h"
 #include "texture.h"
 #include "weak_ptr.h"
-#include "shape.h"
 namespace display
 {
 class Window
@@ -19,7 +18,6 @@ public:
   void Clear() const;
   void Show() const;
   void View(float x, float y, float zoom);
-  Shape Shape() const;
   void Draw(BoundingBox const& box, Modulation const& modulation) const;
   typedef memory::WeakPtr<Window, class WindowImpl> WeakPtr;
   explicit operator bool() const;

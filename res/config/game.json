@@ -28,7 +28,7 @@
 		},
 		"page" : "res/menu/menu.png",
 		"clip" : null,
-		"render box" : [256.0, 192.0, 512.0, 384.0]
+		"render box" : [-256.0, -192.0, 512.0, 384.0]
 	},
     "pause menu script" : "res/menu/pause/pause.lua",
     "start menu script" : "res/menu/start/start.lua",

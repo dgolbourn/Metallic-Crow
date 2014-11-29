@@ -117,7 +117,7 @@ void Sound::Impl::Play(float volume)
   }
   if(channel_ != -1)
   {
-    Mix_Volume(channel_, int(volume * volume_ / MIX_MAX_VOLUME));
+    Mix_Volume(channel_, int(volume * volume_ * MIX_MAX_VOLUME));
   }
 }
 

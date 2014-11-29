@@ -108,7 +108,7 @@ void Music::Impl::Play(float volume)
     }
     music = shared_from_this();
   }
-  Mix_VolumeMusic(int(volume_ * volume / MIX_MAX_VOLUME));
+  Mix_VolumeMusic(int(volume_ * volume * MIX_MAX_VOLUME));
 }
 
 Music::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat) : loops_(repeat ? -1 : 0), volume_(volume), complete_(false), paused_(true)

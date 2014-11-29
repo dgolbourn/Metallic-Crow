@@ -31,6 +31,9 @@ function script_begin()
   fade_end(script_end)
   collectgarbage()
   
+  music_load("1", "test", "res/story/chapter0/music.json")
+  music_play("1", "test")
+
   stage00:subtitle("test")
 
   stage00:choice("up", "down", "", "...", 3)

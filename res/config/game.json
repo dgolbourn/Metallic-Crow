@@ -1,7 +1,7 @@
 {
     "window" : 
 	{
-		"name" : "Adventure Cat!",
+		"name" : "A Closer World",
 		"width" : 1024,
 		"height" : 768,
 		"mode" : "windowed"
@@ -11,7 +11,7 @@
 		"idle font" : 
 		{
 			"file" : "res/ext/menu.ttf",
-			"point" : 35,
+			"point" : 72,
 			"colour" : [255, 255, 255],
 			"bold" : false,
 			"italic" : false,
@@ -20,7 +20,7 @@
 		"active font" :
 		{
 			"file" : "res/ext/menu.ttf",
-			"point" : 40,
+			"point" : 86,
 			"colour" : [255, 0, 0],
 			"bold" : false,
 			"italic" : false,
@@ -28,7 +28,7 @@
 		},
 		"page" : "res/menu/menu.png",
 		"clip" : null,
-		"render box" : [-256.0, -192.0, 512.0, 384.0]
+		"render box" : [-512.0, -384.0, 1024.0, 768.0]
 	},
     "pause menu script" : "res/menu/pause/pause.lua",
     "start menu script" : "res/menu/start/start.lua",
@@ -43,5 +43,6 @@
 			"name" : "chapter 1",
 			"file" : "res/story/chapter1/chapter1.lua"
 		}
-	]
+	],
+	"volume" : 1.0
 }

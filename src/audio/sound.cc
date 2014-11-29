@@ -6,6 +6,8 @@
 #include <mutex>
 #include "log.h"
 #include <iostream>
+#include <vector>
+#include "boost/functional/hash.hpp"
 namespace
 {
 typedef std::shared_ptr<Mix_Chunk> Chunk;
@@ -20,13 +22,13 @@ public:
   ~Impl();
   void Pause();
   void Resume();
-  void Play();
+  void Play(float volume);
   mix::Library mix_;
   Chunk chunk_;
   int channel_;
   int loops_;
-  int volume_;
-  bool play_on_resume_;
+  float volume_;
+  bool paused_;
 };
 }
 
@@ -42,9 +44,11 @@ Mix_Chunk* Init(boost::filesystem::path const& file)
   return chunk;
 }
 
-std::unordered_map<std::string, Chunk> chunks;
+std::unordered_map<boost::filesystem::path, Chunk, boost::hash<boost::filesystem::path>> chunks;
+
 std::mutex mutex;
-std::unordered_map<int, std::shared_ptr<audio::Sound::Impl>> channels;
+typedef std::shared_ptr<audio::Sound::Impl> SoundPtr;
+std::vector<SoundPtr> channels;
 
 void ChannelFinished(int channel) noexcept
 {
@@ -53,12 +57,8 @@ void ChannelFinished(int channel) noexcept
     std::unique_lock<std::mutex> lock(mutex, std::defer_lock);
     if(-1 == std::try_lock(lock))
     {
-      auto iter = channels.find(channel);
-      if(iter != channels.end())
-      {
-        iter->second->channel_ = -1;
-        channels.erase(iter);
-      }
+      channels.at(channel)->channel_ = -1;
+      channels.at(channel).reset();
     }
     else
     {
@@ -84,42 +84,48 @@ void InitChannelMixer()
 
 namespace audio
 {
-void Free()
+void Sound::Free()
 {
   chunks.clear();
 }
 
-void Free(boost::filesystem::path const& file)
+void Sound::Free(boost::filesystem::path const& file)
 {
-  chunks.erase(file.string());
+  chunks.erase(file);
 }
 
-void Sound::Impl::Play()
+void Sound::Impl::Play(float volume)
 {
   if(channel_ == -1)
   {
-    if(Mix_Playing(-1) < 256)
+    int size = Mix_AllocateChannels(-1);
+    if(Mix_Playing(-1) < size)
     {
       channel_ = Mix_PlayChannel(-1, chunk_.get(), loops_);
-      if(channel_ != -1)
-      {
-        Mix_Volume(channel_, volume_);
-        std::lock_guard<std::mutex> lock(mutex);
-        channels.emplace(channel_, shared_from_this());
-      }
-      else
+      if(channel_ == -1)
       {
         BOOST_THROW_EXCEPTION(mix::Exception() << mix::Exception::What(mix::Error()));
       }
+      if(paused_)
+      {
+        Mix_Pause(channel_);
+      }
+      std::lock_guard<std::mutex> lock(mutex);
+      channels.resize(size);
+      channels.at(channel_) = shared_from_this();
     }
+  }
+  if(channel_ != -1)
+  {
+    Mix_Volume(channel_, int(volume * volume_ / MIX_MAX_VOLUME));
   }
 }
 
-Sound::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat) : channel_(-1), loops_(repeat ? -1 : 0), volume_(int(volume / MIX_MAX_VOLUME)), play_on_resume_(true)
+Sound::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat) : channel_(-1), loops_(repeat ? -1 : 0), volume_(volume), paused_(true)
 {
   InitChannelMixer();
 
-  auto fileiter = chunks.find(file.string());
+  auto fileiter = chunks.find(file);
   if(fileiter != chunks.end())
   {
     chunk_ = fileiter->second;
@@ -127,7 +133,7 @@ Sound::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat
   else
   {
     chunk_ = Chunk(Init(file), Mix_FreeChunk);
-    chunks.emplace(file.string(), chunk_);
+    chunks.emplace(file, chunk_);
   }
 }
 
@@ -141,6 +147,7 @@ Sound::Impl::~Impl()
 
 void Sound::Impl::Pause()
 {
+  paused_ = true;
   if(channel_ != -1)
   {
     Mix_Pause(channel_);
@@ -149,22 +156,27 @@ void Sound::Impl::Pause()
 
 void Sound::Impl::Resume()
 {
-  if(play_on_resume_)
+  paused_ = false;
+  if(channel_ != -1)
   {
-    play_on_resume_ = false;
-    Play();
-  }
-  else
-  {
-    if(channel_ != -1)
-    {
-      Mix_Resume(channel_);
-    }
+    Mix_Resume(channel_);
   }
 }
 
 Sound::Sound(boost::filesystem::path const& file, float volume, bool repeat) : impl_(std::make_shared<Impl>(file, volume, repeat))
 {
+}
+
+Sound::Sound(json::JSON const& json, boost::filesystem::path const& path)
+{
+  char const* file;
+  double volume;
+  int repeat;
+  json.Unpack("{sssfsb}",
+    "file", &file,
+    "volume", &volume,
+    "repeat", &repeat);
+  impl_ = std::make_shared<Impl>(path / file, float(volume), repeat != 0);
 }
 
 void Sound::Pause()
@@ -177,12 +189,12 @@ void Sound::Resume()
   impl_->Resume();
 }
 
-bool Sound::operator()()
+bool Sound::operator()(float volume)
 {
   bool valid = false;
   if(impl_)
   {
-    impl_->Play();
+    impl_->Play(volume);
     valid = true;
   }
   return valid;

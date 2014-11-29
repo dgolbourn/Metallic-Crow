@@ -19,6 +19,8 @@
 #include "signal.h"
 #include "boost/filesystem.hpp"
 #include "game_joint.h"
+#include "music.h"
+#include "sound.h"
 namespace game
 {
 typedef std::list<Actor::WeakPtr> ActorList;
@@ -28,6 +30,8 @@ typedef std::multimap<std::string, Scenery> SceneryMap;
 typedef std::multimap<std::string, Actor> ActorMap;
 typedef std::multimap<std::string, event::Timer> TimerMap;
 typedef std::multimap<std::string, Screen> ScreenMap;
+typedef std::multimap<std::string, audio::Sound> SoundMap;
+typedef std::map<std::string, audio::Music> MusicMap;
 typedef std::array<bool, 2> Paused;
 
 struct Stage
@@ -39,6 +43,9 @@ struct Stage
   Paused paused_;
   TimerMap timers_;
   ScreenMap screens_;
+  SoundMap sounds_;
+  MusicMap music_;
+  audio::Music current_music_;
   Subject subject_;
   ActorList subjects_;
   float zoom_;
@@ -59,7 +66,7 @@ typedef std::pair<std::string, StagePtr> StagePair;
 class Script::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(display::Window& window, event::Queue& queue, boost::filesystem::path const& path);
+  Impl(display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume);
   void Init(boost::filesystem::path const& file);
   
   void Pause();
@@ -148,6 +155,15 @@ public:
   void JointFree();
 
   void AudioInit();
+  void SoundLoad();
+  void SoundFree();
+  void SoundPlay();
+  void MusicLoad();
+  void MusicFree();
+  void MusicPlay();
+
+  void ResourceInit();
+  void ResourceCollect();
 
   lua::Stack lua_;
   display::Window window_;
@@ -159,6 +175,7 @@ public:
   event::Signal signal_;
   bool begun_;
   boost::filesystem::path path_;
+  float volume_;
 };
 }
 #endif

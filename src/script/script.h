@@ -12,7 +12,7 @@ class Script
 {
 public:
   Script() = default;
-  Script(boost::filesystem::path const& file, display::Window& window, event::Queue& queue, boost::filesystem::path const& path);
+  Script(boost::filesystem::path const& file, display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume);
   void Pause();
   void Resume();
   void Render();

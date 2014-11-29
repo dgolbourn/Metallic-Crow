@@ -145,6 +145,7 @@ public:
   int slot_;
   int chapter_;
   boost::filesystem::path path_;
+  float volume_;
 };
 
 void Controller::Impl::Load(int slot)
@@ -172,23 +173,25 @@ Controller::Impl::Impl(json::JSON const& json, event::Queue& queue, boost::files
   char const* start;
   char const* saves;
   json_t* chapters;
-  json.Unpack("{sosossssssso}",
+  double volume;
+  json.Unpack("{sososssssssosf}",
     "window", &window,
     "menu", &menu,
     "pause menu script", &pause,
     "start menu script", &start,
     "saves", &saves,
-    "chapters", &chapters);
+    "chapters", &chapters,
+    "volume", &volume);
 
   window_ = display::Window(json::JSON(window));
 
   pause_menu_ = Menu(json::JSON(menu), window_, path_);
   pause_menu_({"Continue", "Main Menu"});
-  pause_script_ = Script(path_ / pause, window_, queue_, path_);
+  pause_script_ = Script(path_ / pause, window_, queue_, path_, volume_);
 
   start_menu_ = Menu(json::JSON(menu), window_, path_);
   start_menu_({"Play", "Chapters", "Load", "Quit"});
-  start_script_ = Script(path_ / start, window_, queue_, path_);
+  start_script_ = Script(path_ / start, window_, queue_, path_, volume_);
 
   saves_ = Saves(path_ / saves);
   slot_ = saves_.LastPlayed();
@@ -201,6 +204,8 @@ Controller::Impl::Impl(json::JSON const& json, event::Queue& queue, boost::files
 
   load_menu_ = Menu(json::JSON(menu), window_, path_);
   LoadOptions(load_menu_, saves_, chapter_names_);
+
+  volume_ = float(volume);
 }
 
 void Controller::Impl::Init()
@@ -241,7 +246,7 @@ void Controller::Impl::ChapterEnd()
   }
   else
   {
-    story_script_ = Script(chapter_files_[chapter_], window_, queue_, path_);
+    story_script_ = Script(chapter_files_[chapter_], window_, queue_, path_, volume_);
     story_script_.Add(function::Bind(&Impl::ChapterEnd, shared_from_this()));
     story_script_.Resume();
   }
@@ -275,7 +280,7 @@ void Controller::Impl::StartPlay()
   }
   saves_.Play(slot_);
   saves_.Save();
-  story_script_ = Script(chapter_files_[chapter_], window_, queue_, path_);
+  story_script_ = Script(chapter_files_[chapter_], window_, queue_, path_, volume_);
   story_script_.Add(function::Bind(&Impl::ChapterEnd, shared_from_this()));
   story_script_.Resume();
 }

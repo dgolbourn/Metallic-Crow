@@ -42,8 +42,22 @@ void Script::Impl::StageNominate()
     auto stage = stages_.find(name);
     if(stage != stages_.end())
     {
+      if(stage_.second)
+      {
+        for(auto& sound : stage_.second->sounds_)
+        {
+          sound.second(0.f);
+        }
+      }
+
       stage_.first = stage->first;
       stage_.second = stage->second;
+      
+      for(auto& sound : stage_.second->sounds_)
+      {
+        sound.second(volume_);
+      }
+      stage_.second->current_music_(volume_);
     }
   }
 }
@@ -161,6 +175,14 @@ void Script::Impl::Pause(StagePtr const& stage, bool& paused)
         timer = stage->timers_.erase(timer);
       }
     }
+    for(auto& sound : stage->sounds_)
+    {
+      sound.second.Pause();
+    }
+    for(auto& music : stage->music_)
+    {
+      music.second.Pause();
+    }
   }
 }
 
@@ -193,6 +215,14 @@ void Script::Impl::Resume(StagePtr const& stage, bool& paused)
       {
         timer = stage->timers_.erase(timer);
       }
+    }
+    for(auto& sound : stage->sounds_)
+    {
+      sound.second.Resume();
+    }
+    for(auto& music : stage->music_)
+    {
+      music.second.Resume();
     }
   }
 }

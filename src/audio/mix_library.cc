@@ -36,8 +36,7 @@ Library::Library(void) : sdl_(SDL_INIT_AUDIO)
       BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
     }
 
-    int mixer_channels = 256;
-    if(Mix_AllocateChannels(mixer_channels) != mixer_channels)
+    if(Mix_AllocateChannels(1024) != 1024)
     {
       Mix_CloseAudio();
       MixQuit();

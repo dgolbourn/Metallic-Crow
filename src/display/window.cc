@@ -202,6 +202,11 @@ void WindowImpl::Free()
   textures_.clear();
 }
 
+void WindowImpl::Free(boost::filesystem::path const& file)
+{
+  textures_.erase(file);
+}
+
 void WindowImpl::View(float x, float y, float zoom)
 {
   view_.x = x;
@@ -270,6 +275,11 @@ void Window::Draw(BoundingBox const& box, Modulation const& modulation) const
 void Window::Free()
 {
   impl_->Free();
+}
+
+void Window::Free(boost::filesystem::path const& file)
+{
+  impl_->Free(file);
 }
 
 void Window::View(float x, float y, float zoom)

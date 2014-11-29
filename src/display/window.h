@@ -15,6 +15,7 @@ public:
   Window() = default;
   Window(json::JSON const& json);
   void Free();
+  void Free(boost::filesystem::path const& file);
   void Clear() const;
   void Show() const;
   void View(float x, float y, float zoom);

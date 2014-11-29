@@ -23,6 +23,7 @@ public:
   sdl::Texture Text(std::string const& text, sdl::Font const& font, float length);
   sdl::Texture Text(std::string const& text, sdl::Font const& font);
   void Free();
+  void Free(boost::filesystem::path const& file);
   void Clear() const;
   void Show() const;
   void Destroy();

@@ -3,21 +3,28 @@
 #include "SDL_mixer.h"
 #include "mix_library.h"
 #include "mix_exception.h"
+#include <unordered_map>
+#include "boost/functional/hash.hpp"
+namespace
+{
+typedef std::shared_ptr<Mix_Music> Stream;
+}
+
 namespace audio
 {
 class Music::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
   Impl(boost::filesystem::path const& file, float volume, bool repeat);
-  ~Impl();
-  void Play();
+  void Play(float volume);
   void Pause();
   void Resume();
   mix::Library mix_;
-  Mix_Music* music_;
-  int volume_;
+  Stream stream_;
+  float volume_;
   int loops_;
   bool complete_;
+  bool paused_;
 };
 }
 
@@ -33,7 +40,7 @@ void MusicFinished()
   }
 }
 
-void Init()
+void InitHookMusic()
 {
   static bool initialised;
   if(!initialised)
@@ -42,12 +49,35 @@ void Init()
     Mix_HookMusicFinished(MusicFinished);
   }
 }
+
+Mix_Music* Init(boost::filesystem::path const& file)
+{
+  Mix_Music* music = Mix_LoadMUS(file.string().c_str());
+  if(!music)
+  {
+    BOOST_THROW_EXCEPTION(mix::Exception() << mix::Exception::What(mix::Error()));
+  }
+  return music;
+}
+
+std::unordered_map<boost::filesystem::path, Stream, boost::hash<boost::filesystem::path>> streams;
 }
 
 namespace audio
 {
+void Music::Free()
+{
+  streams.clear();
+}
+
+void Music::Free(boost::filesystem::path const& file)
+{
+  streams.erase(file.string());
+}
+
 void Music::Impl::Pause()
 {
+  paused_ = true;
   if(music.lock() == shared_from_this())
   {
     Mix_PauseMusic();
@@ -56,62 +86,79 @@ void Music::Impl::Pause()
 
 void Music::Impl::Resume()
 {
+  paused_ = false;
   if(music.lock() == shared_from_this())
   {
     Mix_ResumeMusic();
   }
 }
 
-void Music::Impl::Play()
+void Music::Impl::Play(float volume)
 {
-  complete_ = false;
-  if(music.lock() == shared_from_this())
+  if(music.lock() != shared_from_this())
   {
-    Mix_RewindMusic();
-    Mix_ResumeMusic();
-  }
-  else
-  {
-    if(Mix_PlayMusic(music_, loops_) == -1)
+    complete_ = false;
+    if(Mix_PlayMusic(stream_.get(), loops_) == -1)
     {
       BOOST_THROW_EXCEPTION(mix::Exception() << mix::Exception::What(mix::Error()));
     }
-    Mix_VolumeMusic(volume_);
+    if(paused_)
+    {
+      Mix_PauseMusic();
+    }
     music = shared_from_this();
   }
+  Mix_VolumeMusic(int(volume_ * volume / MIX_MAX_VOLUME));
 }
 
-Music::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat) : loops_(repeat ? -1 : 0), volume_(int(volume / MIX_MAX_VOLUME)), complete_(false)
+Music::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat) : loops_(repeat ? -1 : 0), volume_(volume), complete_(false), paused_(true)
 {
-  Init();
-  music_ = Mix_LoadMUS(file.string().c_str());
-  if(!music_)
+  InitHookMusic();
+
+  auto fileiter = streams.find(file);
+  if(fileiter != streams.end())
   {
-    BOOST_THROW_EXCEPTION(mix::Exception() << mix::Exception::What(mix::Error()));
+    stream_ = fileiter->second;
   }
-}
-
-Music::Impl::~Impl()
-{
-  Mix_FreeMusic(music_);
+  else
+  {
+    stream_ = Stream(Init(file), Mix_FreeMusic);
+    streams.emplace(file, stream_);
+  }
 }
 
 Music::Music(boost::filesystem::path const& file, float volume, bool repeat) : impl_(std::make_shared<Impl>(file, volume, repeat))
 {
 }
 
-bool Music::operator()()
+Music::Music(json::JSON const& json, boost::filesystem::path const& path)
+{
+  char const* file;
+  double volume;
+  int repeat;
+  json.Unpack("{sssfsb}",
+    "file", &file,
+    "volume", &volume,
+    "repeat", &repeat);
+  impl_ = std::make_shared<Impl>(path / file, float(volume), repeat != 0);
+}
+
+bool Music::operator()(float volume)
 {
   bool valid = false;
   if(impl_)
   {
-    impl_->Play();
+    impl_->Play(volume);
     valid = true;
+  }
+  else
+  {
+    Mix_HaltMusic();
   }
   return valid;
 }
 
-Music::operator bool(void) const
+Music::operator bool() const
 {
   return bool(impl_) && !impl_->complete_;
 }

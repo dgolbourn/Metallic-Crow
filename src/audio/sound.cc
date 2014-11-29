@@ -1,38 +1,77 @@
 #include "sound.h"
 #include <unordered_map>
 #include "SDL_mixer.h"
-#include "chunk.h"
+#include "mix_exception.h"
+#include "mix_library.h"
 #include <mutex>
+#include "log.h"
+#include <iostream>
+namespace
+{
+typedef std::shared_ptr<Mix_Chunk> Chunk;
+}
+
 namespace audio
 {
-class SoundImpl
+class Sound::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  SoundImpl(std::string const& filename);
-  void Play(int repeats);
-  void Pause(void);
-  void Resume(void);
-  void Stop(void);
-  void Fade(int ms);
-  void Volume(int volume);
-
-  mix::Chunk chunk_;
+  Impl(boost::filesystem::path const& file, float volume, bool repeat);
+  ~Impl();
+  void Pause();
+  void Resume();
+  void Play();
+  mix::Library mix_;
+  Chunk chunk_;
+  int channel_;
+  int loops_;
   int volume_;
+  bool play_on_resume_;
 };
+}
 
-static std::mutex mutex;
-static std::unordered_map<int, SoundImpl const*> channels;
-
-static void ChannelFinished(int channel)
+namespace
 {
-  std::unique_lock<std::mutex> lock(mutex, std::defer_lock);
-  if(-1 == std::try_lock(lock))
+Mix_Chunk* Init(boost::filesystem::path const& file)
+{
+  Mix_Chunk* chunk = Mix_LoadWAV(file.string().c_str());
+  if(!chunk)
   {
-    (void)channels.erase(channel);
+    BOOST_THROW_EXCEPTION(mix::Exception() << mix::Exception::What(mix::Error()));
+  }
+  return chunk;
+}
+
+std::unordered_map<std::string, Chunk> chunks;
+std::mutex mutex;
+std::unordered_map<int, std::shared_ptr<audio::Sound::Impl>> channels;
+
+void ChannelFinished(int channel) noexcept
+{
+  try
+  {
+    std::unique_lock<std::mutex> lock(mutex, std::defer_lock);
+    if(-1 == std::try_lock(lock))
+    {
+      auto iter = channels.find(channel);
+      if(iter != channels.end())
+      {
+        iter->second->channel_ = -1;
+        channels.erase(iter);
+      }
+    }
+    else
+    {
+      std::cerr << "Lock failed" << std::endl;
+    }
+  }
+  catch(...)
+  {
+    exception::Log("Swallowed exception");
   }
 }
 
-static void InitChannelMixer(void)
+void InitChannelMixer()
 {
   static bool initialised;
   if(!initialised)
@@ -41,131 +80,116 @@ static void InitChannelMixer(void)
     initialised = true;
   }
 }
+}
 
-static int const default_volume = -1;
-SoundImpl::SoundImpl(std::string const& filename) : chunk_(filename), volume_(default_volume)
+namespace audio
+{
+void Free()
+{
+  chunks.clear();
+}
+
+void Free(boost::filesystem::path const& file)
+{
+  chunks.erase(file.string());
+}
+
+void Sound::Impl::Play()
+{
+  if(channel_ == -1)
+  {
+    if(Mix_Playing(-1) < 256)
+    {
+      channel_ = Mix_PlayChannel(-1, chunk_.get(), loops_);
+      if(channel_ != -1)
+      {
+        Mix_Volume(channel_, volume_);
+        std::lock_guard<std::mutex> lock(mutex);
+        channels.emplace(channel_, shared_from_this());
+      }
+      else
+      {
+        BOOST_THROW_EXCEPTION(mix::Exception() << mix::Exception::What(mix::Error()));
+      }
+    }
+  }
+}
+
+Sound::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat) : channel_(-1), loops_(repeat ? -1 : 0), volume_(int(volume / MIX_MAX_VOLUME)), play_on_resume_(true)
 {
   InitChannelMixer();
-}
 
-void SoundImpl::Play(int repeats)
-{
-  int channel = chunk_.Play(repeats, volume_);
-  if(channel != -1)
+  auto fileiter = chunks.find(file.string());
+  if(fileiter != chunks.end())
   {
-    channels[channel] = this;
+    chunk_ = fileiter->second;
+  }
+  else
+  {
+    chunk_ = Chunk(Init(file), Mix_FreeChunk);
+    chunks.emplace(file.string(), chunk_);
   }
 }
 
-void SoundImpl::Pause(void)
+Sound::Impl::~Impl()
 {
-  for(auto& channel : channels)
+  if(channel_ != -1)
   {
-    if(channel.second == this)
-    {
-      Mix_Pause(channel.first);
-    }
+    Mix_HaltChannel(channel_);
   }
 }
 
-void SoundImpl::Resume(void)
+void Sound::Impl::Pause()
 {
-  for(auto& channel : channels)
+  if(channel_ != -1)
   {
-    if(channel.second == this)
-    {
-      Mix_Resume(channel.first);
-    }
+    Mix_Pause(channel_);
   }
 }
 
-void SoundImpl::Stop(void)
+void Sound::Impl::Resume()
 {
-  for(auto channel = channels.begin(); channel != channels.end();)
+  if(play_on_resume_)
   {
-    if(channel->second == this)
+    play_on_resume_ = false;
+    Play();
+  }
+  else
+  {
+    if(channel_ != -1)
     {
-      (void)Mix_HaltChannel(channel->first);
-      channel = channels.erase(channel);
-    }
-    else
-    {
-      ++channel;
+      Mix_Resume(channel_);
     }
   }
 }
 
-void SoundImpl::Fade(int ms)
+Sound::Sound(boost::filesystem::path const& file, float volume, bool repeat) : impl_(std::make_shared<Impl>(file, volume, repeat))
 {
-  for(auto channel = channels.begin(); channel != channels.end();)
-  {
-    if(channel->second == this)
-    {
-      (void)Mix_FadeOutChannel(channel->first, ms);
-      channel = channels.erase(channel);
-    }
-    else
-    {
-      ++channel;
-    }
-  }
 }
 
-void SoundImpl::Volume(int volume)
+void Sound::Pause()
 {
-  volume_ = volume;
-  for(auto& channel : channels)
-  {
-    if(channel.second == this)
-    {
-      (void)Mix_Volume(channel.first, volume_);
-    }
-  }
-}
-
-Sound::Sound(std::string const& filename)
-{
-  impl_ = std::make_shared<SoundImpl>(filename);
-}
-
-void Sound::Play(int repeats)
-{
-  std::lock_guard<std::mutex> lock(mutex);
-  impl_->Play(repeats);
-}
-
-void Sound::Pause(void) const
-{
-  std::lock_guard<std::mutex> lock(mutex);
   impl_->Pause();
 }
 
-void Sound::Resume(void) const
+void Sound::Resume()
 {
-  std::lock_guard<std::mutex> lock(mutex);
   impl_->Resume();
 }
 
-void Sound::Stop(void) const
+bool Sound::operator()()
 {
-  std::lock_guard<std::mutex> lock(mutex);
-  impl_->Stop();
+  bool valid = false;
+  if(impl_)
+  {
+    impl_->Play();
+    valid = true;
+  }
+  return valid;
 }
 
-void Sound::Fade(int ms) const
+Sound::operator bool() const
 {
-  std::lock_guard<std::mutex> lock(mutex);
-  impl_->Fade(ms);
-}
-
-void Sound::Volume(int volume)
-{
-  std::lock_guard<std::mutex> lock(mutex);
-  impl_->Volume(volume);
-}
-
-Sound::operator bool(void) const
-{
-  return bool(impl_);
+  return bool(impl_) && (impl_->channel_ != -1);
 }
 }

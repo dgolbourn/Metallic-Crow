@@ -1,25 +1,24 @@
 #ifndef SOUND_H_
 #define SOUND_H_
-
 #include <memory>
-#include <string>
-
+#include "boost/filesystem.hpp"
 namespace audio
 {
 class Sound
 {
 public:
-  Sound(void) = default;
-  Sound(std::string const& filename);
-  void Play(int repeats = 0);
-  void Pause(void) const;
-  void Resume(void) const;
-  void Stop(void) const;
-  void Fade(int ms) const;
-  void Volume(int volume);
-  explicit operator bool(void) const;
+  Sound() = default;
+  Sound(boost::filesystem::path const& file, float volume, bool repeat);
+  void Pause();
+  void Resume();
+  bool operator()();
+  explicit operator bool() const;
+  class Impl;
 private:
-  std::shared_ptr<class SoundImpl> impl_;
+  std::shared_ptr<Impl> impl_;
 };
+
+void Free();
+void Free(boost::filesystem::path const& file);
 }
 #endif

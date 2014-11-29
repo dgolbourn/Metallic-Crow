@@ -10,6 +10,20 @@ set (CMAKE_GENERATOR_TOOLSET "CTP_Nov2013" CACHE STRING "Platform Toolset" FORCE
 
 set (CMAKE_VS_PLATFORM_TOOLSET "CTP_Nov2013" CACHE STRING "Platform Toolset" FORCE)
 
+include_directories ("${PROJECT_SOURCE_DIR}/src/audio")
+
+set (AUDIO_SOURCES
+	"${PROJECT_SOURCE_DIR}/src/audio/mix_exception.cc"
+	"${PROJECT_SOURCE_DIR}/src/audio/mix_exception.h"
+	"${PROJECT_SOURCE_DIR}/src/audio/mix_library.cc"
+	"${PROJECT_SOURCE_DIR}/src/audio/mix_library.h"
+	"${PROJECT_SOURCE_DIR}/src/audio/music.cc"
+	"${PROJECT_SOURCE_DIR}/src/audio/music.h"
+	"${PROJECT_SOURCE_DIR}/src/audio/sound.cc"
+	"${PROJECT_SOURCE_DIR}/src/audio/sound.h")
+
+source_group ("Source Files\\audio" FILES ${AUDIO_SOURCES})
+
 include_directories ("${PROJECT_SOURCE_DIR}/src/c")
 
 set (C_SOURCES
@@ -276,6 +290,23 @@ set_property(TARGET freetype PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/b
 set_property(TARGET freetype PROPERTY IMPORTED_IMPLIB "${PROJECT_SOURCE_DIR}/bin/shared/freetype.lib")
 target_link_libraries(metallic-crow SDL2-ttf freetype)
 
+include_directories ("${PROJECT_SOURCE_DIR}/lib/SDL2_mixer")
+add_library(SDL2-mixer SHARED IMPORTED)
+set_property(TARGET SDL2-mixer PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/bin/shared/SDL2_mixer.dll")
+set_property(TARGET SDL2-mixer PROPERTY IMPORTED_IMPLIB "${PROJECT_SOURCE_DIR}/bin/shared/SDL2_mixer.lib")
+
+add_library(libogg SHARED IMPORTED)
+set_property(TARGET libogg PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/bin/shared/libogg.dll")
+set_property(TARGET libogg PROPERTY IMPORTED_IMPLIB "${PROJECT_SOURCE_DIR}/bin/shared/libogg.lib")
+
+add_library(libvorbis SHARED IMPORTED)
+set_property(TARGET libvorbis PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/bin/shared/libvorbis.dll")
+set_property(TARGET libvorbis PROPERTY IMPORTED_IMPLIB "${PROJECT_SOURCE_DIR}/bin/shared/libogg.lib")
+
+add_library(libvorbisfile SHARED IMPORTED)
+set_property(TARGET libvorbisfile PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/bin/shared/libvorbisfile-3.dll")
+set_property(TARGET libvorbisfile PROPERTY IMPORTED_IMPLIB "${PROJECT_SOURCE_DIR}/bin/shared/libvorbisfile-3.lib")
+target_link_libraries(metallic-crow SDL2-mixer libogg libvorbis libvorbisfile)
 
 include_directories ("${PROJECT_SOURCE_DIR}/lib/box2d/Box2D")
 add_library(Box2D STATIC IMPORTED)

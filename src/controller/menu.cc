@@ -76,7 +76,7 @@ void Menu::Impl::Choice(Options const& options)
     active_text_.emplace_back(display::Texture(option, active_font_, window_), display::BoundingBox());
   }
 
-  float line_spacing = idle_font_.LineSpacing();
+  float line_spacing = 1.5f * idle_font_.LineSpacing();
   float height = 0.f;
   for(auto& text : idle_text_)
   {
@@ -84,7 +84,7 @@ void Menu::Impl::Choice(Options const& options)
     float current = line_spacing;
     while(current < shape.second)
     {
-      current += line_spacing;
+      current += line_spacing - shape.second;
     }
     height += current;
   }
@@ -98,7 +98,7 @@ void Menu::Impl::Choice(Options const& options)
     float current = line_spacing;
     while(current < shape.second)
     {
-      current += line_spacing;
+      current += line_spacing - shape.second;
     }
     y += current;
   }

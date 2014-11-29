@@ -1,27 +1,21 @@
 #ifndef MUSIC_H_
 #define MUSIC_H_
-
-#include <string>
 #include <memory>
-#include "weak_ptr.h"
-
+#include "boost/filesystem.hpp"
 namespace audio
 {
 class Music
 {
 public:
-  Music(void) = default;  
-  Music(std::string const& filename);
-  void Pause(void);
-  void Resume(void);
-  void Play(void);
-  void Stop(void);
-  void Volume(double volume);
-  explicit operator bool(void) const;
-  typedef memory::WeakPtr<Music, class MusicImpl> WeakPtr;
+  Music() = default;
+  Music(boost::filesystem::path const& file, float volume, bool repeat);
+  void Pause();
+  void Resume();
+  bool operator()();
+  explicit operator bool() const;
+  class Impl;
 private:
-  std::shared_ptr<class MusicImpl> impl_;
-  friend WeakPtr;
+  std::shared_ptr<Impl> impl_;
 };
 }
 #endif

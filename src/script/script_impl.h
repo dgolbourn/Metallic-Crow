@@ -147,6 +147,8 @@ public:
   void JointLoad();
   void JointFree();
 
+  void AudioInit();
+
   lua::Stack lua_;
   display::Window window_;
   event::Queue queue_;

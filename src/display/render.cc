@@ -72,11 +72,11 @@ float Transform(float x, float new_origin, float width, float zoom, float parall
 
 namespace sdl
 {
-void Render(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, double angle, SDL_Colour const* modulation)
+void Render(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, SDL_FRect const* original, double angle, SDL_Colour const* modulation)
 {
   SDL_FPoint centre;
-  centre.x = .5f * destination->w;
-  centre.y = .5f * destination->h;
+  centre.x = .5f * original->w - original->x + destination->x;
+  centre.y = .5f * original->h - original->y + destination->y;
 
   Modulator mod(texture, modulation);
   
@@ -95,9 +95,18 @@ void Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
 {
   bool render = true;
   SDL_Rect source = {0, 0, texture->w, texture->h};
+  SDL_FRect clip = {0.f, 0.f, 1.f, 1.f};
+  
   if(source_ptr)
   {
-    if(SDL_IntersectRect(source_ptr, &source, &source) == SDL_FALSE)
+    if(SDL_IntersectRect(source_ptr, &source, &source))
+    {
+      clip.x = (source.x - source_ptr->x) / float(source_ptr->w);
+      clip.y = (source.y - source_ptr->y) / float(source_ptr->h);
+      clip.w = source.w / float(source_ptr->w);
+      clip.h = source.h / float(source_ptr->h);
+    }
+    else
     {
       render = false;
     }
@@ -113,11 +122,6 @@ void Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
     SDL_FRect destination;
     if(destination_ptr)
     {
-      destination.x = destination_ptr->x;
-      destination.y = destination_ptr->y;
-      destination.w = destination_ptr->w;
-      destination.h = destination_ptr->h;
-      
       if(parallax <= 0.f)
       {
         parallax = 1.f;
@@ -129,10 +133,10 @@ void Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
         scale *= zoom;
       }
 
-      destination.x = Transform(destination.x, view.x - .5f * wf, wf, scale, parallax);
-      destination.y = Transform(destination.y, view.y - .5f * hf, hf, scale, parallax);
-      destination.w = scale * destination.w;
-      destination.h = scale * destination.h;
+      destination.x = Transform(destination_ptr->x, view.x - .5f * wf, wf, scale, parallax);
+      destination.y = Transform(destination_ptr->y, view.y - .5f * hf, hf, scale, parallax);
+      destination.w = scale * destination_ptr->w;
+      destination.h = scale * destination_ptr->h;
     }
     else
     {
@@ -142,13 +146,20 @@ void Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
       destination.h = hf;
     }
 
+    SDL_FRect original = destination;
+
+    destination.x += clip.x * destination.w;
+    destination.y += clip.y * destination.h;
+    destination.w *= clip.w;
+    destination.h *= clip.h;
+
     if(tile)
     {
-      algorithm::FloodFill<Painter>((Painter(window, renderer, texture, &source, &destination, angle, modulation)));
+      algorithm::FloodFill<Painter>((Painter(window, renderer, texture, &source, &destination, &original, angle, modulation)));
     }
     else
     {
-      Render(renderer, texture, &source, &destination, angle, modulation);
+      Render(renderer, texture, &source, &destination, &original, angle, modulation);
     }
   }
 }

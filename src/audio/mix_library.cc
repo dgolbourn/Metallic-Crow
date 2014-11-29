@@ -5,38 +5,38 @@
 #include "mix_library.h"
 #include "sdl_library.h"
 #include "mix_exception.h"
-#include "audio_format.h"
-
-namespace mix
+namespace
 {
-static int reference_count;
+int reference_count;
 
-static void MixQuit(void)
+void MixQuit()
 {
   while(Mix_Init(0))
   {
     Mix_Quit();
   }
 }
+}
 
+namespace mix
+{
 Library::Library(void) : sdl_(SDL_INIT_AUDIO)
 {
   if(reference_count == 0)
   {
-    static int const flags = 0;
+    int flags = MIX_INIT_OGG;
     if((Mix_Init(flags) & flags) != flags) 
     {
       BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
     }
 
-    static int const samples = (int)1 << 10;
-    if(Mix_OpenAudio(MIX_SAMPLE_RATE, MIX_FORMAT, MIX_CHANNEL_LAYOUT, samples) == -1)
+    if(Mix_OpenAudio(44100, AUDIO_S16, 2, 1024) == -1)
     {
       MixQuit();
       BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
     }
 
-    static int const mixer_channels = 128;
+    int mixer_channels = 256;
     if(Mix_AllocateChannels(mixer_channels) != mixer_channels)
     {
       Mix_CloseAudio();

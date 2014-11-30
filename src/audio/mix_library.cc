@@ -20,7 +20,7 @@ void MixQuit()
 
 namespace mix
 {
-Library::Library(void) : sdl_(SDL_INIT_AUDIO)
+Library::Library() : sdl_(SDL_INIT_AUDIO)
 {
   if(reference_count == 0)
   {
@@ -46,7 +46,7 @@ Library::Library(void) : sdl_(SDL_INIT_AUDIO)
   reference_count++;
 }
 
-Library::~Library(void)
+Library::~Library()
 {
   if(reference_count > 0)
   {

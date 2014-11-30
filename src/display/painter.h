@@ -8,7 +8,7 @@ namespace sdl
 class Painter
 {
 public:
-  Painter(void) = default;
+  Painter() = default;
   Painter(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, SDL_FRect const* original, double angle, SDL_Colour const* modulation);
   bool operator()(algorithm::NodeCoordinates const& coords);
 private:

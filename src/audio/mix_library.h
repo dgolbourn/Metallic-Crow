@@ -6,13 +6,13 @@ namespace mix
 class Library
 {
 public:
-  Library(void);
+  Library();
   Library(Library const& other);
   Library(Library&& other);
   Library& operator=(Library other);
-  ~Library(void);
+  ~Library();
 private:
-  sdl::Library const sdl_;
+  sdl::Library sdl_;
 };
 }
 #endif

@@ -9,6 +9,7 @@
 #include "json_iterator.h"
 #include <sstream>
 #include <algorithm>
+#include "sound.h"
 namespace game
 {
 namespace
@@ -146,6 +147,9 @@ public:
   int chapter_;
   boost::filesystem::path path_;
   float volume_;
+  audio::Sound navigate_;
+  audio::Sound select_;
+  audio::Sound back_;
 };
 
 void Controller::Impl::Load(int slot)
@@ -174,14 +178,20 @@ Controller::Impl::Impl(json::JSON const& json, event::Queue& queue, boost::files
   char const* saves;
   json_t* chapters;
   double volume;
-  json.Unpack("{sososssssssosf}",
+  json_t* navigate;
+  json_t* select;
+  json_t* back;
+  json.Unpack("{sososssssssosfsososo}",
     "window", &window,
     "menu", &menu,
     "pause menu script", &pause,
     "start menu script", &start,
     "saves", &saves,
     "chapters", &chapters,
-    "volume", &volume);
+    "volume", &volume, 
+    "sound navigate", &navigate,
+    "sound select", &select,
+    "sound back", &back);
 
   window_ = display::Window(json::JSON(window));
 
@@ -206,6 +216,14 @@ Controller::Impl::Impl(json::JSON const& json, event::Queue& queue, boost::files
   LoadOptions(load_menu_, saves_, chapter_names_);
 
   volume_ = float(volume);
+
+  navigate_ = audio::Sound(json::JSON(navigate), path_);
+  select_ = audio::Sound(json::JSON(select), path_);
+  back_ = audio::Sound(json::JSON(back), path_);
+  
+  navigate_.Resume();
+  select_.Resume();
+  back_.Resume();
 }
 
 void Controller::Impl::Init()
@@ -310,18 +328,22 @@ void Controller::Impl::UpBegin()
   switch(state_)
   {
   case State::Start:
+    navigate_(volume_);
     start_menu_.Previous();
     break;
   case State::Pause:
+    navigate_(volume_);
     pause_menu_.Previous();
     break;
   case State::Story:
     story_script_.Up();
     break;
   case State::Chapter:
+    navigate_(volume_);
     chapter_menu_.Previous();
     break;
   case State::Load:
+    navigate_(volume_);
     load_menu_.Previous();
     break;
   default:
@@ -350,18 +372,22 @@ void Controller::Impl::DownBegin()
   switch(state_)
   {
   case State::Start:
+    navigate_(volume_);
     start_menu_.Next();
     break;
   case State::Pause:
+    navigate_(volume_);
     pause_menu_.Next();
     break;
   case State::Story:
     story_script_.Down();
     break;
   case State::Chapter:
+    navigate_(volume_);
     chapter_menu_.Next();
     break;
   case State::Load:
+    navigate_(volume_);
     load_menu_.Next();
     break;
   default:
@@ -518,18 +544,22 @@ void Controller::Impl::Select()
   switch(state_)
   {
   case State::Start:
+    select_(volume_);
     start_menu_.Select();
     break;
   case State::Pause:
+    select_(volume_);
     pause_menu_.Select();
     break;
   default:
   case State::Story:
     break;
   case State::Chapter:
+    select_(volume_);
     chapter_menu_.Select();
     break;
   case State::Load:
+    select_(volume_);
     load_menu_.Select();
     break;
   }
@@ -543,17 +573,20 @@ void Controller::Impl::Back()
   case State::Start:
     break;
   case State::Pause:
+    back_(volume_);
     state_ = State::Story;
     story_script_.Resume();
     pause_script_.Pause();
     break;
   case State::Story:
+    back_(volume_);
     state_ = State::Pause;
     story_script_.Pause();
     pause_script_.Resume();
     break;
   case State::Load:
   case State::Chapter:
+    back_(volume_);
     state_ = State::Start;
     break;
   }

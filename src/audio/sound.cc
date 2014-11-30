@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 #include "boost/functional/hash.hpp"
+#include "audio_thread.h"
 namespace
 {
 typedef std::shared_ptr<Mix_Chunk> Chunk;
@@ -15,7 +16,7 @@ typedef std::shared_ptr<Mix_Chunk> Chunk;
 
 namespace audio
 {
-class Sound::Impl final : public std::enable_shared_from_this<Impl>
+class Sound::Impl
 {
 public:
   Impl(boost::filesystem::path const& file, float volume, bool repeat);
@@ -45,24 +46,20 @@ Mix_Chunk* Init(boost::filesystem::path const& file)
 }
 
 std::unordered_map<boost::filesystem::path, Chunk, boost::hash<boost::filesystem::path>> chunks;
-
-std::mutex mutex;
-typedef std::shared_ptr<audio::Sound::Impl> SoundPtr;
-std::vector<SoundPtr> channels;
+std::vector<audio::Sound::Impl*> sounds;
 
 void ChannelFinished(int channel) noexcept
 {
   try
   {
-    std::unique_lock<std::mutex> lock(mutex, std::defer_lock);
-    if(-1 == std::try_lock(lock))
+    audio::Guard lock(audio::mutex);
+    if(channel < int(sounds.size()))
     {
-      channels.at(channel)->channel_ = -1;
-      channels.at(channel).reset();
-    }
-    else
-    {
-      std::cerr << "Lock failed" << std::endl;
+      if(sounds[channel])
+      {
+        sounds[channel]->channel_ = -1;
+        sounds[channel] = nullptr;
+      }
     }
   }
   catch(...)
@@ -71,7 +68,7 @@ void ChannelFinished(int channel) noexcept
   }
 }
 
-void InitChannelMixer()
+void InitHookSound()
 {
   static bool initialised;
   if(!initialised)
@@ -96,6 +93,7 @@ void Sound::Free(boost::filesystem::path const& file)
 
 void Sound::Impl::Play(float volume)
 {
+  Guard lock(mutex);
   if(channel_ == -1)
   {
     int size = Mix_AllocateChannels(-1);
@@ -110,9 +108,8 @@ void Sound::Impl::Play(float volume)
       {
         Mix_Pause(channel_);
       }
-      std::lock_guard<std::mutex> lock(mutex);
-      channels.resize(size);
-      channels.at(channel_) = shared_from_this();
+      sounds.resize(size);
+      sounds[channel_] = this;
     }
   }
   if(channel_ != -1)
@@ -123,7 +120,7 @@ void Sound::Impl::Play(float volume)
 
 Sound::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat) : channel_(-1), loops_(repeat ? -1 : 0), volume_(volume), paused_(true)
 {
-  InitChannelMixer();
+  InitHookSound();
 
   auto fileiter = chunks.find(file);
   if(fileiter != chunks.end())
@@ -139,6 +136,7 @@ Sound::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat
 
 Sound::Impl::~Impl()
 {
+  Guard lock(mutex);
   if(channel_ != -1)
   {
     Mix_HaltChannel(channel_);
@@ -147,6 +145,7 @@ Sound::Impl::~Impl()
 
 void Sound::Impl::Pause()
 {
+  Guard lock(mutex);
   paused_ = true;
   if(channel_ != -1)
   {
@@ -156,6 +155,7 @@ void Sound::Impl::Pause()
 
 void Sound::Impl::Resume()
 {
+  Guard lock(mutex);
   paused_ = false;
   if(channel_ != -1)
   {
@@ -202,6 +202,12 @@ bool Sound::operator()(float volume)
 
 Sound::operator bool() const
 {
-  return bool(impl_) && (impl_->channel_ != -1);
+  bool valid = bool(impl_);
+  if(valid)
+  {
+    Guard lock(mutex);
+    valid = (impl_->channel_ != -1);
+  }
+  return valid;
 }
 }

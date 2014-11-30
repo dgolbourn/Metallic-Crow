@@ -13,6 +13,8 @@ set (CMAKE_VS_PLATFORM_TOOLSET "CTP_Nov2013" CACHE STRING "Platform Toolset" FOR
 include_directories ("${PROJECT_SOURCE_DIR}/src/audio")
 
 set (AUDIO_SOURCES
+	"${PROJECT_SOURCE_DIR}/src/audio/audio_thread.cc"
+	"${PROJECT_SOURCE_DIR}/src/audio/audio_thread.h"
 	"${PROJECT_SOURCE_DIR}/src/audio/mix_exception.cc"
 	"${PROJECT_SOURCE_DIR}/src/audio/mix_exception.h"
 	"${PROJECT_SOURCE_DIR}/src/audio/mix_library.cc"

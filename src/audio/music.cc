@@ -5,6 +5,8 @@
 #include "mix_exception.h"
 #include <unordered_map>
 #include "boost/functional/hash.hpp"
+#include "log.h"
+#include "audio_thread.h"
 namespace
 {
 typedef std::shared_ptr<Mix_Music> Stream;
@@ -12,10 +14,11 @@ typedef std::shared_ptr<Mix_Music> Stream;
 
 namespace audio
 {
-class Music::Impl final : public std::enable_shared_from_this<Impl>
+class Music::Impl
 {
 public:
   Impl(boost::filesystem::path const& file, float volume, bool repeat);
+  ~Impl();
   void Play(float volume);
   void Pause();
   void Resume();
@@ -30,13 +33,22 @@ public:
 
 namespace
 {
-std::weak_ptr<audio::Music::Impl> music;
+audio::Music::Impl* music;
 
-void MusicFinished()
+void MusicFinished() noexcept
 {
-  if(auto current = music.lock())
+  try
   {
-    current->complete_ = true;
+    audio::Guard lock(audio::mutex);
+    if(music)
+    {
+      music->complete_ = true;
+      music = nullptr;
+    }
+  }
+  catch(...)
+  {
+    exception::Log("Swallowed exception");
   }
 }
 
@@ -77,8 +89,9 @@ void Music::Free(boost::filesystem::path const& file)
 
 void Music::Impl::Pause()
 {
+  Guard lock(mutex);
   paused_ = true;
-  if(music.lock() == shared_from_this())
+  if(music == this)
   {
     Mix_PauseMusic();
   }
@@ -86,8 +99,9 @@ void Music::Impl::Pause()
 
 void Music::Impl::Resume()
 {
+  Guard lock(mutex);
   paused_ = false;
-  if(music.lock() == shared_from_this())
+  if(music == this)
   {
     Mix_ResumeMusic();
   }
@@ -95,7 +109,8 @@ void Music::Impl::Resume()
 
 void Music::Impl::Play(float volume)
 {
-  if(music.lock() != shared_from_this())
+  Guard lock(mutex);
+  if(music != this)
   {
     complete_ = false;
     if(Mix_PlayMusic(stream_.get(), loops_) == -1)
@@ -106,7 +121,7 @@ void Music::Impl::Play(float volume)
     {
       Mix_PauseMusic();
     }
-    music = shared_from_this();
+    music = this;
   }
   Mix_VolumeMusic(int(volume_ * volume * MIX_MAX_VOLUME));
 }
@@ -124,6 +139,16 @@ Music::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat
   {
     stream_ = Stream(Init(file), Mix_FreeMusic);
     streams.emplace(file, stream_);
+  }
+}
+
+Music::Impl::~Impl()
+{
+  Guard lock(mutex);
+  if(music == this)
+  {
+    Mix_HaltMusic();
+    music = nullptr;
   }
 }
 
@@ -153,14 +178,22 @@ bool Music::operator()(float volume)
   }
   else
   {
+    Guard lock(mutex);
     Mix_HaltMusic();
+    music = nullptr;
   }
   return valid;
 }
 
 Music::operator bool() const
 {
-  return bool(impl_) && !impl_->complete_;
+  bool valid = bool(impl_);
+  if(valid)
+  {
+    Guard lock(mutex);
+    valid = !impl_->complete_;
+  }
+  return valid;
 }
 
 void Music::Pause()

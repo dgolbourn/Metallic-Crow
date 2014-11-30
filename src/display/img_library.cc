@@ -2,11 +2,13 @@
 #include "img_exception.h"
 #include "SDL_image.h"
 #include <climits>
+namespace
+{
+int reference_count;
+}
 
 namespace img
 {
-static int reference_count;
-
 Library::Library(int flags)
 {
   if((flags & IMG_Init(flags)) != flags)

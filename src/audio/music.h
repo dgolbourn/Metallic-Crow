@@ -14,6 +14,7 @@ public:
   void Pause();
   void Resume();
   bool operator()(float volume);
+  void End();
   explicit operator bool() const;
   static void Free();
   static void Free(boost::filesystem::path const& file);

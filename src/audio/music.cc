@@ -6,7 +6,8 @@
 #include <unordered_map>
 #include "boost/functional/hash.hpp"
 #include "log.h"
-#include "audio_thread.h"
+#include "mix_thread.h"
+#include <mutex>
 namespace
 {
 typedef std::shared_ptr<Mix_Music> Stream;
@@ -22,12 +23,15 @@ public:
   void Play(float volume);
   void Pause();
   void Resume();
+  void End();
   mix::Library mix_;
   Stream stream_;
+  float play_volume_;
   float volume_;
-  int loops_;
+  bool repeat_;
   bool complete_;
   bool paused_;
+  bool end_;
 };
 }
 
@@ -39,11 +43,19 @@ void MusicFinished() noexcept
 {
   try
   {
-    audio::Guard lock(audio::mutex);
+    std::lock_guard<mix::Mutex> lock(mix::mutex);
     if(music)
     {
-      music->complete_ = true;
+      audio::Music::Impl* temp = music;
       music = nullptr;
+      if(temp)
+      {
+        temp->complete_ = true;
+        if(temp->repeat_ && !temp->end_)
+        {
+          temp->Play(temp->play_volume_);
+        }
+      }
     }
   }
   catch(...)
@@ -89,7 +101,7 @@ void Music::Free(boost::filesystem::path const& file)
 
 void Music::Impl::Pause()
 {
-  Guard lock(mutex);
+  std::lock_guard<mix::Mutex> lock(mix::mutex);
   paused_ = true;
   if(music == this)
   {
@@ -99,7 +111,7 @@ void Music::Impl::Pause()
 
 void Music::Impl::Resume()
 {
-  Guard lock(mutex);
+  std::lock_guard<mix::Mutex> lock(mix::mutex);
   paused_ = false;
   if(music == this)
   {
@@ -107,13 +119,20 @@ void Music::Impl::Resume()
   }
 }
 
+void Music::Impl::End()
+{
+  std::lock_guard<mix::Mutex> lock(mix::mutex);
+  end_ = true;
+}
+
 void Music::Impl::Play(float volume)
 {
-  Guard lock(mutex);
+  std::lock_guard<mix::Mutex> lock(mix::mutex);
+  play_volume_ = volume;
   if(music != this)
   {
     complete_ = false;
-    if(Mix_PlayMusic(stream_.get(), loops_) == -1)
+    if(Mix_PlayMusic(stream_.get(), 0) == -1)
     {
       BOOST_THROW_EXCEPTION(mix::Exception() << mix::Exception::What(mix::Error()));
     }
@@ -123,10 +142,11 @@ void Music::Impl::Play(float volume)
     }
     music = this;
   }
-  Mix_VolumeMusic(int(volume_ * volume * MIX_MAX_VOLUME));
+  Mix_VolumeMusic(int(play_volume_ * volume_ * MIX_MAX_VOLUME));
+  end_ = false;
 }
 
-Music::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat) : loops_(repeat ? -1 : 0), volume_(volume), complete_(false), paused_(true)
+Music::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat) : repeat_(repeat), play_volume_(1.f), volume_(volume), complete_(false), paused_(true), end_(false)
 {
   InitHookMusic();
 
@@ -144,11 +164,11 @@ Music::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat
 
 Music::Impl::~Impl()
 {
-  Guard lock(mutex);
+  std::lock_guard<mix::Mutex> lock(mix::mutex);
   if(music == this)
   {
+    end_ = true;
     Mix_HaltMusic();
-    music = nullptr;
   }
 }
 
@@ -170,17 +190,19 @@ Music::Music(json::JSON const& json, boost::filesystem::path const& path)
 
 bool Music::operator()(float volume)
 {
-  bool valid = false;
-  if(impl_)
+  bool valid = bool(impl_);
+  if(valid)
   {
     impl_->Play(volume);
-    valid = true;
   }
   else
   {
-    Guard lock(mutex);
+    std::lock_guard<mix::Mutex> lock(mix::mutex);
+    if(music)
+    {
+      music->end_ = true;
+    }
     Mix_HaltMusic();
-    music = nullptr;
   }
   return valid;
 }
@@ -190,7 +212,7 @@ Music::operator bool() const
   bool valid = bool(impl_);
   if(valid)
   {
-    Guard lock(mutex);
+    std::lock_guard<mix::Mutex> lock(mix::mutex);
     valid = !impl_->complete_;
   }
   return valid;
@@ -204,5 +226,10 @@ void Music::Pause()
 void Music::Resume()
 {
   impl_->Resume();
+}
+
+void Music::End()
+{
+  impl_->End();
 }
 }

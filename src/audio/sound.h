@@ -13,6 +13,7 @@ public:
   Sound(boost::filesystem::path const& file, float volume, bool repeat);
   void Pause();
   void Resume();
+  void End();
   bool operator()(float volume);
   explicit operator bool() const;
   static void Free();

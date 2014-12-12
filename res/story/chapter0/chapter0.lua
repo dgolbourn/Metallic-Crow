@@ -1,5 +1,11 @@
 require "res/lib/metallic-crow"
 
+function control(x, y)
+  print(x)
+  print(y)
+  print("")
+end
+
 function choice_up()
 end
 
@@ -37,6 +43,8 @@ function script_begin()
   stage00:subtitle("test")
 
   stage00:choice("up", "down", "", "...", 3)
+
+  arena1 = Actor:new(stage00, "res/story/chapter0/arena1.json")
 
   stage00:show()
   stage00:resume()

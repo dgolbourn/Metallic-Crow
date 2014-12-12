@@ -58,7 +58,6 @@ static ShapePair Chain(WorldImpl const& world, json::JSON json)
   if(vertices.front() == vertices.back())
   {
     vertices.pop_back();
-    chain.CreateChain(vertices.data(), vertices.size());
     chain.CreateLoop(vertices.data(), vertices.size());
   }
   else

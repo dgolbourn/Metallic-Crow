@@ -13,14 +13,7 @@ class Controller
 public:
   Controller() = default;
   Controller(json::JSON const& json, event::Queue& queue, boost::filesystem::path const& path);
-  void UpBegin();
-  void DownBegin();
-  void LeftBegin();
-  void RightBegin();
-  void UpEnd();
-  void DownEnd();
-  void LeftEnd();
-  void RightEnd();
+  void Control(float x, float y);
   void ChoiceUp();
   void ChoiceDown();
   void ChoiceLeft();

@@ -7,9 +7,11 @@ void Script::Impl::AudioInit()
   lua_.Add(function::Bind(&Impl::SoundLoad, shared_from_this()), "sound_load", 0);
   lua_.Add(function::Bind(&Impl::SoundFree, shared_from_this()), "sound_free", 0);
   lua_.Add(function::Bind(&Impl::SoundPlay, shared_from_this()), "sound_play", 0);
+  lua_.Add(function::Bind(&Impl::SoundEnd, shared_from_this()), "sound_end", 0);
   lua_.Add(function::Bind(&Impl::MusicLoad, shared_from_this()), "music_load", 0);
   lua_.Add(function::Bind(&Impl::MusicFree, shared_from_this()), "music_free", 0);
   lua_.Add(function::Bind(&Impl::MusicPlay, shared_from_this()), "music_play", 0);
+  lua_.Add(function::Bind(&Impl::MusicEnd, shared_from_this()), "music_end", 0);
 }
 
 void Script::Impl::SoundLoad()
@@ -62,6 +64,21 @@ void Script::Impl::SoundPlay()
   }
 }
 
+void Script::Impl::SoundEnd()
+{
+  StagePtr stage = StagePop();
+  std::string name;
+  lua_.PopFront(name);
+  if(stage)
+  {
+    auto range = stage->sounds_.equal_range(name);
+    for(auto& sound = range.first; sound != range.second; ++sound)
+    {
+      sound->second.End();
+    }
+  }
+}
+
 void Script::Impl::MusicLoad()
 {
   StagePtr stage = StagePop();
@@ -88,6 +105,21 @@ void Script::Impl::MusicFree()
   if(stage)
   {
     stage->music_.erase(name);
+  }
+}
+
+void Script::Impl::MusicEnd()
+{
+  StagePtr stage = StagePop();
+  std::string name;
+  lua_.PopFront(name);
+  if(stage)
+  {
+    auto iter = stage->music_.find(name);
+    if(iter != stage->music_.end())
+    {
+      iter->second.End();
+    }
   }
 }
 

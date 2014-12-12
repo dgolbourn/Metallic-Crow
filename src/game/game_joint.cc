@@ -10,7 +10,7 @@ public:
   dynamics::Joint joint_;
 };
 
-JointImpl::JointImpl(json::JSON const& json, Actor const& actor_a, Actor const& actor_b, dynamics::World& world) : joint_(json, actor_a.impl_->body_, actor_b.impl_->body_, world)
+JointImpl::JointImpl(json::JSON const& json, Actor const& actor_a, Actor const& actor_b, dynamics::World& world) : joint_(json, actor_a.impl_->dynamics_body_, actor_b.impl_->dynamics_body_, world)
 {
 }
 

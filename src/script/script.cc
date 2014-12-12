@@ -37,7 +37,7 @@ void Script::Impl::Call(std::string const& call)
   lua_.Call(0, 0);
 }
 
-void Script::Impl::Pause(void)
+void Script::Impl::Pause()
 {
   if(!paused_)
   {
@@ -71,7 +71,7 @@ void Script::Impl::Resume()
   }
 }
 
-void Script::Impl::Render(void)
+void Script::Impl::Render()
 {
   if(stage_.second)
   {
@@ -82,56 +82,44 @@ void Script::Impl::Render(void)
   fade_.Render();
 }
 
-void Script::Impl::ChoiceUp(void)
+void Script::Impl::ChoiceUp()
 {
-  stage_.second->choice_.Up();
-}
-
-void Script::Impl::ChoiceDown(void)
-{
-  stage_.second->choice_.Down();
-}
-
-void Script::Impl::ChoiceLeft(void)
-{
-  stage_.second->choice_.Left();
-}
-
-void Script::Impl::ChoiceRight(void)
-{
-  stage_.second->choice_.Right();
-}
-
-void Script::Impl::Up(void)
-{
-  if(stage_.second->hero_)
+  if(stage_.second)
   {
-    stage_.second->hero_.Up();
+    stage_.second->choice_.Up();
   }
 }
 
-void Script::Impl::Down(void)
+void Script::Impl::ChoiceDown()
 {
-  if(stage_.second->hero_)
+  if(stage_.second)
   {
-    stage_.second->hero_.Down();
+    stage_.second->choice_.Down();
   }
 }
 
-void Script::Impl::Left(void)
+void Script::Impl::ChoiceLeft()
 {
-  if(stage_.second->hero_)
+  if(stage_.second)
   {
-    stage_.second->hero_.Left();
+    stage_.second->choice_.Left();
   }
 }
 
-void Script::Impl::Right(void)
+void Script::Impl::ChoiceRight()
 {
-  if(stage_.second->hero_)
+  if(stage_.second)
   {
-    stage_.second->hero_.Right();
+    stage_.second->choice_.Right();
   }
+}
+
+void Script::Impl::Control(float x, float y)
+{
+  lua_.Get("control");
+  lua_.Push(x);
+  lua_.Push(y);
+  lua_.Call(2, 0);
 }
 
 void Script::Impl::Add(event::Command const& command)
@@ -139,59 +127,44 @@ void Script::Impl::Add(event::Command const& command)
   signal_.Add(command);
 }
 
-void Script::Pause(void)
+void Script::Pause()
 {
   impl_->Pause();
 }
 
-void Script::Resume(void)
+void Script::Resume()
 {
   impl_->Resume();
 }
 
-void Script::Render(void)
+void Script::Render()
 {
   impl_->Render();
 }
 
-void Script::ChoiceUp(void)
+void Script::ChoiceUp()
 {
   impl_->ChoiceUp();
 }
 
-void Script::ChoiceDown(void)
+void Script::ChoiceDown()
 {
   impl_->ChoiceDown();
 }
 
-void Script::ChoiceLeft(void)
+void Script::ChoiceLeft()
 {
   impl_->ChoiceLeft();
 }
 
-void Script::ChoiceRight(void)
+void Script::ChoiceRight()
 {
   impl_->ChoiceRight();
 }
 
-void Script::Up(void)
+void Script::Control(float x, float y)
 {
-  impl_->Up();
-}
-
-void Script::Down(void)
-{
-  impl_->Down();
-}
-
-void Script::Left(void)
-{
-  impl_->Left();
-}
-
-void Script::Right(void)
-{
-  impl_->Right();
+  impl_->Control(x, y);
 }
 
 void Script::Add(event::Command const& command)
@@ -199,7 +172,7 @@ void Script::Add(event::Command const& command)
   impl_->Add(command);
 }
 
-Script::operator bool(void) const
+Script::operator bool() const
 {
   return bool(impl_);
 }

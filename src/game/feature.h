@@ -3,7 +3,6 @@
 #include <memory>
 #include "window.h"
 #include "json.h"
-#include "position.h"
 #include "boost/filesystem.hpp"
 namespace game
 {
@@ -12,8 +11,11 @@ class Feature
 public:
   Feature() = default;
   Feature(json::JSON const& json, display::Window& window, boost::filesystem::path const& path);
-  void Expression(std::string const& expression, int index, bool left_facing);
-  void Render(Position const& position, display::Modulation const& modulation) const;
+  void Expression(std::string const& expression, int index);
+  void Expression(std::string const& expression);
+  void Expression(int index);
+  bool operator()(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, bool facing) const;
+  explicit operator bool() const;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

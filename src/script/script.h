@@ -20,10 +20,7 @@ public:
   void ChoiceDown();
   void ChoiceLeft();
   void ChoiceRight();
-  void Up();
-  void Down();
-  void Left();
-  void Right();
+  void Control(float x, float y);
   void Add(event::Command const& command);
   explicit operator bool() const;
 private:

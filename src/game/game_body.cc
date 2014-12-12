@@ -1,255 +1,276 @@
 #include "game_body.h"
-#include "animation.h"
 #include <unordered_map>
+#include <map>
+#include <vector>
+#include <list>
 #include "boost/functional/hash.hpp"
 #include "json_iterator.h"
-#include "signal.h"
-namespace game
-{
+#include "scene.h"
 namespace
 {
-typedef std::vector<Position> Positions;
-typedef std::pair<std::string, bool> NextExpression;
-
-Positions MakePositions(json::JSON&& json)
+struct Frame
 {
-  Positions positions;
-  if(json)
-  {
-    for(json::JSON const& value : json)
-    {
-      Position position;
-      value.Unpack("[ff]", &position.first, &position.second);
-      positions.push_back(position);
-    }
-  }
-  return positions;
-}
-
-NextExpression MakeNextExpression(json::JSON const& json)
-{
-  NextExpression next("", false);
-  if(json)
-  {
-    char const* next_expression;
-    int next_facing;
-    json.Unpack("{sssb}",
-      "expression", &next_expression,
-      "left facing", &next_facing);
-    next = NextExpression(std::string(next_expression), (next_facing != 0));
-  }
-  return next;
-}
-
-struct Animation
-{
-  Animation(json::JSON&& back, json::JSON&& front, json::JSON&& eyes, json::JSON&& mouth, json::JSON const& render_box, json::JSON const& next, bool left_facing, display::Window& window, boost::filesystem::path const& path);
-  display::Animation back_;
-  display::Animation front_;
-  Positions eyes_;
-  Positions mouth_;
-  display::BoundingBox render_box_;
-  NextExpression next_;
-  bool left_facing_;
+  game::Scene scene_;
+  std::vector<std::pair<display::BoundingBox, display::BoundingBox>> boxes_;
 };
 
-Animation::Animation(json::JSON&& back, json::JSON&& front, json::JSON&& eyes, json::JSON&& mouth, json::JSON const& render_box, json::JSON const& next, bool left_facing, display::Window& window, boost::filesystem::path const& path) :
-  back_(display::MakeAnimation(std::move(back), window, path)),
-  front_(display::MakeAnimation(std::move(front), window, path)),
-  eyes_(MakePositions(std::move(eyes))),
-  mouth_(MakePositions(std::move(mouth))),
-  render_box_(render_box),
-  next_(MakeNextExpression(next)),
-  left_facing_(left_facing)
+struct Frames
 {
-}
-
-struct Iterator
-{
-  display::Animation::iterator back_;
-  display::Animation::iterator front_;
-  Positions::iterator eyes_;
-  Positions::iterator mouth_;
+  std::vector<Frame> frames_;
+  typedef std::pair<std::string, bool> Key;
+  typedef std::unordered_map<Key, Frames, boost::hash<Key>> Map;
+  Map::iterator next_;
+  bool iterruptable_;
 };
-
-struct Texture
-{
-  display::Texture back_;
-  display::Texture front_;
-  Position eyes_;
-  Position mouth_;
-};
-
-typedef std::pair<std::string, bool> Key;
-typedef std::unordered_map<Key, Animation, boost::hash<Key>> AnimationMap;
-typedef AnimationMap::iterator AnimationPtr;
-
-template<class A, class B, class C> bool Increment(A& texture, B& iterator, C const& animation)
-{
-  bool end = true;
-  if(iterator != animation.end())
-  {
-    ++iterator;
-    if(iterator != animation.end())
-    {
-      texture = *iterator;
-      end = false;
-    }
-  }
-  return end;
 }
 
-template<class A, class B, class C> void Begin(A& texture, B& iterator, C& animation)
+namespace game
 {
-  iterator = animation.begin();
-  if(iterator != animation.end())
-  {
-    texture = *iterator;
-  }
-}
-}
-
 class Body::Impl
 {
 public:
-  Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path);
+  Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path, Feature const& eyes, Feature const& mouth);
   void Expression(std::string const& expression, bool left_facing);
+  void Expression(std::string const& expression);
+  void Expression(bool left_facing);
+  void Expression();
   void Next();
-  void Reset();
-  OptionalPosition Eyes() const;
-  OptionalPosition Mouth() const;
-  void Facing(event::Command const& command);
-  void Render(Position const& position, display::Modulation const& modulation, bool front) const;
+  void Position(game::Position const& position);
+  game::Position Position() const;
+  void Modulation(display::Modulation const& modulation);
+  void Render();
  
-  AnimationMap animations_;
-  AnimationPtr animation_;
-  Iterator iterator_;
-  Texture texture_;
-  event::Signal facing_;
+  Frames::Map expressions_;
+  Frames::Map::iterator current_frames_;
+  std::vector<Frame>::iterator current_frame_;
+  Frames::Map::iterator next_;
+  game::Position position_;
+  display::Modulation modulation_;
+  Frames::Key state_;
 };
 
-Body::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path)
+Body::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command) : modulation_(1.f, 1.f, 1.f, 1.f)
 {
-  json_t* expressions_ref;
-  json.Unpack("{so}",
-    "expressions", &expressions_ref);
+  json_t* expressions;
+  char const* begin_expression;
+  int begin_facing;
+  double x, y;
+  json.Unpack("{sosssbs[ff]}",
+    "expressions", &expressions,
+    "expression", &begin_expression,
+    "left facing", &begin_facing,
+    "position", &x, &y);
 
-  json::JSON expressions(expressions_ref);
-  for(json::JSON const& value : expressions)
+  std::map<Frames::Key, std::list<Frames::Map::iterator*>> next;
+
+  for(json::JSON expression : json::JSON(expressions))
   {
-    char const* expression;
+    char const* name;
+    char const* next_expression;
     int facing;
-    json_t* back;
-    json_t* front;
-    json_t* eyes;
-    json_t* mouth;
-    json_t* render_box;
-    json_t* next;
+    int next_facing;
+    int interruptable;
+    json_t* frames_ref;
 
-    value.Unpack("{sssbsosososososo}", 
-      "expression", &expression,
+    expression.Unpack("{sssbsssbsbso}", 
+      "name", &name,
       "left facing", &facing,
-      "back animation", &back,
-      "front animation", &front,
-      "eyes position", &eyes,
-      "mouth position", &mouth,
-      "render box", &render_box,
-      "next", &next);
+      "next name", &next_expression,
+      "next left facing", &next_facing,
+      "interruptable", &interruptable,
+      "frames", &frames_ref);
 
-    bool left_facing = (facing != 0);
-    animations_.emplace
-    (
-      Key(std::string(expression), left_facing),
-      Animation(json::JSON(back), json::JSON(front), json::JSON(eyes), json::JSON(mouth), json::JSON(render_box), json::JSON(next), left_facing, window, path)
-    );
+    Frames& frames = expressions_[Frames::Key(name, facing != 0)];
+    frames.iterruptable_ = (interruptable != 0);
+
+    next[Frames::Key(next_expression, (next_facing != 0))].push_back(&frames.next_);
+
+    frames.frames_.resize(json::JSON(frames_ref).Size());
+    auto frame_iter = frames.frames_.begin();
+    for(json::JSON frame : json::JSON(frames_ref))
+    {
+      int frame_facing;
+      json_t* eyes_box;
+      json_t* mouth_box;
+      json_t* textures;
+      double deyes_parallax;
+      double dmouth_parallax;
+      int eyes_plane;
+      int mouth_plane;
+      frame.Unpack("{sbsosfsisosfsiso}"
+        "left facing", &frame_facing,
+        "eyes box", &eyes_box,
+        "eyes parallax", &deyes_parallax,
+        "eyes plane", &eyes_plane,
+        "mouth box", &mouth_box,
+        "mouth parallax", &dmouth_parallax,
+        "mouth plane", &mouth_plane,
+        "textures", &textures);
+
+      bool facing = (frame_facing != 0);
+           
+      if(eyes_command)
+      {
+        float eyes_parallax = float(deyes_parallax);
+        display::BoundingBox eyes((json::JSON(eyes_box)));
+        frame_iter->boxes_.emplace_back(eyes, display::BoundingBox(eyes, display::BoundingBox()));
+        frame_iter->scene_.Add([=](){return eyes_command(eyes, modulation_, eyes_parallax, facing);}, eyes_plane);
+      }
+
+      if(mouth_command)
+      {
+        float mouth_parallax = float(dmouth_parallax);
+        display::BoundingBox mouth((json::JSON(mouth_box)));
+        frame_iter->boxes_.emplace_back(mouth, display::BoundingBox(mouth, display::BoundingBox()));
+        frame_iter->scene_.Add([=](){return mouth_command(mouth, modulation_, mouth_parallax, facing);}, mouth_plane);
+      }
+
+      for(json::JSON texture : json::JSON(textures))
+      {
+        char const* page;
+        json_t* clip;
+        json_t* render_box;
+        int plane;
+        double dparallax;
+        texture.Unpack("{sssososfsi}",
+          "page", &page,
+          "clip", &clip,
+          "render box", &render_box,
+          "parallax", &dparallax,
+          "plane", &plane);
+
+        display::BoundingBox render((json::JSON(render_box)));
+        frame_iter->boxes_.emplace_back(render, display::BoundingBox(render, display::BoundingBox()));
+
+        float parallax = float(dparallax);
+        display::Texture texture(display::Texture(path / page, window), display::BoundingBox(json::JSON(clip)));
+        frame_iter->scene_.Add([=](){return texture(display::BoundingBox(), render, parallax, false, 0., modulation_);}, plane);
+      }
+    }
+  }
+
+  for(auto& list : next)
+  {
+    auto expression = expressions_.find(list.first);
+    for(auto& item : list.second)
+    {
+      *item = expression;
+    }
+  }
+
+  state_ = Frames::Key(begin_expression, begin_facing != 0);
+  current_frames_ = expressions_.find(state_);
+  current_frame_ = current_frames_->second.frames_.begin();
+  next_ = expressions_.end();
+  position_.first = float(x);
+  position_.second = float(y);
+  for(auto& box : current_frame_->boxes_)
+  {
+    box.first.x(box.second.x() + position_.first);
+    box.first.y(box.second.y() + position_.first);
   }
 }
 
 void Body::Impl::Expression(std::string const& expression, bool left_facing)
 {
-  auto temp = animations_.find(Key(expression, left_facing));
-  if(temp != animations_.end())
+  state_.first = expression;
+  state_.second = left_facing;
+  Expression();
+}
+
+void Body::Impl::Expression(std::string const& expression)
+{
+  state_.first = expression;
+  Expression();
+}
+
+void Body::Impl::Expression(bool left_facing)
+{
+  state_.second = left_facing;
+  Expression();
+}
+
+void Body::Impl::Expression()
+{
+  auto next = expressions_.find(state_);
+  if(next != expressions_.end())
   {
-    animation_ = temp;
-    Reset();
+    if(next != current_frames_)
+    {
+      if(current_frames_->second.iterruptable_)
+      {
+        current_frames_ = next;
+        current_frame_ = current_frames_->second.frames_.begin();
+        state_.first = current_frames_->first.first;
+        state_.second = current_frames_->first.second;
+        for(auto& box : current_frame_->boxes_)
+        {
+          box.first.x(box.second.x() + position_.first);
+          box.first.y(box.second.y() + position_.first);
+        }
+      }
+      else
+      {
+        next_ = next;
+      }
+    }
   }
 }
 
 void Body::Impl::Next()
 {
-  bool done = true;
-  done &= Increment(texture_.eyes_, iterator_.eyes_, animation_->second.eyes_);
-  done &= Increment(texture_.mouth_, iterator_.mouth_, animation_->second.mouth_);
-  done &= Increment(texture_.back_, iterator_.back_, animation_->second.back_);
-  done &= Increment(texture_.front_, iterator_.front_, animation_->second.front_);
-  if(done)
+  ++current_frame_;
+  if(current_frame_ == current_frames_->second.frames_.end())
   {
-    if(animation_->second.next_.first != "")
+    if(current_frames_->second.iterruptable_ && (next_ != expressions_.end()))
     {
-      if(animation_->second.left_facing_ != animation_->second.next_.second)
-      {
-        facing_();
-      }
-      Expression(animation_->second.next_.first, animation_->second.next_.second);
+      current_frames_ = next_;
+      next_ = expressions_.end();
     }
+    else
+    {
+      current_frames_ = current_frames_->second.next_;
+    }
+    current_frame_ = current_frames_->second.frames_.begin();
+    state_.first = current_frames_->first.first;
+    state_.second = current_frames_->first.second;
   }
-}
-
-void Body::Impl::Reset()
-{
-  Begin(texture_.back_, iterator_.back_, animation_->second.back_);
-  Begin(texture_.front_, iterator_.front_, animation_->second.front_);
-  Begin(texture_.eyes_, iterator_.eyes_, animation_->second.eyes_);
-  Begin(texture_.mouth_, iterator_.mouth_, animation_->second.mouth_);
-}
-
-Body::OptionalPosition Body::Impl::Eyes() const
-{
-  OptionalPosition position;
-  if(!animation_->second.eyes_.empty())
+  for(auto& box : current_frame_->boxes_)
   {
-    position = texture_.eyes_;
+    box.first.x(box.second.x() + position_.first);
+    box.first.y(box.second.y() + position_.first);
   }
-  return position;
 }
 
-Body::OptionalPosition Body::Impl::Mouth() const
+void Body::Impl::Render()
 {
-  OptionalPosition position;
-  if(!animation_->second.mouth_.empty())
-  {
-    position = texture_.mouth_;
-  }
-  return position;
+  current_frame_->scene_.Render();
 }
 
-void Body::Impl::Facing(event::Command const& command)
+void Body::Impl::Position(game::Position const& position)
 {
-  facing_.Add(command);
+  position_ = position;
+  for(auto& box : current_frame_->boxes_)
+  {
+    box.first.x(box.second.x() + position_.first);
+    box.first.y(box.second.y() + position_.first);
+  }
 }
 
-void Body::Impl::Render(Position const& position, display::Modulation const& modulation, bool front) const
+game::Position Body::Impl::Position() const
 {
-  display::Texture texture;
-  if(front)
-  {
-    texture = texture_.front_;
-  }
-  else
-  {
-    texture = texture_.back_;
-  }
-
-  if(texture)
-  {
-    display::BoundingBox box = display::BoundingBox(animation_->second.render_box_, display::BoundingBox());
-    box.x(box.x() + position.first);
-    box.y(box.y() + position.second);
-    texture(display::BoundingBox(), box, 1.f, false, 0., modulation);
-  }
+  return position_;
 }
 
-Body::Body(json::JSON const& json, display::Window& window, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, window, path))
+void Body::Impl::Modulation(display::Modulation const& modulation)
+{
+  modulation_.r(modulation.r());
+  modulation_.g(modulation.g());
+  modulation_.b(modulation.b());
+  modulation_.a(modulation.a());
+}
+
+Body::Body(json::JSON const& json, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command) : impl_(std::make_shared<Impl>(json, window, path, eyes_command, mouth_command))
 {
 }
 
@@ -258,28 +279,43 @@ void Body::Expression(std::string const& expression, bool left_facing)
   impl_->Expression(expression, left_facing);
 }
 
+void Body::Expression(bool left_facing)
+{
+  impl_->Expression(left_facing);
+}
+
+void Body::Expression(std::string const& expression)
+{
+  impl_->Expression(expression);
+}
+
 void Body::Next()
 {
   impl_->Next();
 }
 
-Body::OptionalPosition Body::Eyes() const
+void Body::Render()
 {
-  return impl_->Eyes();
+  impl_->Render();
 }
 
-Body::OptionalPosition Body::Mouth() const
+void Body::Position(game::Position const& position)
 {
-  return impl_->Mouth();
+  impl_->Position(position);
 }
 
-void Body::Facing(event::Command const& command)
+game::Position Body::Position() const
 {
-  return impl_->Facing(command);
+  return impl_->Position();
 }
 
-void Body::Render(Position const& position, display::Modulation const& modulation, bool front) const
+void Body::Modulation(display::Modulation const& modulation)
 {
-  impl_->Render(position, modulation, front);
+  impl_->Modulation(modulation);
+}
+
+Body::operator bool() const
+{
+  return bool(impl_);
 }
 }

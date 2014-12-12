@@ -36,7 +36,6 @@ typedef std::array<bool, 2> Paused;
 
 struct Stage
 {
-  Actor hero_;
   JointMap joints_;
   SceneryMap scenery_;
   ActorMap actors_;
@@ -77,10 +76,7 @@ public:
   void ChoiceDown();
   void ChoiceLeft();
   void ChoiceRight();
-  void Up();
-  void Down();
-  void Left();
-  void Right(); 
+  void Control(float x, float y);
 
   void Call(std::string const& call);
   void View(dynamics::World::WeakPtr world);
@@ -95,15 +91,10 @@ public:
   void ActorBody();
   void ActorEyes();
   void ActorMouth();
-  void ActorNominate();
   void ActorPosition();
   void ActorVelocity();
   void ActorForce();
   void ActorImpulse();
-  void ActorUp();
-  void ActorDown();
-  void ActorLeft();
-  void ActorRight();
 
   void SceneryInit();
   void SceneryLoad();
@@ -158,9 +149,11 @@ public:
   void SoundLoad();
   void SoundFree();
   void SoundPlay();
+  void SoundEnd();
   void MusicLoad();
   void MusicFree();
   void MusicPlay();
+  void MusicEnd();
 
   void ResourceInit();
   void ResourceCollect();

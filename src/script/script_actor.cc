@@ -9,15 +9,10 @@ void Script::Impl::ActorInit()
   lua_.Add(function::Bind(&Impl::ActorBody, shared_from_this()), "actor_body", 0);
   lua_.Add(function::Bind(&Impl::ActorEyes, shared_from_this()), "actor_eyes", 0);
   lua_.Add(function::Bind(&Impl::ActorMouth, shared_from_this()), "actor_mouth", 0);
-  lua_.Add(function::Bind(&Impl::ActorNominate, shared_from_this()), "actor_nominate", 0);
   lua_.Add(function::Bind(&Impl::ActorPosition, shared_from_this()), "actor_position", 0);
   lua_.Add(function::Bind(&Impl::ActorVelocity, shared_from_this()), "actor_velocity", 0);
   lua_.Add(function::Bind(&Impl::ActorForce, shared_from_this()), "actor_force", 0);
   lua_.Add(function::Bind(&Impl::ActorImpulse, shared_from_this()), "actor_impulse", 0);
-  lua_.Add(function::Bind(&Impl::ActorUp, shared_from_this()), "actor_up", 0);
-  lua_.Add(function::Bind(&Impl::ActorDown, shared_from_this()), "actor_down", 0);
-  lua_.Add(function::Bind(&Impl::ActorLeft, shared_from_this()), "actor_left", 0);
-  lua_.Add(function::Bind(&Impl::ActorRight, shared_from_this()), "actor_right", 0);
 }
 
 void Script::Impl::ActorLoad()
@@ -54,14 +49,30 @@ void Script::Impl::ActorBody()
   StagePtr stage = StagePop();
   std::string name;
   std::string expression;
+  int facing;
   lua_.PopFront(name);
   lua_.PopFront(expression);
+  lua_.PopFront(facing);
   if(stage)
   {
     auto range = stage->actors_.equal_range(name);
     for(auto& actor = range.first; actor != range.second; ++actor)
     {
-      actor->second.Body(expression);
+      if(expression == "")
+      {
+        if(facing)
+        {
+          actor->second.Body(facing > 0);
+        }
+      }
+      else if(facing)
+      {
+        actor->second.Body(expression, facing > 0);
+      }
+      else
+      {
+        actor->second.Body(expression);
+      }
     }
   }
 }
@@ -97,24 +108,6 @@ void Script::Impl::ActorMouth()
     {
       actor->second.Mouth(expression);
     }
-  }
-}
-
-void Script::Impl::ActorNominate()
-{
-  StagePtr stage = StagePop();
-  std::string name;
-  lua_.PopFront(name);
-
-  if(stage)
-  {
-    Actor hero;
-    auto iter = stage->actors_.find(name);
-    if(iter != stage->actors_.end())
-    {
-      hero = iter->second;
-    }
-    stage->hero_ = hero;
   }
 }
 
@@ -187,69 +180,9 @@ void Script::Impl::ActorImpulse()
   if(stage)
   {
     auto range = stage->actors_.equal_range(name);
-    for (auto& actor = range.first; actor != range.second; ++actor)
+    for(auto& actor = range.first; actor != range.second; ++actor)
     {
       actor->second.Impulse(Position(i, j));
-    }
-  }
-}
-
-void Script::Impl::ActorUp()
-{
-  StagePtr stage = StagePop();
-  std::string name;
-  lua_.PopFront(name);
-  if(stage)
-  {
-    auto range = stage->actors_.equal_range(name);
-    for(auto& actor = range.first; actor != range.second; ++actor)
-    {
-      actor->second.Up();
-    }
-  }
-}
-
-void Script::Impl::ActorDown()
-{
-  StagePtr stage = StagePop();
-  std::string name;
-  lua_.PopFront(name);
-  if(stage)
-  {
-    auto range = stage->actors_.equal_range(name);
-    for(auto& actor = range.first; actor != range.second; ++actor)
-    {
-      actor->second.Down();
-    }
-  }
-}
-
-void Script::Impl::ActorLeft()
-{
-  StagePtr stage = StagePop();
-  std::string name;
-  lua_.PopFront(name);
-  if(stage)
-  {
-    auto range = stage->actors_.equal_range(name);
-    for(auto& actor = range.first; actor != range.second; ++actor)
-    {
-      actor->second.Left();
-    }
-  }
-}
-
-void Script::Impl::ActorRight()
-{
-  StagePtr stage = StagePop();
-  std::string name;
-  lua_.PopFront(name);
-  if(stage)
-  {
-    auto range = stage->actors_.equal_range(name);
-    for(auto& actor = range.first; actor != range.second; ++actor)
-    {
-      actor->second.Right();
     }
   }
 }

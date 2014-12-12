@@ -8,6 +8,10 @@ function Music:play()
 	music_play(self.stage, self.name)
 end
 
+function Music:stop()
+	music_end(self.stage, self.name)
+end
+
 function Music:new(stage, music)
 	if(self.number == nil) then
 		self.__gc = self.finalise

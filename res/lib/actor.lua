@@ -4,8 +4,14 @@ function Actor:finalise()
 	actor_free(self.stage, self.name)
 end
 
-function Actor:body(expression)
-	actor_body(self.stage, self.name, expression)
+function Actor:body(expression, facing)
+	if(expression == nil) then
+		expression = ""
+	end
+	if(facing == nil) then
+		facing = 0
+	end
+	actor_body(self.stage, self.name, expression, facing)
 end
 
 function Actor:eyes(expression)
@@ -48,22 +54,6 @@ end
 
 function Actor:impulse(i, j)
 	actor_impulse(self.stage, self.name, i, j)
-end
-
-function Actor:up()
-	actor_up(self.stage, self.name)
-end
-
-function Actor:down()
-	actor_down(self.stage, self.name)
-end
-
-function Actor:left()
-	actor_left(self.stage, self.name)
-end
-
-function Actor:right()
-	actor_right(self.stage, self.name)
 end
 
 function Actor:new(stage, actor, troupe)

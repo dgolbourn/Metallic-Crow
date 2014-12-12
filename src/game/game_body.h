@@ -4,23 +4,26 @@
 #include "window.h"
 #include "json.h"
 #include "position.h"
-#include "boost/optional/optional.hpp"
-#include "command.h"
 #include "boost/filesystem.hpp"
+#include "modulation.h"
+#include "bounding_box.h"
+#include "feature.h"
 namespace game
 {
 class Body
 {
 public:
   Body() = default;
-  Body(json::JSON const& json, display::Window& window, boost::filesystem::path const& path);
+  Body(json::JSON const& json, display::Window& window, boost::filesystem::path const& path, Feature const& eyes, Feature const& mouth);
   void Expression(std::string const& expression, bool left_facing);
+  void Expression(std::string const& expression);
+  void Expression(bool left_facing);
   void Next();
-  typedef boost::optional<Position> OptionalPosition;
-  OptionalPosition Eyes() const;
-  OptionalPosition Mouth() const;
-  void Facing(event::Command const& command);
-  void Render(Position const& position, display::Modulation const& modulation, bool front) const;
+  void Position(Position const& position);
+  game::Position Position() const;
+  void Modulation(display::Modulation const& modulation);
+  void Render();
+  explicit operator bool() const;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

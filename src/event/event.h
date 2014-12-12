@@ -1,28 +1,26 @@
 #ifndef EVENT_H_
 #define EVENT_H_
-#include "switch.h"
 #include "json.h"
 #include "weak_ptr.h"
+#include "command.h"
 namespace event
 {
 class Event
 {
 public:
-  Event(void) = default;
+  Event() = default;
   Event(json::JSON const& json);
-  void operator()(void);
-  void Up(Command const& start, Command const& end);
-  void Down(Command const& start, Command const& end);
-  void Left(Command const& start, Command const& end);
-  void Right(Command const& start, Command const& end);
-  void ChoiceUp(Command const& start, Command const& end);
-  void ChoiceDown(Command const& start, Command const& end);
-  void ChoiceLeft(Command const& start, Command const& end);
-  void ChoiceRight(Command const& start, Command const& end);
-  void Select(Command const& start, Command const& end);
-  void Back(Command const& start, Command const& end);
-  void Quit(Command const& command);
-  explicit operator bool(void) const;
+  void operator()();
+  typedef std::function<bool(float, float)> Command;
+  void Control(Command const& command);
+  void ChoiceUp(event::Command const& command);
+  void ChoiceDown(event::Command const& command);
+  void ChoiceLeft(event::Command const& command);
+  void ChoiceRight(event::Command const& command);
+  void Select(event::Command const& command);
+  void Back(event::Command const& command);
+  void Quit(event::Command const& command);
+  explicit operator bool() const;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

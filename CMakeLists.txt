@@ -182,8 +182,6 @@ set (GAME_SOURCES
 	"${PROJECT_SOURCE_DIR}/src/game/actor.cc"
 	"${PROJECT_SOURCE_DIR}/src/game/actor.h"
 	"${PROJECT_SOURCE_DIR}/src/game/actor_impl.h"
-	"${PROJECT_SOURCE_DIR}/src/game/avatar.cc"
-	"${PROJECT_SOURCE_DIR}/src/game/avatar.h"
 	"${PROJECT_SOURCE_DIR}/src/game/choice.cc"
 	"${PROJECT_SOURCE_DIR}/src/game/choice.h"
 	"${PROJECT_SOURCE_DIR}/src/game/fade.cc"

@@ -102,14 +102,7 @@ class Controller::Impl final : public std::enable_shared_from_this<Impl>
 public:
   Impl(json::JSON const& json, event::Queue& queue, boost::filesystem::path const& path);
   void Init();
-  void UpBegin();
-  void DownBegin();
-  void LeftBegin();
-  void RightBegin();
-  void UpEnd();
-  void DownEnd();
-  void LeftEnd();
-  void RightEnd();
+  void Control(float x, float y);
   void ChoiceUp();
   void ChoiceDown();
   void ChoiceLeft();
@@ -150,6 +143,7 @@ public:
   audio::Sound navigate_;
   audio::Sound select_;
   audio::Sound back_;
+  int sign_;
 };
 
 void Controller::Impl::Load(int slot)
@@ -169,7 +163,7 @@ void Controller::Impl::Chapter(int chapter)
   state_ = State::Start;
 }
 
-Controller::Impl::Impl(json::JSON const& json, event::Queue& queue, boost::filesystem::path const& path) : state_(State::Start), queue_(queue), path_(path)
+Controller::Impl::Impl(json::JSON const& json, event::Queue& queue, boost::filesystem::path const& path) : state_(State::Start), queue_(queue), path_(path), sign_(0)
 {
   json_t* window;
   json_t* menu;
@@ -323,154 +317,75 @@ void Controller::Impl::Add(event::Command const& command)
   signal_.Add(command);
 }
 
-void Controller::Impl::UpBegin()
+void Controller::Impl::Control(float x, float y)
 {
-  switch(state_)
-  {
-  case State::Start:
-    navigate_(volume_);
-    start_menu_.Previous();
-    break;
-  case State::Pause:
-    navigate_(volume_);
-    pause_menu_.Previous();
-    break;
-  case State::Story:
-    story_script_.Up();
-    break;
-  case State::Chapter:
-    navigate_(volume_);
-    chapter_menu_.Previous();
-    break;
-  case State::Load:
-    navigate_(volume_);
-    load_menu_.Previous();
-    break;
-  default:
-    break;
-  }
-}
+  int sign = int(0.f < y) - int(y < 0.f);
+  bool up = (sign_ <= 0) && (sign > 0);
+  bool down = (sign_ >= 0) && (sign < 0);
+  sign_ = sign;
 
-void Controller::Impl::UpEnd()
-{
-  switch(state_)
-  {
-  case State::Story:
-    story_script_.Down();
-    break;
-  default:
-  case State::Load:
-  case State::Chapter:
-  case State::Pause:
-  case State::Start:
-    break;
-  }
-}
-
-void Controller::Impl::DownBegin()
-{
   switch(state_)
   {
   case State::Start:
-    navigate_(volume_);
-    start_menu_.Next();
+    if(up || down)
+    {
+      navigate_(volume_);
+    }
+    if(up)
+    {
+      start_menu_.Previous();
+    }
+    if(down)
+    {
+      start_menu_.Next();
+    }
     break;
   case State::Pause:
-    navigate_(volume_);
-    pause_menu_.Next();
-    break;
-  case State::Story:
-    story_script_.Down();
+    if(up || down)
+    {
+      navigate_(volume_);
+    }
+    if(up)
+    {
+      pause_menu_.Previous();
+    }
+    if(down)
+    {
+      pause_menu_.Next();
+    }
     break;
   case State::Chapter:
-    navigate_(volume_);
-    chapter_menu_.Next();
+    if(up || down)
+    {
+      navigate_(volume_);
+    }
+    if(up)
+    {
+      chapter_menu_.Previous();
+    }
+    if(down)
+    {
+      chapter_menu_.Next();
+    }
     break;
   case State::Load:
-    navigate_(volume_);
-    load_menu_.Next();
-    break;
-  default:
-    break;
-  }
-}
-
-void Controller::Impl::DownEnd()
-{
-  switch(state_)
-  {
-  case State::Story:
-    story_script_.Up();
-    break;
-  default:
-  case State::Load:
-  case State::Chapter:
-  case State::Pause:
-  case State::Start:
-    break;
-  }
-}
-
-void Controller::Impl::LeftBegin()
-{
-  switch(state_)
-  {
-  default:
-  case State::Start:
-  case State::Pause:
-  case State::Chapter:
-  case State::Load:
+    if(up || down)
+    {
+      navigate_(volume_);
+    }
+    if(up)
+    {
+      load_menu_.Previous();
+    }
+    if(down)
+    {
+      load_menu_.Next();
+    }
     break;
   case State::Story:
-    story_script_.Left();
+    story_script_.Control(x, y);
     break;
-  }
-}
-
-void Controller::Impl::LeftEnd()
-{
-  switch(state_)
-  {
   default:
-  case State::Start:
-  case State::Pause:
-  case State::Chapter:
-  case State::Load:
-    break;
-  case State::Story:
-    story_script_.Right();
-    break;
-  }
-}
-
-void Controller::Impl::RightBegin()
-{
-  switch(state_)
-  {
-  default:
-  case State::Start:
-  case State::Pause:
-  case State::Chapter:
-  case State::Load:
-    break;
-  case State::Story:
-    story_script_.Right();
-    break;
-  }
-}
-
-void Controller::Impl::RightEnd()
-{
-  switch(state_)
-  {
-  default:
-  case State::Start:
-  case State::Pause:
-  case State::Chapter:
-  case State::Load:
-    break;
-  case State::Story:
-    story_script_.Left();
     break;
   }
 }
@@ -496,10 +411,22 @@ void Controller::Impl::ChoiceDown()
   switch(state_)
   {
   default:
+    break;
   case State::Start:
+    select_(volume_);
+    start_menu_.Select();
+    break;
   case State::Pause:
+    select_(volume_);
+    pause_menu_.Select();
+    break;
   case State::Chapter:
+    select_(volume_);
+    chapter_menu_.Select();
+    break;
   case State::Load:
+    select_(volume_);
+    load_menu_.Select();
     break;
   case State::Story:
     story_script_.ChoiceDown();
@@ -529,9 +456,17 @@ void Controller::Impl::ChoiceRight()
   {
   default:
   case State::Start:
+    break;
   case State::Pause:
-  case State::Chapter:
+    back_(volume_);
+    state_ = State::Story;
+    story_script_.Resume();
+    pause_script_.Pause();
+    break;
   case State::Load:
+  case State::Chapter:
+    back_(volume_);
+    state_ = State::Start;
     break;
   case State::Story:
     story_script_.ChoiceRight();
@@ -551,9 +486,6 @@ void Controller::Impl::Select()
     select_(volume_);
     pause_menu_.Select();
     break;
-  default:
-  case State::Story:
-    break;
   case State::Chapter:
     select_(volume_);
     chapter_menu_.Select();
@@ -561,6 +493,9 @@ void Controller::Impl::Select()
   case State::Load:
     select_(volume_);
     load_menu_.Select();
+    break;
+  default:
+  case State::Story:
     break;
   }
 }
@@ -635,44 +570,9 @@ Controller::Controller(json::JSON const& json, event::Queue& queue, boost::files
   impl_->Init();
 }
 
-void Controller::UpBegin()
+void Controller::Control(float x, float y)
 {
-  impl_->UpBegin();
-}
-
-void Controller::DownBegin()
-{
-  impl_->DownBegin();
-}
-
-void Controller::LeftBegin()
-{
-  impl_->LeftBegin();
-}
-
-void Controller::RightBegin()
-{
-  impl_->RightBegin();
-}
-
-void Controller::UpEnd()
-{
-  impl_->UpEnd();
-}
-
-void Controller::DownEnd()
-{
-  impl_->DownEnd();
-}
-
-void Controller::LeftEnd()
-{
-  impl_->LeftEnd();
-}
-
-void Controller::RightEnd()
-{
-  impl_->RightEnd();
+  impl_->Control(x, y);
 }
 
 void Controller::ChoiceUp()

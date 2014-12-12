@@ -8,5 +8,8 @@
 	"choice left" : 4,
 	"choice right" : 7,
 	"select" : 40,
-    "back" : 41
+    "back" : 41,
+    "update max" : 0.9,
+    "update min" : 0.25,
+    "update threshold" : 0.0001
 }

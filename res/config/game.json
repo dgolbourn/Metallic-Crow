@@ -44,5 +44,23 @@
 			"file" : "res/story/chapter1/chapter1.lua"
 		}
 	],
-	"volume" : 1.0
+	"volume" : 1.0,
+	"sound navigate" : 
+	{
+		"file" : "res/ext/navigate.ogg",
+		"volume" : 1.0,
+		"repeat" : false
+	},
+	"sound select" : 
+	{
+		"file" : "res/ext/select.ogg",
+		"volume" : 1.0,
+		"repeat" : false
+	},
+	"sound back" : 
+	{
+		"file" : "res/ext/back.ogg",
+		"volume" : 1.0,
+		"repeat" : false
+	}
 }

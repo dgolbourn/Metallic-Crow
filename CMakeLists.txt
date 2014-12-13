@@ -225,7 +225,6 @@ set (SCRIPT_SOURCES
 	"${PROJECT_SOURCE_DIR}/src/script/script_fade.cc"
 	"${PROJECT_SOURCE_DIR}/src/script/script_impl.h"
 	"${PROJECT_SOURCE_DIR}/src/script/script_joint.cc"
-	"${PROJECT_SOURCE_DIR}/src/script/script_resource.cc"
 	"${PROJECT_SOURCE_DIR}/src/script/script_scenery.cc"
 	"${PROJECT_SOURCE_DIR}/src/script/script_screen.cc"
 	"${PROJECT_SOURCE_DIR}/src/script/script_stage.cc"

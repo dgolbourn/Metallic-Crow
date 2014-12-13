@@ -23,8 +23,7 @@ void Script::Impl::Init(boost::filesystem::path const& file)
   FadeInit();
   JointInit();
   AudioInit();
-  ResourceInit();
-
+  
   typedef void (event::Signal::*Notify)();
   lua_.Add(function::Bind((Notify)&event::Signal::operator(), signal_), "script_end", 0);
 

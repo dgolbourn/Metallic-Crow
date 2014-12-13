@@ -13,32 +13,28 @@ public:
   Impl(std::string const& text, sdl::Font const& font, Window& window);
   Impl(Impl const& texture, BoundingBox const& clip);
   bool Render(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const;
-  bool Check(void) const;
-  display::Shape Shape(void) const;
+  bool Check() const;
+  display::Shape Shape() const;
   Window::WeakPtr window_;
-  sdl::Texture::WeakPtr texture_ptr_;
   sdl::Texture texture_;
-  display::BoundingBox clip_;
+  BoundingBox clip_;
 };
 
 Texture::Impl::Impl(boost::filesystem::path const& file, Window& window) : window_(window)
 {
-  texture_ptr_ = window.impl_->Load(file);
-  sdl::Texture texture = texture_ptr_.Lock();
-  clip_ = BoundingBox(0.f, 0.f, float(texture->w), float(texture->h));
+  texture_ = window.impl_->Load(file);
+  clip_ = BoundingBox(0.f, 0.f, float(texture_->w), float(texture_->h));
 }
 
 Texture::Impl::Impl(std::string const& text, sdl::Font const& font, float width, Window& window) : window_(window)
 {
   texture_ = window.impl_->Text(text, font, width);
-  texture_ptr_ = texture_;
   clip_ = BoundingBox(0.f, 0.f, float(texture_->w), float(texture_->h));
 }
 
 Texture::Impl::Impl(std::string const& text, sdl::Font const& font, Window& window) : window_(window)
 {
   texture_ = window.impl_->Text(text, font);
-  texture_ptr_ = texture_;
   clip_ = BoundingBox(0.f, 0.f, float(texture_->w), float(texture_->h));
 }
 
@@ -79,21 +75,18 @@ bool Texture::Impl::Render(BoundingBox const& source, BoundingBox const& destina
   bool locked = false;
   if(auto window = window_.Lock())
   {
-    if(auto texture = texture_ptr_.Lock())
-    {
-      window.impl_->Render(texture, Clip(clip_, source), destination, parallax, tile, angle, modulation);
+      window.impl_->Render(texture_, Clip(clip_, source), destination, parallax, tile, angle, modulation);
       locked = true;
-    }
   }
   return locked;
 }
 
-bool Texture::Impl::Check(void) const
+bool Texture::Impl::Check() const
 {
-  return bool(window_.Lock()) && bool(texture_ptr_.Lock());
+  return bool(window_.Lock());
 }
 
-Shape Texture::Impl::Shape(void) const
+Shape Texture::Impl::Shape() const
 {
   return display::Shape(clip_.w(), clip_.h());
 }
@@ -103,12 +96,12 @@ bool Texture::operator()(BoundingBox const& source, BoundingBox const& destinati
   return bool(impl_) && impl_->Render(source, destination, parallax, tile, angle, modulation);
 }
 
-Texture::operator bool(void) const
+Texture::operator bool() const
 {
   return bool(impl_) && impl_->Check();
 }
 
-Shape Texture::Shape(void) const
+Shape Texture::Shape() const
 {
   return impl_->Shape();
 }

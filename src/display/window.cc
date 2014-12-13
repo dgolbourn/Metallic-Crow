@@ -48,7 +48,7 @@ public:
 };
 }
 
-void WindowImpl::Destroy()
+void WindowImpl::Destroy() noexcept
 {
   if(renderer_)
   {
@@ -135,12 +135,17 @@ sdl::Texture WindowImpl::Load(boost::filesystem::path const& file)
   auto fileiter = textures_.find(file);
   if(fileiter != textures_.end())
   {
-    texture = fileiter->second;
+    texture = fileiter->second.Lock();
+    if(!texture)
+    {
+      textures_.erase(fileiter);
+    }
   }
-  else
+  
+  if(!texture)
   {
     texture = sdl::Texture(renderer_, (SDL_Surface*)sdl::Surface(file));
-    textures_[file] = texture;
+    textures_.emplace(file, texture);
   }
   return texture;
 }
@@ -197,14 +202,14 @@ void WindowImpl::Show() const
   SDL_RenderPresent(renderer_);
 }
 
-void WindowImpl::Free()
+void WindowImpl::LoadCache(boost::filesystem::path const& file)
 {
-  textures_.clear();
+  cache_.emplace(file, Load(file));
 }
 
 void WindowImpl::Free(boost::filesystem::path const& file)
 {
-  textures_.erase(file);
+  cache_.erase(file);
 }
 
 void WindowImpl::View(float x, float y, float zoom)
@@ -272,9 +277,9 @@ void Window::Draw(BoundingBox const& box, Modulation const& modulation) const
   impl_->Draw(box, modulation);
 }
 
-void Window::Free()
+void Window::Load(boost::filesystem::path const& file)
 {
-  impl_->Free();
+  impl_->LoadCache(file);
 }
 
 void Window::Free(boost::filesystem::path const& file)

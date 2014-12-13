@@ -11,6 +11,7 @@
 namespace
 {
 typedef std::shared_ptr<Mix_Music> Stream;
+typedef std::weak_ptr<Mix_Music> WeakStream;
 }
 
 namespace audio
@@ -84,19 +85,37 @@ Mix_Music* Init(boost::filesystem::path const& file)
   return music;
 }
 
-std::unordered_map<boost::filesystem::path, Stream, boost::hash<boost::filesystem::path>> streams;
+std::unordered_map<boost::filesystem::path, Stream, boost::hash<boost::filesystem::path>> cache;
+
+std::unordered_map<boost::filesystem::path, WeakStream, boost::hash<boost::filesystem::path>> streams;
+
+Stream MakeStream(boost::filesystem::path const& file)
+{
+  Stream stream;
+  auto fileiter = streams.find(file);
+  if(fileiter != streams.end())
+  {
+    stream = fileiter->second.lock();
+  }
+  if(!stream)
+  {
+    stream = Stream(Init(file), Mix_FreeMusic);
+    streams.emplace(file, stream);
+  }
+  return stream;
+}
 }
 
 namespace audio
 {
-void Music::Free()
+void Music::Load(boost::filesystem::path const& file)
 {
-  streams.clear();
+  cache.emplace(file, MakeStream(file));
 }
 
 void Music::Free(boost::filesystem::path const& file)
 {
-  streams.erase(file.string());
+  cache.erase(file.string());
 }
 
 void Music::Impl::Pause()
@@ -150,16 +169,7 @@ Music::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat
 {
   InitHookMusic();
 
-  auto fileiter = streams.find(file);
-  if(fileiter != streams.end())
-  {
-    stream_ = fileiter->second;
-  }
-  else
-  {
-    stream_ = Stream(Init(file), Mix_FreeMusic);
-    streams.emplace(file, stream_);
-  }
+  stream_ = MakeStream(file);
 }
 
 Music::Impl::~Impl()

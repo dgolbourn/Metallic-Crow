@@ -13,6 +13,7 @@
 namespace
 {
 typedef std::shared_ptr<Mix_Chunk> Chunk;
+typedef std::weak_ptr<Mix_Chunk> WeakChunk;
 }
 
 namespace audio
@@ -49,7 +50,27 @@ Mix_Chunk* Init(boost::filesystem::path const& file)
   return chunk;
 }
 
-std::unordered_map<boost::filesystem::path, Chunk, boost::hash<boost::filesystem::path>> chunks;
+std::unordered_map<boost::filesystem::path, WeakChunk, boost::hash<boost::filesystem::path>> chunks;
+
+Chunk MakeChunk(boost::filesystem::path const& file)
+{
+  Chunk chunk;
+  auto fileiter = chunks.find(file);
+  if(fileiter != chunks.end())
+  {
+    chunk = fileiter->second.lock();
+  }
+
+  if(!chunk)
+  {
+    chunk = Chunk(Init(file), Mix_FreeChunk);
+    chunks.emplace(file, chunk);
+  }
+  return chunk;
+}
+
+std::unordered_map<boost::filesystem::path, Chunk, boost::hash<boost::filesystem::path>> cache;
+
 std::vector<audio::Sound::Impl*> sounds;
 
 void ChannelFinished(int channel) noexcept
@@ -90,14 +111,14 @@ void InitHookSound()
 
 namespace audio
 {
-void Sound::Free()
+void Sound::Load(boost::filesystem::path const& file)
 {
-  chunks.clear();
+  cache.emplace(file, MakeChunk(file));
 }
 
 void Sound::Free(boost::filesystem::path const& file)
 {
-  chunks.erase(file);
+  cache.erase(file);
 }
 
 void Sound::Impl::Play(float volume)
@@ -133,16 +154,7 @@ Sound::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat
 {
   InitHookSound();
 
-  auto fileiter = chunks.find(file);
-  if(fileiter != chunks.end())
-  {
-    chunk_ = fileiter->second;
-  }
-  else
-  {
-    chunk_ = Chunk(Init(file), Mix_FreeChunk);
-    chunks.emplace(file, chunk_);
-  }
+  chunk_ = MakeChunk(file);
 }
 
 Sound::Impl::~Impl()

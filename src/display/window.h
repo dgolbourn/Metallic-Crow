@@ -14,7 +14,7 @@ class Window
 public:
   Window() = default;
   Window(json::JSON const& json);
-  void Free();
+  void Load(boost::filesystem::path const& file);
   void Free(boost::filesystem::path const& file);
   void Clear() const;
   void Show() const;

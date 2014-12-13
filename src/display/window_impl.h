@@ -22,11 +22,11 @@ public:
   sdl::Texture Load(boost::filesystem::path const& file);
   sdl::Texture Text(std::string const& text, sdl::Font const& font, float length);
   sdl::Texture Text(std::string const& text, sdl::Font const& font);
-  void Free();
   void Free(boost::filesystem::path const& file);
+  void LoadCache(boost::filesystem::path const& file);
   void Clear() const;
   void Show() const;
-  void Destroy();
+  void Destroy() noexcept;
   void Draw(BoundingBox const& box, Modulation const& modulation) const;
   void View(float x, float y, float zoom);
   void Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const;
@@ -36,7 +36,8 @@ public:
   ttf::Library ttf_;
   SDL_Window* window_;
   SDL_Renderer* renderer_;
-  std::unordered_map<boost::filesystem::path, sdl::Texture, boost::hash<boost::filesystem::path>> textures_;
+  std::unordered_map<boost::filesystem::path, sdl::Texture::WeakPtr, boost::hash<boost::filesystem::path>> textures_;
+  std::unordered_map<boost::filesystem::path, sdl::Texture, boost::hash<boost::filesystem::path>> cache_;
   SDL_FPoint view_;
   float zoom_;
   float scale_;

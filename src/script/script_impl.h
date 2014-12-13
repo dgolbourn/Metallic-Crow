@@ -155,9 +155,6 @@ public:
   void MusicPlay();
   void MusicEnd();
 
-  void ResourceInit();
-  void ResourceCollect();
-
   lua::Stack lua_;
   display::Window window_;
   event::Queue queue_;

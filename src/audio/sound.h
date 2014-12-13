@@ -16,8 +16,8 @@ public:
   void End();
   bool operator()(float volume);
   explicit operator bool() const;
-  static void Free();
   static void Free(boost::filesystem::path const& file);
+  static void Load(boost::filesystem::path const& file);
   class Impl;
 private:
   std::shared_ptr<Impl> impl_;

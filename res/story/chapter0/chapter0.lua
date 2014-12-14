@@ -1,9 +1,17 @@
 require "res/lib/metallic-crow"
 
+left_facing = false
+
 function control(x, y)
-  print(x)
-  print(y)
-  print("")
+  hero:force(x * 5000, y * -5000)
+  if (x < 0) and not left_facing then
+    left_facing = true
+    hero:body(nil, -1)
+  elseif (x > 0) and left_facing then
+    left_facing = false
+    hero:body(nil, 1)
+  end
+
 end
 
 function choice_up()
@@ -44,7 +52,12 @@ function script_begin()
 
   stage00:choice("up", "down", "", "...", 3)
 
-  arena1 = Actor:new(stage00, "res/story/chapter0/arena1.json")
+  --arena1 = Actor:new(stage00, "res/story/chapter0/arena1.json")
+
+  hero = Actor:new(stage00, "res/story/chapter0/hero.json")
+
+  hero:body(nil, -1)
+  hero:view()
 
   stage00:show()
   stage00:resume()

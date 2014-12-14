@@ -73,7 +73,7 @@ game::Position Actor::Impl::Position()
   {
     position = game_body_.Position();
   }
-  else if (dynamics_body_)
+  else if(dynamics_body_)
   {
     position = dynamics_body_.Position();
   }

@@ -62,12 +62,12 @@ void Script::Impl::ActorBody()
       {
         if(facing)
         {
-          actor->second.Body(facing > 0);
+          actor->second.Body(facing < 0);
         }
       }
       else if(facing)
       {
-        actor->second.Body(expression, facing > 0);
+        actor->second.Body(expression, facing < 0);
       }
       else
       {

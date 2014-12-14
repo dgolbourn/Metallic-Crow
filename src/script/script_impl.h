@@ -79,7 +79,7 @@ public:
   void Control(float x, float y);
 
   void Call(std::string const& call);
-  void View(dynamics::World::WeakPtr world);
+  void View();
   void Pause(StagePtr const& stage, bool& paused);
   bool Pause(StagePtr const& stage);
   void Resume(StagePtr const& stage, bool& paused);

@@ -66,38 +66,35 @@ void Script::Impl::ViewZoom()
   }
 }
 
-void Script::Impl::View(dynamics::World::WeakPtr world)
+void Script::Impl::View()
 {
-  if(world.Lock() == stage_.second->world_)
+  game::Position view(0.f, 0.f);
+  int count = 0;
+
+  if(stage_.second->subject_)
   {
-    game::Position view(0.f, 0.f);
-    int count = 0;
-
-    if(stage_.second->subject_)
-    {
-      view.first += stage_.second->subject_->first;
-      view.second += stage_.second->subject_->second;
-      ++count;
-    }
-
-    for(auto iter = stage_.second->subjects_.begin(); iter != stage_.second->subjects_.end();)
-    {
-      if(Actor subject = iter->Lock())
-      {
-        game::Position position = subject.Position();
-        view.first += position.first;
-        view.second += position.second;
-        ++count;
-        ++iter;
-      }
-      else
-      {
-        iter = stage_.second->subjects_.erase(iter);
-      }
-    }
-
-    count = std::max(count, 1);
-    window_.View(view.first / count, view.second / count, stage_.second->zoom_);
+    view.first += stage_.second->subject_->first;
+    view.second += stage_.second->subject_->second;
+    ++count;
   }
+
+  for(auto iter = stage_.second->subjects_.begin(); iter != stage_.second->subjects_.end();)
+  {
+    if(Actor subject = iter->Lock())
+    {
+      game::Position position = subject.Position();
+      view.first += position.first;
+      view.second += position.second;
+      ++count;
+      ++iter;
+    }
+    else
+    {
+      iter = stage_.second->subjects_.erase(iter);
+    }
+  }
+
+  count = std::max(count, 1);
+  window_.View(view.first / count, view.second / count, stage_.second->zoom_);
 }
 }

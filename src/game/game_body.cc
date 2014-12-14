@@ -89,43 +89,55 @@ Body::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesys
     auto frame_iter = frames.frames_.begin();
     for(json::JSON frame : json::JSON(frames_ref))
     {
-      int frame_facing;
-      json_t* eyes_box;
-      json_t* mouth_box;
-      json_t* textures;
-      double deyes_parallax;
-      double dmouth_parallax;
-      int eyes_plane;
-      int mouth_plane;
-      frame.Unpack("{sbsosfsisosfsiso}"
-        "left facing", &frame_facing,
-        "eyes box", &eyes_box,
-        "eyes parallax", &deyes_parallax,
-        "eyes plane", &eyes_plane,
-        "mouth box", &mouth_box,
-        "mouth parallax", &dmouth_parallax,
-        "mouth plane", &mouth_plane,
-        "textures", &textures);
+      json_t* jframe_facing;
+      json_t* jeyes_box;
+      json_t* jmouth_box;
+      json_t* jtextures;
+      json_t* jeyes_parallax;
+      json_t* jmouth_parallax;
+      json_t* jeyes_plane;
+      json_t* jmouth_plane;
+      frame.Unpack("{sosososososososo}",
+        "left facing", &jframe_facing,
+        "eyes box", &jeyes_box,
+        "eyes parallax", &jeyes_parallax,
+        "eyes plane", &jeyes_plane,
+        "mouth box", &jmouth_box,
+        "mouth parallax", &jmouth_parallax,
+        "mouth plane", &jmouth_plane,
+        "textures", &jtextures);
 
-      bool facing = (frame_facing != 0);
-           
       if(eyes_command)
       {
-        float eyes_parallax = float(deyes_parallax);
-        display::BoundingBox eyes((json::JSON(eyes_box)));
+        int ifacing;
+        json::JSON(jframe_facing).Unpack("b", &ifacing);
+        bool facing = (ifacing != 0);
+        double dparallax;
+        json::JSON(jeyes_parallax).Unpack("f", &dparallax);
+        float eyes_parallax = float(dparallax);
+        display::BoundingBox eyes((json::JSON(jeyes_box)));
+        int iplane;
+        json::JSON(jeyes_plane).Unpack("i", &iplane);
         frame_iter->boxes_.emplace_back(eyes, display::BoundingBox(eyes, display::BoundingBox()));
-        frame_iter->scene_.Add([=](){return eyes_command(eyes, modulation_, eyes_parallax, facing);}, eyes_plane);
+        frame_iter->scene_.Add([=](){return eyes_command(eyes, modulation_, eyes_parallax, facing);}, iplane);
       }
 
       if(mouth_command)
       {
-        float mouth_parallax = float(dmouth_parallax);
-        display::BoundingBox mouth((json::JSON(mouth_box)));
+        int ifacing;
+        json::JSON(jframe_facing).Unpack("b", &ifacing);
+        bool facing = (ifacing != 0);
+        double dparallax;
+        json::JSON(jmouth_parallax).Unpack("f", &dparallax);
+        float mouth_parallax = float(dparallax);
+        display::BoundingBox mouth((json::JSON(jmouth_box)));
+        int iplane;
+        json::JSON(jmouth_plane).Unpack("i", &iplane);
         frame_iter->boxes_.emplace_back(mouth, display::BoundingBox(mouth, display::BoundingBox()));
-        frame_iter->scene_.Add([=](){return mouth_command(mouth, modulation_, mouth_parallax, facing);}, mouth_plane);
+        frame_iter->scene_.Add([=](){return mouth_command(mouth, modulation_, mouth_parallax, facing); }, iplane);
       }
 
-      for(json::JSON texture : json::JSON(textures))
+      for(json::JSON texture : json::JSON(jtextures))
       {
         char const* page;
         json_t* clip;
@@ -146,6 +158,7 @@ Body::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesys
         display::Texture texture(display::Texture(path / page, window), display::BoundingBox(json::JSON(clip)));
         frame_iter->scene_.Add([=](){return texture(display::BoundingBox(), render, parallax, false, 0., modulation_);}, plane);
       }
+      ++frame_iter;
     }
   }
 
@@ -167,7 +180,7 @@ Body::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesys
   for(auto& box : current_frame_->boxes_)
   {
     box.first.x(box.second.x() + position_.first);
-    box.first.y(box.second.y() + position_.first);
+    box.first.y(box.second.y() + position_.second);
   }
 }
 
@@ -206,7 +219,7 @@ void Body::Impl::Expression()
         for(auto& box : current_frame_->boxes_)
         {
           box.first.x(box.second.x() + position_.first);
-          box.first.y(box.second.y() + position_.first);
+          box.first.y(box.second.y() + position_.second);
         }
       }
       else
@@ -238,7 +251,7 @@ void Body::Impl::Next()
   for(auto& box : current_frame_->boxes_)
   {
     box.first.x(box.second.x() + position_.first);
-    box.first.y(box.second.y() + position_.first);
+    box.first.y(box.second.y() + position_.second);
   }
 }
 
@@ -253,7 +266,7 @@ void Body::Impl::Position(game::Position const& position)
   for(auto& box : current_frame_->boxes_)
   {
     box.first.x(box.second.x() + position_.first);
-    box.first.y(box.second.y() + position_.first);
+    box.first.y(box.second.y() + position_.second);
   }
 }
 

@@ -79,9 +79,7 @@ void Script::Impl::StageLoad()
   
   stage->collision_ = collision::Collision(queue_);
 
-  dynamics::World world(json::JSON(path_ / world_file), stage->collision_, queue_);
-  world.End(function::Bind(&Impl::View, shared_from_this(), dynamics::World::WeakPtr(world)));
-  stage->world_ = world;
+  stage->world_ = dynamics::World(json::JSON(path_ / world_file), stage->collision_, queue_);
 
   stage->paused_[0] = paused_;
   stage->paused_[1] = true;

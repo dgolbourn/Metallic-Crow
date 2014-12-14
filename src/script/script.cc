@@ -74,6 +74,7 @@ void Script::Impl::Render()
 {
   if(stage_.second)
   {
+    View();
     stage_.second->scene_.Render();
     stage_.second->choice_.Render();
     stage_.second->subtitle_.Render();

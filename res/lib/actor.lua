@@ -22,10 +22,6 @@ function Actor:mouth(expression)
 	actor_mouth(self.stage, self.name, expression)
 end
 
-function Actor:lead()
-	actor_nominate(self.stage, self.name)
-end
-
 function Actor:view(z)
 	view_actor(self.stage, self.name)
 	if(z ~= nil) then
@@ -56,7 +52,7 @@ function Actor:impulse(i, j)
 	actor_impulse(self.stage, self.name, i, j)
 end
 
-function Actor:new(stage, actor, troupe)
+function Actor:new(stage, actor, actors)
 	if(self.number == nil) then
 		self.__gc = self.finalise
 		self.__index = self
@@ -64,11 +60,11 @@ function Actor:new(stage, actor, troupe)
 	end
 	
 	object = {}
-	if(troupe == nil) then
+	if(actors == nil) then
 		self.number = self.number + 1
 		object.name = tostring(self.number)
 	else
-		object.name = troupe.name
+		object.name = actors.name
 	end
 	setmetatable(object, self)
 	object.stage = stage.name

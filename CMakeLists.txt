@@ -144,7 +144,6 @@ source_group ("Source Files\\dynamics" FILES ${DYNAMICS_SOURCES})
 include_directories ("${PROJECT_SOURCE_DIR}/src/event")
 
 set (EVENT_SOURCES
-	"${PROJECT_SOURCE_DIR}/src/event/command.cc"
 	"${PROJECT_SOURCE_DIR}/src/event/command.h"
 	"${PROJECT_SOURCE_DIR}/src/event/event.cc"
 	"${PROJECT_SOURCE_DIR}/src/event/event.h"
@@ -152,7 +151,6 @@ set (EVENT_SOURCES
 	"${PROJECT_SOURCE_DIR}/src/event/queue.h"
 	"${PROJECT_SOURCE_DIR}/src/event/signal.cc"
 	"${PROJECT_SOURCE_DIR}/src/event/signal.h"
-	"${PROJECT_SOURCE_DIR}/src/event/switch.h"
 	"${PROJECT_SOURCE_DIR}/src/event/sync.cc"
 	"${PROJECT_SOURCE_DIR}/src/event/sync.h"
 	"${PROJECT_SOURCE_DIR}/src/event/timer.cc"

@@ -1,11 +1,11 @@
 #include "collision.h"
 #include <map>
-#include "switch.h"
+#include "signal.h"
 namespace collision
 {
 namespace
 {
-typedef std::map<dynamics::Body::WeakPtr, std::map<dynamics::Body::WeakPtr, event::Switch>> CollisionMap;
+typedef std::map<dynamics::Body::WeakPtr, std::map<dynamics::Body::WeakPtr, std::pair<event::Signal, event::Signal>>> CollisionMap;
 
 void Remove(CollisionMap& collisions, dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b)
 {

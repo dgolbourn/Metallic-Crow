@@ -46,6 +46,39 @@ public:
     }
   }
 };
+
+class BlendMode
+{
+  SDL_BlendMode blend_mode_;
+  SDL_Texture* texture_;
+public:
+  BlendMode(SDL_Texture* texture, SDL_BlendMode blend_mode) : texture_(texture)
+  {
+    if(SDL_GetTextureBlendMode(texture_, &blend_mode_))
+    {
+      BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
+    }
+    if(SDL_SetTextureBlendMode(texture_, blend_mode))
+    {
+      BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
+    }
+  }
+
+  ~BlendMode()
+  {
+    try
+    {
+      if(SDL_SetTextureBlendMode(texture_, blend_mode_))
+      {
+        BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
+      }
+    }
+    catch(...)
+    {
+      exception::Log("Swallowed exception");
+    }
+  }
+};
 }
 
 void WindowImpl::Destroy() noexcept
@@ -243,18 +276,41 @@ void WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, 
     destination_ptr = &destination_copy;
   }
 
-  SDL_Colour const* modulation_ptr = nullptr;
+  SDL_Colour* modulation_ptr = nullptr;
   SDL_Colour modulation_copy;
+  float r, g, b;
   if(modulation)
   {
-    modulation_copy.r = sdl::Colour(modulation.r());
-    modulation_copy.g = sdl::Colour(modulation.g());
-    modulation_copy.b = sdl::Colour(modulation.b());
+    r = modulation.r();
+    g = modulation.g();
+    b = modulation.b();
+    modulation_copy.r = sdl::Colour(r);
+    modulation_copy.g = sdl::Colour(g);
+    modulation_copy.b = sdl::Colour(b);
     modulation_copy.a = sdl::Colour(modulation.a());
     modulation_ptr = &modulation_copy;
   }
 
   sdl::Render(window_, renderer_, (SDL_Texture*)texture, source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, modulation_ptr, scale_);
+
+  if(modulation_ptr)
+  {
+    modulation_ptr->r = sdl::Colour(--r);
+    modulation_ptr->g = sdl::Colour(--g);
+    modulation_ptr->b = sdl::Colour(--b);
+    if(modulation_ptr->r || modulation_ptr->g || modulation_ptr->b)
+    {
+      BlendMode blend_mode((SDL_Texture*)texture, SDL_BLENDMODE_ADD);
+      do
+      {
+        sdl::Render(window_, renderer_, (SDL_Texture*)texture, source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, modulation_ptr, scale_);
+        modulation_ptr->r = sdl::Colour(--r);
+        modulation_ptr->g = sdl::Colour(--g);
+        modulation_ptr->b = sdl::Colour(--b);
+      }
+      while(modulation_ptr->r || modulation_ptr->g || modulation_ptr->b);
+    }
+  }
 }
 
 Window::Window(json::JSON const& json)

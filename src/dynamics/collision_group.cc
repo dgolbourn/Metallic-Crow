@@ -1,7 +1,7 @@
 #include "collision_group.h"
 #include <map>
 #include <set>
-#include "switch.h"
+#include "signal.h"
 #include "json_iterator.h"
 #include "bind.h"
 namespace collision
@@ -9,7 +9,7 @@ namespace collision
 namespace
 {
 typedef std::map<std::string, std::set<dynamics::Body::WeakPtr>> Members;
-typedef std::map<std::string, std::map<std::string, event::Switch>> Collisions;
+typedef std::map<std::string, std::map<std::string, std::pair<event::Signal, event::Signal>>> Collisions;
 }
 
 class Group::Impl

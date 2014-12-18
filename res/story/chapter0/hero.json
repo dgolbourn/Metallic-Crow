@@ -1,0 +1,254 @@
+{
+	"dynamics body" : 
+	{
+		"names" : ["Hero"],
+		"body" : 
+		{
+		    "position" : [0.0, 0.0],
+		    "velocity" : [0.0, 0.0],
+		    "shapes" : 
+		    [
+		    	{
+					"type" : "circle",
+					"shape" : [0.0, 0.0, 100.0]
+		    	}
+		    ],
+		    "mass" : 1.0,
+		    "restitution" : 0.01,
+		    "drag" : 0.99,
+		    "friction" : 0.99,
+		    "light" : 
+			{
+				"emit" : [0.3,0.3,0.3],
+				"transmit" : [0.1,0.1,0.1],
+				"diffuse" : [0.5,0.5,0.5],
+				"absorb" : [1.0,1.0,1.0],
+				"intrinsic" : [0.3,0.3,0.3]
+			}
+		}
+	},
+	"frame period" : 0.125,
+	"game body" : 
+	{
+		"expressions" : 
+		[
+			{
+				"name" : "standing",
+				"left facing" : false,
+				"next name" : "standing",
+				"next left facing" : false,
+				"interruptable" : true,
+				"frames" :
+				[
+					{
+						"left facing" : null,
+						"eyes box" : null,
+						"eyes parallax" : null,
+						"eyes plane" : null,
+						"mouth box" : null,
+						"mouth parallax" : null, 
+						"mouth plane" : null,
+						"textures" :
+						[
+							{
+								"page" : "res/ext/hero_standing.png",
+								"clip" : [0.0, 0.0, 136.0, 115.0],
+								"render box" : [-180.0,-150.0,272.0,230.0],
+								"parallax" : 1.0,
+								"plane" : 0		
+							}
+						]
+					},
+					{
+						"left facing" : null,
+						"eyes box" : null,
+						"eyes parallax" : null,
+						"eyes plane" : null,
+						"mouth box" : null,
+						"mouth parallax" : null, 
+						"mouth plane" : null,
+						"textures" :
+						[
+							{
+								"page" : "res/ext/hero_standing.png",
+								"clip" : [136.0, 0.0, 136.0, 115.0],
+								"render box" : [-180.0,-150.0,272.0,230.0],
+								"parallax" : 1.0,
+								"plane" : 0		
+							}
+						]
+					},
+					{
+						"left facing" : null,
+						"eyes box" : null,
+						"eyes parallax" : null,
+						"eyes plane" : null,
+						"mouth box" : null,
+						"mouth parallax" : null, 
+						"mouth plane" : null,
+						"textures" :
+						[
+							{
+								"page" : "res/ext/hero_standing.png",
+								"clip" : [272.0, 0.0, 136.0, 115.0],
+								"render box" : [-180.0,-150.0,272.0,230.0],
+								"parallax" : 1.0,
+								"plane" : 0		
+							}
+						]
+					},
+					{
+						"left facing" : null,
+						"eyes box" : null,
+						"eyes parallax" : null,
+						"eyes plane" : null,
+						"mouth box" : null,
+						"mouth parallax" : null, 
+						"mouth plane" : null,
+						"textures" :
+						[
+							{
+								"page" : "res/ext/hero_standing.png",
+								"clip" : [408.0, 0.0, 136.0, 115.0],
+								"render box" : [-180.0,-150.0,272.0,230.0],
+								"parallax" : 1.0,
+								"plane" : 0		
+							}
+						]
+					},
+					{
+						"left facing" : null,
+						"eyes box" : null,
+						"eyes parallax" : null,
+						"eyes plane" : null,
+						"mouth box" : null,
+						"mouth parallax" : null, 
+						"mouth plane" : null,
+						"textures" :
+						[
+							{
+								"page" : "res/ext/hero_standing.png",
+								"clip" : [544.0, 0.0, 136.0, 115.0],
+								"render box" : [-180.0,-150.0,272.0,230.0],
+								"parallax" : 1.0,
+								"plane" : 0
+							}
+						]
+					}
+				]
+			},
+			{
+				"name" : "standing",
+				"left facing" : true,
+				"next name" : "standing",
+				"next left facing" : true,
+				"interruptable" : true,
+				"frames" :
+				[
+					{
+						"left facing" : null,
+						"eyes box" : null,
+						"eyes parallax" : null,
+						"eyes plane" : null,
+						"mouth box" : null,
+						"mouth parallax" : null, 
+						"mouth plane" : null,
+						"textures" :
+						[
+							{
+								"page" : "res/ext/hero_standing.png",
+								"clip" : [0.0, 0.0, 136.0, 115.0],
+								"render box" : [180.0,-150.0,-272.0,230.0],
+								"parallax" : 1.0,
+								"plane" : 0		
+							}
+						]
+					},
+					{
+						"left facing" : null,
+						"eyes box" : null,
+						"eyes parallax" : null,
+						"eyes plane" : null,
+						"mouth box" : null,
+						"mouth parallax" : null, 
+						"mouth plane" : null,
+						"textures" :
+						[
+							{
+								"page" : "res/ext/hero_standing.png",
+								"clip" : [136.0, 0.0, 136.0, 115.0],
+								"render box" : [180.0,-150.0,-272.0,230.0],
+								"parallax" : 1.0,
+								"plane" : 0		
+							}
+						]
+					},
+					{
+						"left facing" : null,
+						"eyes box" : null,
+						"eyes parallax" : null,
+						"eyes plane" : null,
+						"mouth box" : null,
+						"mouth parallax" : null, 
+						"mouth plane" : null,
+						"textures" :
+						[
+							{
+								"page" : "res/ext/hero_standing.png",
+								"clip" : [272.0, 0.0, 136.0, 115.0],
+								"render box" : [180.0,-150.0,-272.0,230.0],
+								"parallax" : 1.0,
+								"plane" : 0		
+							}
+						]
+					},
+					{
+						"left facing" : null,
+						"eyes box" : null,
+						"eyes parallax" : null,
+						"eyes plane" : null,
+						"mouth box" : null,
+						"mouth parallax" : null, 
+						"mouth plane" : null,
+						"textures" :
+						[
+							{
+								"page" : "res/ext/hero_standing.png",
+								"clip" : [408.0, 0.0, 136.0, 115.0],
+								"render box" : [180.0,-150.0,-272.0,230.0],
+								"parallax" : 1.0,
+								"plane" : 0		
+							}
+						]
+					},
+					{
+						"left facing" : null,
+						"eyes box" : null,
+						"eyes parallax" : null,
+						"eyes plane" : null,
+						"mouth box" : null,
+						"mouth parallax" : null, 
+						"mouth plane" : null,
+						"textures" :
+						[
+							{
+								"page" : "res/ext/hero_standing.png",
+								"clip" : [544.0, 0.0, 136.0, 115.0],
+								"render box" : [180.0,-150.0,-272.0,230.0],
+								"parallax" : 1.0,
+								"plane" : 0
+							}
+						]
+					}
+				]
+			}
+		],
+    "expression" : "standing",
+    "left facing" : false,
+    "position" : [0.0, 0.0]
+	},
+	"eyes" : null,
+	"mouth" : null,
+	"plane" : 0,
+	"blink" : null
+}

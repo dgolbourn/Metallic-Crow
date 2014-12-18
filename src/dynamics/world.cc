@@ -30,7 +30,7 @@ static bool ToggleContact(b2Contact* contact, BodyImplCount& contacts, bool begi
   {
     if(iter == contacts.end())
     {
-      contacts.emplace(pair, 0);
+      contacts.emplace(pair, 1);
       trigger = true;
     }
     else
@@ -40,11 +40,18 @@ static bool ToggleContact(b2Contact* contact, BodyImplCount& contacts, bool begi
   }
   else
   {
-    --iter->second;
-    if(iter->second <= 0)
+    if(iter == contacts.end())
     {
-      contacts.erase(iter);
       trigger = true;
+    }
+    else
+    {
+      --iter->second;
+      if(iter->second <= 0)
+      {
+        contacts.erase(iter);
+        trigger = true;
+      }
     }
   }
   return trigger;
@@ -66,9 +73,6 @@ void WorldImpl::EndContact(b2Contact* contact)
   }
 }
 
-static const int32 velocity_iterations = 8;
-static const int32 position_iterations = 3;
-
 void WorldImpl::Update(void)
 {
   if(!paused_)
@@ -86,7 +90,7 @@ void WorldImpl::Update(void)
           body.Begin();
         }
 
-        world_.Step(dt_, velocity_iterations, position_iterations);
+        world_.Step(dt_, 8, 3);
 
         for(auto& body : world_)
         {

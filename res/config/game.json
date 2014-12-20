@@ -12,23 +12,24 @@
 		{
 			"file" : "res/ext/menu.ttf",
 			"point" : 72,
-			"colour" : [255, 255, 255],
 			"bold" : false,
 			"italic" : false,
-			"outline" : [0, 0, 0]
+			"outline" : true
 		},
+		"idle font modulation" : null,
 		"active font" :
 		{
 			"file" : "res/ext/menu.ttf",
 			"point" : 86,
-			"colour" : [255, 0, 0],
 			"bold" : false,
 			"italic" : false,
-			"outline" : [0, 0, 0]
+			"outline" : true
 		},
+		"active font modulation" : [1.0, 0.0, 0.0, 1.0],
 		"page" : "res/menu/menu.png",
 		"clip" : null,
-		"render box" : [-512.0, -384.0, 1024.0, 768.0]
+		"render box" : [-512.0, -384.0, 1024.0, 768.0],
+		"page modulation" : null
 	},
     "pause menu script" : "res/menu/pause/pause.lua",
     "start menu script" : "res/menu/start/start.lua",

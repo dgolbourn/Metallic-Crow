@@ -6,15 +6,22 @@
 #include <deque>
 #include <map>
 #include "signal.h"
-namespace game
-{ 
+#include "modulation.h"
 namespace
 {
-typedef std::pair<display::Texture, display::BoundingBox> Texture;
+struct Texture
+{
+  display::Texture texture_;
+  display::BoundingBox render_box_;
+  display::Modulation modulation_;
+};
+
 typedef std::deque<Texture> Textures;
 typedef std::map<int, event::Signal> Signals;
 }
 
+namespace game
+{ 
 class Menu::Impl
 {
 public:
@@ -39,6 +46,8 @@ public:
   sdl::Font active_font_;
   display::Window window_;
   boost::filesystem::path path_;
+  display::Modulation idle_modulation_;
+  display::Modulation active_modulation_;
 };
 
 Menu::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path) : selection_(0), selections_(0), window_(window), path_(path)
@@ -48,18 +57,28 @@ Menu::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesys
   char const* background_file;
   json_t* clip;
   json_t* render_box_ref;
+  json_t* idle_mod;
+  json_t* active_mod;
+  json_t* page_mod;
 
-  json.Unpack("{sososssoso}",
+  json.Unpack("{sososososssososo}",
     "idle font", &idle_ref,
+    "idle font modulation", &idle_mod,
     "active font", &active_ref,
+    "active font modulation", &active_mod,
     "page", &background_file,
     "clip", &clip,
-    "render box", &render_box_ref);
+    "render box", &render_box_ref,
+    "page modulation", &page_mod);
 
   idle_font_ = sdl::Font(json::JSON(idle_ref), path);
   active_font_ = sdl::Font(json::JSON(active_ref), path);
 
-  background_ = Texture(display::Texture(display::Texture(path_ / background_file, window), display::BoundingBox(json::JSON(clip))), display::BoundingBox(json::JSON(render_box_ref)));
+  active_modulation_ = display::Modulation(json::JSON(active_mod));
+  idle_modulation_ = display::Modulation(json::JSON(idle_mod));
+  background_.texture_ = display::Texture(display::Texture(path_ / background_file, window), display::BoundingBox(json::JSON(clip)));
+  background_.render_box_ = display::BoundingBox(json::JSON(render_box_ref));
+  background_.modulation_ = display::Modulation(json::JSON(page_mod));
 }
 
 void Menu::Impl::Choice(Options const& options)
@@ -72,16 +91,23 @@ void Menu::Impl::Choice(Options const& options)
 
   for(std::string const& option : options)
   {
-    idle_text_.emplace_back(display::Texture(option, idle_font_, window_), display::BoundingBox());
-    active_text_.emplace_back(display::Texture(option, active_font_, window_), display::BoundingBox());
+    Texture idle;
+    idle.texture_ = display::Texture(option, idle_font_, window_);
+    idle.modulation_ = idle_modulation_;
+    idle_text_.push_back(idle);
+
+    Texture active;
+    active.texture_ = display::Texture(option, active_font_, window_);
+    active.modulation_ = active_modulation_;
+    active_text_.push_back(active);
   }
 
   float line_spacing = 1.5f * idle_font_.LineSpacing();
   float height = 0.f;
   for(auto& text : idle_text_)
   {
-    display::Shape shape = text.first.Shape();
-    float current = line_spacing;
+    display::Shape shape = text.texture_.Shape();
+    float current = 0.f;
     while(current < shape.second)
     {
       current += line_spacing - shape.second;
@@ -89,11 +115,11 @@ void Menu::Impl::Choice(Options const& options)
     height += current;
   }
 
-  float y = background_.second.y() + .5f * (background_.second.h() - height);
+  float y = background_.render_box_.y() + .5f * (background_.render_box_.h() - height);
   for(auto& text : idle_text_)
   {
-    display::Shape shape = text.first.Shape();
-    text.second = display::BoundingBox(background_.second.x() + .5f * (background_.second.w() - shape.first), y, shape.first, shape.second);
+    display::Shape shape = text.texture_.Shape();
+    text.render_box_ = display::BoundingBox(background_.render_box_.x() + .5f * (background_.render_box_.w() - shape.first), y, shape.first, shape.second);
 
     float current = line_spacing;
     while(current < shape.second)
@@ -105,9 +131,9 @@ void Menu::Impl::Choice(Options const& options)
 
   for(int i = 0; i < selections_; ++i)
   {
-    display::Shape shape = active_text_[i].first.Shape();
-    display::BoundingBox box = idle_text_[i].second;
-    active_text_[i].second = display::BoundingBox(box.x() + .5f * (box.w() - shape.first), box.y() + .5f * (box.h() - shape.second), shape.first, shape.second);
+    display::Shape shape = active_text_[i].texture_.Shape();
+    display::BoundingBox box = idle_text_[i].render_box_;
+    active_text_[i].render_box_ = display::BoundingBox(box.x() + .5f * (box.w() - shape.first), box.y() + .5f * (box.h() - shape.second), shape.first, shape.second);
   }
 
   SetUp();
@@ -168,7 +194,7 @@ void Menu::Impl::Render() const
 {
   for(auto& texture : textures_)
   {
-    texture.first(display::BoundingBox(), texture.second, 0.f, false, 0., display::Modulation());
+    texture.texture_(display::BoundingBox(), texture.render_box_, 0.f, false, 0., texture.modulation_);
   }
 }
 

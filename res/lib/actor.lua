@@ -22,18 +22,12 @@ function Actor:mouth(expression)
 	actor_mouth(self.stage, self.name, expression)
 end
 
-function Actor:view(z)
-	view_actor(self.stage, self.name)
-	if(z ~= nil) then
-		view_zoom(self.stage, z)
-	end
+function Actor:view()
+	view(self.stage, self.name)
 end
 
-function Actor:view_also(z)
-	view_add_actor(self.stage, self.name)
-	if(z ~= nil) then
-		view_zoom(self.stage, z)
-	end
+function Actor:view_also()
+	view_add(self.stage, self.name)
 end
 
 function Actor:position(x, y)

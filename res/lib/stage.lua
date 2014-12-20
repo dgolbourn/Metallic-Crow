@@ -39,8 +39,7 @@ function Stage:subtitle(text, r, g, b)
 	end
 end
 
-function Stage:view(x, y, z)
-	view_point(self.name, x, y)
+function Stage:view(z)
 	view_zoom(self.name, z)
 end
 

@@ -496,6 +496,11 @@ void Controller::Impl::Select()
     break;
   default:
   case State::Story:
+    back_(volume_);
+    state_ = State::Pause;
+    story_script_.Pause();
+    pause_menu_[0];
+    pause_script_.Resume();
     break;
   }
 }
@@ -517,6 +522,7 @@ void Controller::Impl::Back()
     back_(volume_);
     state_ = State::Pause;
     story_script_.Pause();
+    pause_menu_[0];
     pause_script_.Resume();
     break;
   case State::Load:

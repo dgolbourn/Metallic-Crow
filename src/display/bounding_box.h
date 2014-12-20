@@ -1,7 +1,6 @@
 #ifndef BOUNDING_BOX_H_
 #define BOUNDING_BOX_H_
 #include <memory>
-#include <string>
 #include "json.h"
 #include "weak_ptr.h"
 namespace display

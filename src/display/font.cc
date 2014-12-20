@@ -1,25 +1,14 @@
 #include "font.h"
 #include "font_impl.h"
 #include "ttf_exception.h"
-namespace sdl
-{
+#include <unordered_map>
+#include "boost/functional/hash.hpp"
 namespace
 { 
-int Style(bool bold, bool italic)
-{
-  int style = 0;
-  if(bold)
-  {
-    style |= TTF_STYLE_BOLD;
-  }
-  if(italic)
-  {
-    style |= TTF_STYLE_ITALIC;
-  }
-  return style;
-}
+typedef std::pair<boost::filesystem::path, int> FontKey;
+std::unordered_map<FontKey, std::weak_ptr<TTF_Font>, boost::hash<FontKey>> fonts;
 
-TTF_Font* Open(boost::filesystem::path const& file, int point)
+TTF_Font* Init(boost::filesystem::path const& file, int point)
 {
   TTF_Font* font = TTF_OpenFont(file.string().c_str(), point);
   if(!font)
@@ -29,97 +18,54 @@ TTF_Font* Open(boost::filesystem::path const& file, int point)
   return font;
 }
 
-OptionalColour MakeColour(bool valid, int r, int g, int b)
+sdl::Font::Impl::Font MakeFont(boost::filesystem::path const& file, int point)
 {
-  OptionalColour colour;
-  if(valid)
+  sdl::Font::Impl::Font font;
+  auto fileiter = fonts.find(FontKey(file, point));
+  if(fileiter != fonts.end())
   {
-    colour = {Uint8(r), Uint8(g), Uint8(b), 255u};
+    font = fileiter->second.lock();
   }
-  return colour;
-}
-
-OptionalColour MakeColour(json::JSON const& json)
-{
-  OptionalColour colour;
-  if(json)
+  if(!font)
   {
-    int r, g, b;
-    json.Unpack("[iii]", &r, &g, &b);
-    colour = MakeColour(true, r, g, b);
+    font = sdl::Font::Impl::Font(Init(file, point), TTF_CloseFont);
+    fonts.emplace(FontKey(file, point), font);
   }
-  return colour;
+  return font;
 }
 }
 
-void Font::Impl::Init(boost::filesystem::path const& file, int point, int r, int g, int b, bool bold, bool italic, OptionalColour const& outline)
+namespace sdl
 {
-  font_ = nullptr;
-  try
-  {
-    colour_ = {Uint8(r), Uint8(g), Uint8(b), 255u};
-    outline_ = outline;
-    font_ = Open(file, point);
-    TTF_SetFontStyle(font_, Style(bold, italic));
-  }
-  catch(...)
-  {
-    Destroy();
-  }
-}
-
-void Font::Impl::Destroy(void)
-{
-  if(font_)
-  {
-    TTF_CloseFont(font_);
-  }
-}
-
-Font::Impl::Impl(boost::filesystem::path const& file, int point, int r, int g, int b, bool bold, bool italic, bool outline, int or, int og, int ob)
-{
-  Init(file, point, r, g, b, bold, italic, MakeColour(outline, or, og, ob));
-}
-
 Font::Impl::Impl(json::JSON const& json, boost::filesystem::path const& path)
 {
   char const* file;
   int point;
-  int r;
-  int g;
-  int b;
   int bold;
   int italic;
-  json_t* outline;
-
-  json.Unpack("{sssis[iii]sbsbso}",
+  int outline;
+  
+  json.Unpack("{sssisbsbsb}",
     "file", &file,
     "point", &point,
-    "colour", &r, &g, &b,
     "bold", &bold,
     "italic", &italic,
     "outline", &outline);
 
-  Init(path / file, point, r, g, b, bold != 0, italic != 0, MakeColour(json::JSON(outline)));
-}
-
-Font::Impl::~Impl(void)
-{
-  Destroy();
+  font_ = MakeFont(path / file, point);
+  bold_ = (bold != 0);
+  italic_ = (italic != 0);
+  outline_ = (outline != 0);
 }
 
 float Font::Impl::LineSpacing() const
 {
-  return float(TTF_FontLineSkip(font_));
+  return float(TTF_FontLineSkip(font_.get()));
 }
 
 float Font::LineSpacing() const
 {
   return impl_->LineSpacing();
-}
-
-Font::Font(boost::filesystem::path const& file, int point, int r, int g, int b, bool bold, bool italic, bool outline, int or, int og, int ob) : impl_(std::make_shared<Impl>(file, point, r, g, b, bold, italic, outline, or, og, ob))
-{
 }
 
 Font::Font(json::JSON const& json, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, path))

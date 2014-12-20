@@ -9,21 +9,45 @@ namespace sdl
 {
 namespace
 {
+class Style
+{
+  int style_;
+  TTF_Font* font_;
+public:
+  Style(TTF_Font* font, bool bold, bool italic) : font_(font)
+  {
+    style_ = TTF_GetFontStyle(font);
+    int style = 0;
+    if(bold)
+    {
+      style |= TTF_STYLE_BOLD;
+    }
+    if(italic)
+    {
+      style |= TTF_STYLE_ITALIC;
+    }
+    TTF_SetFontStyle(font_, style);
+  }
+  ~Style()
+  {
+    TTF_SetFontStyle(font_, style_);
+  }
+};
+
 typedef std::shared_ptr<SDL_Surface> SurfacePtr;
 
-SurfacePtr MakeText(TTF_Font *font, char const* text, SDL_Colour const* colour, Uint32 length)
+SurfacePtr MakeText(TTF_Font *font, char const* text, SDL_Colour const* colour, bool bold, bool italic, Uint32 length)
 {
-  SDL_Surface* surface = TTF_RenderText_Blended_Wrapped(font, text, *colour, length);
-  if(!surface)
+  Style style(font, bold, italic);
+  SDL_Surface* surface;
+  if(length == UINT32_MAX)
   {
-    BOOST_THROW_EXCEPTION(ttf::Exception() << ttf::Exception::What(ttf::Error()));
+    surface = TTF_RenderText_Blended(font, text, *colour);
   }
-  return SurfacePtr(surface, SDL_FreeSurface);
-}
-
-SurfacePtr MakeText(TTF_Font *font, char const* text, SDL_Colour const* colour)
-{
-  SDL_Surface* surface = TTF_RenderText_Blended(font, text, *colour);
+  else
+  {
+    surface = TTF_RenderText_Blended_Wrapped(font, text, *colour, length);
+  }
   if(!surface)
   {
     BOOST_THROW_EXCEPTION(ttf::Exception() << ttf::Exception::What(ttf::Error()));
@@ -118,22 +142,18 @@ SurfacePtr AddOutline(SDL_Surface* surface, SDL_Colour const* outline)
 
 Surface::Surface(std::string const& text, Font const& font, Uint32 length)
 {
-  SurfacePtr surface = MakeText(font.impl_->font_, text.c_str(), &font.impl_->colour_, length);
+  static const SDL_Colour colour = {UINT8_MAX, UINT8_MAX, UINT8_MAX, SDL_ALPHA_OPAQUE};
+  SurfacePtr surface = MakeText(font.impl_->font_.get(), text.c_str(), &colour, font.impl_->bold_, font.impl_->italic_, length);
   if(font.impl_->outline_)
   {
-    surface = AddOutline(surface.get(), &(*font.impl_->outline_));
+    static const SDL_Colour outline = {0, 0, 0, SDL_ALPHA_OPAQUE};
+    surface = AddOutline(surface.get(), &outline);
   }
   impl_ = surface;
 }
 
-Surface::Surface(std::string const& text, Font const& font)
+Surface::Surface(std::string const& text, Font const& font) : Surface(text, font, UINT32_MAX)
 {
-  SurfacePtr surface = MakeText(font.impl_->font_, text.c_str(), &font.impl_->colour_);
-  if(font.impl_->outline_)
-  {
-    surface = AddOutline(surface.get(), &(*font.impl_->outline_));
-  }
-  impl_ = surface;
 }
 
 Surface::Surface(boost::filesystem::path const& file)

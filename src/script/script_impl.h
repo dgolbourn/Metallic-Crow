@@ -12,7 +12,6 @@
 #include <map>
 #include <string>
 #include <list>
-#include "boost/optional.hpp"
 #include <array>
 #include "subtitle.h"
 #include "fade.h"
@@ -24,7 +23,6 @@
 namespace game
 {
 typedef std::list<Actor::WeakPtr> ActorList;
-typedef boost::optional<Position> Subject;
 typedef std::multimap<std::string, Joint> JointMap;
 typedef std::multimap<std::string, Scenery> SceneryMap;
 typedef std::multimap<std::string, Actor> ActorMap;
@@ -45,7 +43,6 @@ struct Stage
   SoundMap sounds_;
   MusicMap music_;
   audio::Music current_music_;
-  Subject subject_;
   ActorList subjects_;
   float zoom_;
 
@@ -129,7 +126,6 @@ public:
   void ViewInit();
   void ViewAddActor();
   void ViewActor();
-  void ViewPoint();
   void ViewZoom();
 
   void CollisionInit();

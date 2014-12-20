@@ -276,37 +276,34 @@ void WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, 
     destination_ptr = &destination_copy;
   }
 
-  SDL_Colour* modulation_ptr = nullptr;
-  SDL_Colour modulation_copy;
-  float r, g, b;
   if(modulation)
   {
-    r = modulation.r();
-    g = modulation.g();
-    b = modulation.b();
+    float r = modulation.r();
+    float g = modulation.g();
+    float b = modulation.b();
+    SDL_Colour modulation_copy;
     modulation_copy.r = sdl::Colour(r--);
     modulation_copy.g = sdl::Colour(g--);
     modulation_copy.b = sdl::Colour(b--);
     modulation_copy.a = sdl::Colour(modulation.a());
-    modulation_ptr = &modulation_copy;
-  }
 
-  sdl::Render(window_, renderer_, (SDL_Texture*)texture, source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, modulation_ptr, scale_);
+    sdl::Render(window_, renderer_, (SDL_Texture*)texture, source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, &modulation_copy, scale_);
 
-  if(modulation_ptr)
-  {
     if((r > 0.f) || (g > 0.f) || (b > 0.f))
     {
       BlendMode blend_mode((SDL_Texture*)texture, SDL_BLENDMODE_ADD);
       do
       {
-        modulation_ptr->r = sdl::Colour(r--);
-        modulation_ptr->g = sdl::Colour(g--);
-        modulation_ptr->b = sdl::Colour(b--);
-        sdl::Render(window_, renderer_, (SDL_Texture*)texture, source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, modulation_ptr, scale_);
-      }
-      while ((r > 0.f) || (g > 0.f) || (b > 0.f));
+        modulation_copy.r = sdl::Colour(r--);
+        modulation_copy.g = sdl::Colour(g--);
+        modulation_copy.b = sdl::Colour(b--);
+        sdl::Render(window_, renderer_, (SDL_Texture*)texture, source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, &modulation_copy, scale_);
+      } while((r > 0.f) || (g > 0.f) || (b > 0.f));
     }
+  }
+  else
+  {
+    sdl::Render(window_, renderer_, (SDL_Texture*)texture, source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, nullptr, scale_);
   }
 }
 

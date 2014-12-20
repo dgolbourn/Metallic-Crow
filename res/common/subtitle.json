@@ -3,10 +3,9 @@
 	{
 		"file" : "res/ext/menu.ttf",
 		"point" : 54,
-		"colour" : [255, 255, 255],
 		"bold" : false,
 		"italic" : false,
-		"outline" : [0, 0, 0]
+		"outline" : true
 	},
     "render box" : [-512.0, 128.0, 1024.0, 512.0]
 }

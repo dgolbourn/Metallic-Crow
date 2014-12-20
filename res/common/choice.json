@@ -3,10 +3,9 @@
 	{
 		"file" : "res/ext/menu.ttf",
 		"point" : 54,
-		"colour" : [255, 255, 255],
 		"bold" : false,
 		"italic" : false,
-		"outline" : [0, 0, 0]
+		"outline" : true
 	},
     "icons" : 
 	{
@@ -79,7 +78,7 @@
 		"left" : [-1.0, 0.0],
 		"right" : [1.0, 0.0]
 	},
-    "interval" : 0.5,
+    "interval" : 3.0,
     "start modulation" : [1.0, 1.0, 1.0, 1.0],
-    "end modulation" : [1.0, 0.0, 0.0, 0.5]
+    "end modulation" : [1.0, 0.0, 0.0, 0.0]
 }

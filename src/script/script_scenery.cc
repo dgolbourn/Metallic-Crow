@@ -6,7 +6,7 @@ void Script::Impl::SceneryInit()
 {
   lua_.Add(function::Bind(&Impl::SceneryLoad, shared_from_this()), "scenery_load", 0);
   lua_.Add(function::Bind(&Impl::SceneryFree, shared_from_this()), "scenery_free", 0);
-  lua_.Add(function::Bind(&Impl::SceneryLight, shared_from_this()), "scenery_light", 0);
+  lua_.Add(function::Bind(&Impl::SceneryModulation, shared_from_this()), "scenery_modulation", 0);
 }
 
 void Script::Impl::SceneryLoad()
@@ -33,21 +33,22 @@ void Script::Impl::SceneryFree()
   }
 }
 
-void Script::Impl::SceneryLight()
+void Script::Impl::SceneryModulation()
 {
   StagePtr stage = StagePop();
   std::string name;
-  float r, g, b;
+  float r, g, b, a;
   lua_.PopFront(name);
   lua_.PopFront(r);
   lua_.PopFront(g);
   lua_.PopFront(b);
+  lua_.PopFront(a);
   if(stage)
   {
     auto range = stage->scenery_.equal_range(name);
     for(auto& scenery = range.first; scenery != range.second; ++scenery)
     {
-      scenery->second.Modulation(r, g, b);
+      scenery->second.Modulation(r, g, b, a);
     }
   }
 }

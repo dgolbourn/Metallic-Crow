@@ -38,6 +38,27 @@ void Actor::Impl::Resume()
   }
 }
 
+void Actor::Impl::Modulation(float r, float g, float b, float a)
+{
+  modulation_.r(r);
+  modulation_.g(g);
+  modulation_.b(b);
+  modulation_.a(a);
+
+  if(game_body_)
+  {
+    if(dynamics_body_)
+    {
+      display::Modulation modulation = dynamics_body_.Modulation();
+      game_body_.Modulation(modulation.r() * r, modulation.g() * g, modulation.b() * b, modulation.a() * a);
+    }
+    else
+    {
+      game_body_.Modulation(r, g, b, a);
+    }
+  }
+}
+
 void Actor::Impl::Begin()
 {
   dynamics_body_.Force(force_.first, force_.second);
@@ -45,8 +66,13 @@ void Actor::Impl::Begin()
 
 void Actor::Impl::End()
 {
-  game_body_.Position(dynamics_body_.Position());
-  game_body_.Modulation(dynamics_body_.Modulation());
+  game::Position position(dynamics_body_.Position());
+  position.first += position_.first;
+  position.second += position_.second;
+  game_body_.Position(position);
+
+  display::Modulation modulation(dynamics_body_.Modulation());
+  game_body_.Modulation(modulation.r() * modulation_.r(), modulation.g() * modulation_.g(), modulation.b() * modulation_.b(), modulation.a() * modulation_.a());
 }
 
 void Actor::Impl::Render()
@@ -62,20 +88,26 @@ void Actor::Impl::Position(game::Position const& position)
   }
   if(game_body_)
   {
-    game_body_.Position(position);
+    game::Position temp = position;
+    if(dynamics_body_)
+    {
+      temp.first += position_.first;
+      temp.second += position_.second;
+    }
+    game_body_.Position(temp);
   }
 }
 
 game::Position Actor::Impl::Position()
 {
   game::Position position;
-  if(game_body_)
-  {
-    position = game_body_.Position();
-  }
-  else if(dynamics_body_)
+  if(dynamics_body_)
   {
     position = dynamics_body_.Position();
+  }
+  else if(game_body_)
+  {
+    position = game_body_.Position();
   }
   return position;
 }
@@ -233,6 +265,17 @@ Actor::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue&
       }
     }
   }
+
+  if(bool(dynamics_body_) && bool(game_body_))
+  {
+    modulation_ = game_body_.Modulation();
+
+    game::Position dynamics_position = dynamics_body_.Position();
+    game::Position game_position = game_body_.Position();
+
+    position_.first = game_position.first - dynamics_position.first;
+    position_.second = game_position.second - dynamics_position.second;
+  }
 }
 
 void Actor::Impl::Init(Scene& scene, dynamics::World& world, int plane)
@@ -292,6 +335,11 @@ void Actor::Force(game::Position const& force)
 void Actor::Impulse(game::Position const& impulse)
 {
   impl_->Impulse(impulse);
+}
+
+void Actor::Modulation(float r, float g, float b, float a)
+{
+  impl_->Modulation(r, g, b, a);
 }
 
 void Actor::Pause()

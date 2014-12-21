@@ -5,7 +5,7 @@ namespace game
 void Script::Impl::SubtitleInit()
 {
   lua_.Add(function::Bind(&Impl::SubtitleText, shared_from_this()), "subtitle_text", 0);
-  lua_.Add(function::Bind(&Impl::SubtitleLight, shared_from_this()), "subtitle_light", 0);
+  lua_.Add(function::Bind(&Impl::SubtitleModulation, shared_from_this()), "subtitle_modulation", 0);
 }
 
 void Script::Impl::SubtitleText()
@@ -19,16 +19,17 @@ void Script::Impl::SubtitleText()
   }
 }
 
-void Script::Impl::SubtitleLight()
+void Script::Impl::SubtitleModulation()
 {
   StagePtr stage = StagePop();
-  float r, g, b;
+  float r, g, b, a;
   lua_.PopFront(r);
   lua_.PopFront(g);
   lua_.PopFront(b);
+  lua_.PopFront(a);
   if(stage)
   { 
-    stage->subtitle_.Modulate(r, g, b);
+    stage->subtitle_.Modulation(r, g, b, a);
   }
 }
 }

@@ -6,7 +6,7 @@ void Script::Impl::ScreenInit()
 {
   lua_.Add(function::Bind(&Impl::ScreenLoad, shared_from_this()), "screen_load", 0);
   lua_.Add(function::Bind(&Impl::ScreenFree, shared_from_this()), "screen_free", 0);
-  lua_.Add(function::Bind(&Impl::ScreenLight, shared_from_this()), "screen_light", 0);
+  lua_.Add(function::Bind(&Impl::ScreenModulation, shared_from_this()), "screen_modulation", 0);
 }
 
 void Script::Impl::ScreenLoad()
@@ -33,21 +33,22 @@ void Script::Impl::ScreenFree()
   }
 }
 
-void Script::Impl::ScreenLight()
+void Script::Impl::ScreenModulation()
 {
   StagePtr stage = StagePop();
   std::string name;
-  float r, g, b;
+  float r, g, b, a;
   lua_.PopFront(name);
   lua_.PopFront(r);
   lua_.PopFront(g);
   lua_.PopFront(b);
+  lua_.PopFront(a);
   if(stage)
   {
     auto range = stage->screens_.equal_range(name);
     for(auto& screen = range.first; screen != range.second; ++screen)
     {
-      screen->second.Modulation(r, g, b);
+      screen->second.Modulation(r, g, b, a);
     }
   }
 }

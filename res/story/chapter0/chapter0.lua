@@ -56,9 +56,11 @@ function script_begin()
   music_load("1", "test", "res/story/chapter0/music.json")
   music_play("1", "test")
 
-  stage00:subtitle("test")
-
   stage00:choice("up", "down", "", "...", 3)
+  stage00:choice_modulation("up", 1, 0, 0, 1)
+
+  stage00:text("test")
+  stage00:text_modulation(0, 1, 1, 0.75)
 
   arena1 = Actor:new(stage00, "res/story/chapter0/arena1.json")
 

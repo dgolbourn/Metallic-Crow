@@ -24,6 +24,7 @@ public:
   game::Position Velocity() const;
   void Force(game::Position const& force);
   void Impulse(game::Position const& impulse);
+  void Modulation(float r, float g, float b, float a);
   void Pause();
   void Resume();
   void Body(std::string const& expression, bool left_facing);

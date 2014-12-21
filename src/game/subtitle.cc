@@ -6,7 +6,7 @@ class Subtitle::Impl
 public:
   Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path);
   void Subtitle(std::string const& text);
-  void Modulate(float r, float g, float b);
+  void Modulation(float r, float g, float b, float a);
   void Render(void) const;
 
   sdl::Font font_;
@@ -43,9 +43,9 @@ void Subtitle::Impl::Subtitle(std::string const& text)
   render_box_ = display::BoundingBox(clip_.x() + .5f * (clip_.w() - shape.first), clip_.y() + .5f * (clip_.h() - shape.second), shape.first, shape.second);
 }
 
-void Subtitle::Impl::Modulate(float r, float g, float b)
+void Subtitle::Impl::Modulation(float r, float g, float b, float a)
 {
-  modulation_ = display::Modulation(r, g, b, 1.f);
+  modulation_ = display::Modulation(r, g, b, a);
 }
 
 void Subtitle::Render() const
@@ -58,9 +58,9 @@ void Subtitle::operator()(std::string const& text)
   impl_->Subtitle(text);
 }
 
-void Subtitle::Modulate(float r, float g, float b)
+void Subtitle::Modulation(float r, float g, float b, float a)
 {
-  impl_->Modulate(r, g, b);
+  impl_->Modulation(r, g, b, a);
 }
 
 Subtitle::Subtitle(json::JSON const& json, display::Window& window, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, window, path))

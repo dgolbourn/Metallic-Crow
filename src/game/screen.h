@@ -14,7 +14,7 @@ public:
   Screen(json::JSON const& json, display::Window& window, Scene& scene, event::Queue& queue, boost::filesystem::path const& path);
   void Pause();
   void Resume();
-  void Modulation(float r, float g, float b);
+  void Modulation(float r, float g, float b, float a);
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

@@ -4,8 +4,8 @@ function Screen:finalise()
 	screen_free(self.stage, self.name)
 end
 
-function Screen:light(r, g, b)
-	screen_light(self.stage, self.name, r, g, b)
+function Screen:modulation(r, g, b, a)
+	screen_modulation(self.stage, self.name, r, g, b, a)
 end
 
 function Screen:new(stage, screen, screens)

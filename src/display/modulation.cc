@@ -81,5 +81,9 @@ Modulation::Modulation(json::JSON const& json)
   {
     impl_ = std::make_shared<Impl>(json);
   }
+  else
+  {
+    impl_ = std::make_shared<Impl>(1.f, 1.f, 1.f, 1.f);
+  }
 }
 }

@@ -28,7 +28,7 @@ void Script::Impl::StageInit()
   lua_.Add(function::Bind(&Impl::StageNominate, shared_from_this()), "stage_nominate", 0);
   lua_.Add(function::Bind(&Impl::StageLoad, shared_from_this()), "stage_load", 0);
   lua_.Add(function::Bind(&Impl::StageFree, shared_from_this()), "stage_free", 0);
-  lua_.Add(function::Bind(&Impl::StageLight, shared_from_this()), "stage_light", 0);
+  lua_.Add(function::Bind(&Impl::StageAmbient, shared_from_this()), "stage_ambient", 0);
   lua_.Add(function::Bind(&Impl::StagePause, shared_from_this()), "stage_pause", 0);
   lua_.Add(function::Bind(&Impl::StageResume, shared_from_this()), "stage_resume", 0);
 }
@@ -107,7 +107,7 @@ void Script::Impl::StageFree()
   stages_.erase(name);
 }
 
-void Script::Impl::StageLight()
+void Script::Impl::StageAmbient()
 {
   StagePtr stage = StagePop();
   float r, g, b;

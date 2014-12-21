@@ -4,8 +4,8 @@ function Scenery:finalise()
 	scenery_free(self.stage, self.name)
 end
 
-function Scenery:light(r, g, b)
-	scenery_light(self.stage, self.name, r, g, b)
+function Scenery:modulation(r, g, b, a)
+	scenery_modulation(self.stage, self.name, r, g, b, a)
 end
 
 function Scenery:new(stage, scenery, sceneries)

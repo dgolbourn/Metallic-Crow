@@ -78,7 +78,13 @@
 		"left" : [-1.0, 0.0],
 		"right" : [1.0, 0.0]
 	},
-    "interval" : 3.0,
-    "start modulation" : [1.0, 1.0, 1.0, 1.0],
-    "end modulation" : [1.0, 0.0, 0.0, 0.0]
+    "interval" : 10.0,
+    "fade modulation" : [2.0, 0.0, 0.0, 0.0],
+    "text modulation" :
+    {
+		"up" : null,
+		"down" : null,
+		"left" : null,
+		"right" : null
+    }
 }

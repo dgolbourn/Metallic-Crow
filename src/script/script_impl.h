@@ -92,21 +92,22 @@ public:
   void ActorVelocity();
   void ActorForce();
   void ActorImpulse();
+  void ActorModulation();
 
   void SceneryInit();
   void SceneryLoad();
   void SceneryFree();
-  void SceneryLight();
+  void SceneryModulation();
 
   void ScreenInit();
   void ScreenLoad();
   void ScreenFree();
-  void ScreenLight();
+  void ScreenModulation();
 
   void StageInit();
   void StageLoad();
   void StageFree();
-  void StageLight();
+  void StageAmbient();
   void StageNominate();
   void StagePause();
   void StageResume();
@@ -114,10 +115,14 @@ public:
 
   void ChoiceInit();
   void ChoiceChoice();
+  void ChoiceUpModulation();
+  void ChoiceDownModulation();
+  void ChoiceLeftModulation();
+  void ChoiceRightModulation();
 
   void SubtitleInit();
   void SubtitleText();
-  void SubtitleLight();
+  void SubtitleModulation();
 
   void TimerInit();
   void TimerLoad();

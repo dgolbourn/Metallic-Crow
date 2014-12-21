@@ -37,7 +37,8 @@ public:
   void Next();
   void Position(game::Position const& position);
   game::Position Position() const;
-  void Modulation(display::Modulation const& modulation);
+  void Modulation(float r, float g, float b, float a);
+  display::Modulation Modulation() const;
   void Render();
  
   Frames::Map expressions_;
@@ -49,17 +50,21 @@ public:
   Frames::Key state_;
 };
 
-Body::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command) : modulation_(1.f, 1.f, 1.f, 1.f)
+Body::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command)
 {
   json_t* expressions;
   char const* begin_expression;
   int begin_facing;
   double x, y;
-  json.Unpack("{sosssbs[ff]}",
+  json_t* modulation;
+  json.Unpack("{sosssbs[ff]so}",
     "expressions", &expressions,
     "expression", &begin_expression,
     "left facing", &begin_facing,
-    "position", &x, &y);
+    "position", &x, &y,
+    "modulation", &modulation);
+ 
+  modulation_ = display::Modulation(json::JSON(modulation));
 
   std::map<Frames::Key, std::list<Frames::Map::iterator*>> next;
 
@@ -275,12 +280,17 @@ game::Position Body::Impl::Position() const
   return position_;
 }
 
-void Body::Impl::Modulation(display::Modulation const& modulation)
+void Body::Impl::Modulation(float r, float g, float b, float a)
 {
-  modulation_.r(modulation.r());
-  modulation_.g(modulation.g());
-  modulation_.b(modulation.b());
-  modulation_.a(modulation.a());
+  modulation_.r(r);
+  modulation_.g(g);
+  modulation_.b(b);
+  modulation_.a(a);
+}
+
+display::Modulation Body::Impl::Modulation() const
+{
+  return display::Modulation(modulation_.r(), modulation_.g(), modulation_.b(), modulation_.a());
 }
 
 Body::Body(json::JSON const& json, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command) : impl_(std::make_shared<Impl>(json, window, path, eyes_command, mouth_command))
@@ -322,9 +332,14 @@ game::Position Body::Position() const
   return impl_->Position();
 }
 
-void Body::Modulation(display::Modulation const& modulation)
+void Body::Modulation(float r, float g, float b, float a)
 {
-  impl_->Modulation(modulation);
+  impl_->Modulation(r, g, b, a);
+}
+
+display::Modulation Body::Modulation() const
+{
+  return impl_->Modulation();
 }
 
 Body::operator bool() const

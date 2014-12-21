@@ -46,6 +46,10 @@ function Actor:impulse(i, j)
 	actor_impulse(self.stage, self.name, i, j)
 end
 
+function Actor:modulation(r, g, b, a)
+	actor_modulation(self.stage, self.name, r, g, b, a)
+end
+
 function Actor:new(stage, actor, actors)
 	if(self.number == nil) then
 		self.__gc = self.finalise

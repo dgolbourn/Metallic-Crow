@@ -13,6 +13,7 @@ void Script::Impl::ActorInit()
   lua_.Add(function::Bind(&Impl::ActorVelocity, shared_from_this()), "actor_velocity", 0);
   lua_.Add(function::Bind(&Impl::ActorForce, shared_from_this()), "actor_force", 0);
   lua_.Add(function::Bind(&Impl::ActorImpulse, shared_from_this()), "actor_impulse", 0);
+  lua_.Add(function::Bind(&Impl::ActorModulation, shared_from_this()), "actor_modulation", 0);
 }
 
 void Script::Impl::ActorLoad()
@@ -183,6 +184,26 @@ void Script::Impl::ActorImpulse()
     for(auto& actor = range.first; actor != range.second; ++actor)
     {
       actor->second.Impulse(Position(i, j));
+    }
+  }
+}
+
+void Script::Impl::ActorModulation()
+{
+  StagePtr stage = StagePop();
+  std::string name;
+  float r, g, b, a;
+  lua_.PopFront(name);
+  lua_.PopFront(r);
+  lua_.PopFront(g);
+  lua_.PopFront(b);
+  lua_.PopFront(a);
+  if(stage)
+  {
+    auto range = stage->actors_.equal_range(name);
+    for(auto& actor = range.first; actor != range.second; ++actor)
+    {
+      actor->second.Modulation(r, g, b, a);
     }
   }
 }

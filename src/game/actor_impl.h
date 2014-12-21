@@ -25,10 +25,14 @@ public:
   game::Position Velocity() const;
   void Force(game::Position const& force);
   void Impulse(game::Position const& impulse);
+  void Modulation(float r, float g, float b, float a);
   void Begin();
   void End();
   void Blink();
   void Next();
+
+  game::Position position_;
+  display::Modulation modulation_;
 
   dynamics::Body dynamics_body_;
   game::Position force_;

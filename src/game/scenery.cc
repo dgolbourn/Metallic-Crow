@@ -37,7 +37,7 @@ public:
   void Init(Scene& scene, event::Queue&, int plane);
   void Render() const;
   void Next();
-  void Modulation(float r, float g, float b);
+  void Modulation(float r, float g, float b, float a);
   event::Timer timer_;
   Animations animations_;
   float parallax_;
@@ -65,25 +65,25 @@ void Scenery::Impl::Next()
   }
 }
 
-void Scenery::Impl::Modulation(float r, float g, float b)
+void Scenery::Impl::Modulation(float r, float g, float b, float a)
 {
-  modulation_ = display::Modulation(r, g, b, 1.f);
+  modulation_ = display::Modulation(r, g, b, a);
 }
 
 Scenery::Impl::Impl(json::JSON const& json, display::Window& window, int& plane, boost::filesystem::path const& path)
 {
   json_t* animations;
   double parallax;
-  double r, g, b;
+  json_t* modulation;
   double interval;
-  json.Unpack("{sosfsisfs[fff]}",
+  json.Unpack("{sosfsisfso}",
     "animations", &animations,
     "interval",  &interval,
     "plane", &plane,
     "parallax", &parallax,
-    "modulation" , &r, &g, &b);
+    "modulation", &modulation);
  
-  modulation_ = display::Modulation(float(r), float(g), float(b), 1.f);
+  modulation_ = display::Modulation(json::JSON(modulation));
  
   for(json::JSON animation : json::JSON(animations))
   {
@@ -120,8 +120,8 @@ Scenery::Scenery(json::JSON const& json, event::Queue& queue, display::Window& w
   impl_->Init(scene, queue, plane);
 }
 
-void Scenery::Modulation(float r, float g, float b)
+void Scenery::Modulation(float r, float g, float b, float a)
 {
-  impl_->Modulation(r, g, b);
+  impl_->Modulation(r, g, b, a);
 }
 }

@@ -18,6 +18,10 @@ public:
   void Left(event::Command const& command);
   void Right(event::Command const& command);
   void Timer(event::Command const& command);
+  void Up(float r, float g, float b, float a);
+  void Down(float r, float g, float b, float a);
+  void Left(float r, float g, float b, float a);
+  void Right(float r, float g, float b, float a);
   void Pause();
   void Resume();
   void Render() const;

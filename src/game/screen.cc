@@ -13,7 +13,7 @@ public:
   void Resume();
   void Next();
   void Render() const;
-  void Modulation(float r, float g, float b);
+  void Modulation(float r, float g, float b, float a);
   
   display::Modulation modulation_;
   event::Timer timer_;
@@ -25,21 +25,24 @@ public:
   double angle_;
 };
 
-Screen::Impl::Impl(json::JSON const& json, display::Window& window, int& plane, boost::filesystem::path const& path) : modulation_(1.f, 1.f, 1.f, 1.f)
+Screen::Impl::Impl(json::JSON const& json, display::Window& window, int& plane, boost::filesystem::path const& path)
 {
   json_t* animation;
   json_t* render_box;
   double parallax;
   double interval;
+  json_t* modulation;
 
-  json.Unpack("{sososfsisfsf}",
+  json.Unpack("{sososfsisfsfso}",
     "animation", &animation,
     "render box", &render_box,
     "interval", &interval,
     "plane", &plane,
     "parallax", &parallax,
-    "angle", &angle_);
+    "angle", &angle_,
+    "modulation", &modulation);
 
+  modulation_ = display::Modulation(json::JSON(modulation));
   parallax_ = float(parallax);
   animation_ = display::MakeAnimation(json::JSON(animation), window, path);
   iterator_ = animation_.begin();
@@ -84,11 +87,12 @@ void Screen::Impl::Resume()
   timer_.Resume();
 }
 
-void Screen::Impl::Modulation(float r, float g, float b)
+void Screen::Impl::Modulation(float r, float g, float b, float a)
 {
   modulation_.r(r);
   modulation_.g(g);
   modulation_.b(b);
+  modulation_.a(a);
 }
 
 Screen::Screen(json::JSON const& json, display::Window& window, Scene& scene, event::Queue& queue, boost::filesystem::path const& path)
@@ -108,8 +112,8 @@ void Screen::Resume()
   impl_->Resume();
 }
 
-void Screen::Modulation(float r, float g, float b)
+void Screen::Modulation(float r, float g, float b, float a)
 {
-  impl_->Modulation(r, g, b);
+  impl_->Modulation(r, g, b, a);
 }
 }

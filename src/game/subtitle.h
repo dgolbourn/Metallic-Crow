@@ -9,11 +9,11 @@ namespace game
 class Subtitle
 {
 public:
-  Subtitle(void) = default;
+  Subtitle() = default;
   Subtitle(json::JSON const& json, display::Window& window, boost::filesystem::path const& path);
   void operator()(std::string const& text);
-  void Modulate(float r, float g, float b);
-  void Render(void) const;
+  void Modulation(float r, float g, float b, float a);
+  void Render() const;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

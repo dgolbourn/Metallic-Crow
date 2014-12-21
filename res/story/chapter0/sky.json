@@ -7,5 +7,6 @@
     "interval" :  -1.0,
     "plane" : -1000,
     "parallax" : 1.0,
-    "angle" : 0.0
+    "angle" : 0.0,
+    "modulation" : null
 }

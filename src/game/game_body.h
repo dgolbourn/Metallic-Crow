@@ -21,7 +21,8 @@ public:
   void Next();
   void Position(Position const& position);
   game::Position Position() const;
-  void Modulation(display::Modulation const& modulation);
+  void Modulation(float r, float g, float b, float a);
+  display::Modulation Modulation() const;
   void Render();
   explicit operator bool() const;
 private:

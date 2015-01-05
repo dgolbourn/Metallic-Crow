@@ -98,7 +98,7 @@ WindowImpl::WindowImpl(json::JSON const& json) : sdl_(SDL_INIT_VIDEO), img_(IMG_
   try
   {
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "2");
 
     char const* name;
     int width;
@@ -115,6 +115,7 @@ WindowImpl::WindowImpl(json::JSON const& json) : sdl_(SDL_INIT_VIDEO), img_(IMG_
     if(std::string(mode) == "full screen")
     {
       flags |= SDL_WINDOW_FULLSCREEN;
+      SDL_ShowCursor(SDL_DISABLE);
     }
     else if(std::string(mode) == "borderless")
     {

@@ -240,7 +240,7 @@ void Body::Impl::Next()
   ++current_frame_;
   if(current_frame_ == current_frames_->second.frames_.end())
   {
-    if(current_frames_->second.iterruptable_ && (next_ != expressions_.end()))
+    if(!current_frames_->second.iterruptable_ && (next_ != expressions_.end()))
     {
       current_frames_ = next_;
       next_ = expressions_.end();

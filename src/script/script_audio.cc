@@ -59,7 +59,7 @@ void Script::Impl::SoundPlay()
     auto range = stage->sounds_.equal_range(name);
     for(auto& sound = range.first; sound != range.second; ++sound)
     {
-      sound->second(volume_);
+      sound->second(volume);
     }
   }
 }

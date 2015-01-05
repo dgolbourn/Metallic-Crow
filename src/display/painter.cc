@@ -122,7 +122,7 @@ bool PainterImpl::operator()(algorithm::NodeCoordinates const& coords)
     SDL_FRect original = original_;
     original.x += move.x;
     original.y += move.y;
-    Render(renderer_, texture_, source_, &destination, &original, angle_ ,modulation_);
+    Render(renderer_, texture_, source_, &destination, &original, angle_, modulation_);
     filled = true;
   }
   return filled;

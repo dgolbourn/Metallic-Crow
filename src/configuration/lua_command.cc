@@ -39,17 +39,18 @@ Command::Impl::~Impl()
 
 bool Command::Impl::Notify()
 {
-  bool ret = false;
+  bool valid = false;
   if(StackPtr stack = stack_.lock())
   {
     lua_rawgeti(stack->state_, LUA_REGISTRYINDEX, stack->weak_registry_);
     lua_rawgeti(stack->state_, -1, reference_);
 
-    ret = (lua_isnil(stack->state_, -1) == 0);
+    valid = (lua_isnil(stack->state_, -1) == 0);
   
-    if(ret)
+    if(valid)
     {
-      if(lua_pcall(stack->state_, 0, 0, 0))
+      int ret = lua_pcall(stack->state_, 0, 0, 0);
+      if(ret)
       {
         std::string error(lua_tostring(stack->state_, -1));
         lua_pop(stack->state_, 2);
@@ -62,7 +63,7 @@ bool Command::Impl::Notify()
     }
     lua_pop(stack->state_, 1);
   }
-  return ret;
+  return valid;
 }
 
 Command::Command(StackPtr const& stack) : impl_(std::make_shared<Impl>(stack))

@@ -1,8 +1,0 @@
-require "res/lib/stage"
-require "res/lib/actor"
-require "res/lib/timer"
-require "res/lib/scenery"
-require "res/lib/screen"
-require "res/lib/joint"
-require "res/lib/sound"
-require "res/lib/music"

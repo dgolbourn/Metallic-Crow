@@ -243,7 +243,6 @@ template<int T> void Choice::Impl::Event()
 {
   if(choices_[T] && !bool(animation_timer_))
   {
-    signals_[T]();
     if(icons_[T].size() >= 2)
     {
       animation_timer_ = event::Timer(interval_, icons_[T].size() - 2);
@@ -260,6 +259,8 @@ template<int T> void Choice::Impl::Event()
     {
       Reset();
     }
+
+    signals_[T]();
   }
 }
 

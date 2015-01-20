@@ -42,7 +42,7 @@ Feature::Impl::Impl(json::JSON const& json, display::Window& window, boost::file
     char const* page;
     json_t* clip;
 
-    json.Unpack("{sssisbssso}",
+    value.Unpack("{sssisbssso}",
       "expression", &expression,
       "index", &index,
       "left facing", &facing,

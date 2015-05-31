@@ -7,8 +7,18 @@ Script::Impl::Impl(display::Window& window, event::Queue& queue, boost::filesyst
 {
 }
 
+namespace
+{
+int step_size = 1;
+double step_time = 0.1;
+}
+
 void Script::Impl::Init(boost::filesystem::path const& file)
 {
+  collect_ = event::Timer(step_time, -1);
+  collect_.Add(function::Bind(&Impl::Collect, shared_from_this()));
+  queue_.Add(function::Bind(&event::Timer::operator(), collect_));
+
   lua_.Load(file);
 
   ActorInit();
@@ -30,6 +40,11 @@ void Script::Impl::Init(boost::filesystem::path const& file)
   Call("script_initialise");
 }
 
+void Script::Impl::Collect()
+{
+  lua_.Collect(step_size);
+}
+
 void Script::Impl::Call(std::string const& call)
 {
   lua_.Get(call);
@@ -46,6 +61,7 @@ void Script::Impl::Pause()
       Pause(stage.second, stage.second->paused_[0]);
     }
     fade_.Pause();
+    collect_.Pause();
   }
 }
 
@@ -67,6 +83,7 @@ void Script::Impl::Resume()
       Resume(stage.second, stage.second->paused_[0]);
     }
     fade_.Resume();
+    collect_.Resume();
   }
 }
 

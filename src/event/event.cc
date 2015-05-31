@@ -8,6 +8,7 @@
 #include <cmath>
 #include "sdl_exception.h"
 #include "log.h"
+#include "lua_exception.h"
 namespace
 {
 typedef std::list<event::Event::Command> Commands;
@@ -39,6 +40,7 @@ namespace event
 class Event::Impl
 {
 public:
+  Impl(lua::Stack& lua);
   Impl(json::JSON const& json);
   ~Impl();
   void Check();
@@ -143,6 +145,68 @@ void Event::Impl::Back(event::Command const& command)
 void Event::Impl::Quit(event::Command const& command)
 {
   quit_.Add(command);
+}
+
+namespace
+{
+SDL_Scancode GetScanCodeField(lua::Stack& lua, std::string const& field)
+{
+  int temp;
+  lua.Field(field);
+  lua.PopBack(temp);
+  return SDL_Scancode(temp);
+}
+}
+
+Event::Impl::Impl(lua::Stack& lua) : sdl_(SDL_INIT_EVENTS | SDL_INIT_GAMECONTROLLER), x_report_(0.f), y_report_(0.f), x_key_(0.f), y_key_(0.f), key_state_up_(false), key_state_down_(false), key_state_left_(false), key_state_right_(false)
+{
+  try
+  {
+    key_up_ = GetScanCodeField(lua, "up");
+    key_down_ = GetScanCodeField(lua, "down");
+    key_left_ = GetScanCodeField(lua, "left");
+    key_right_ = GetScanCodeField(lua, "right");
+    key_choice_up_ = GetScanCodeField(lua, "choice_up");
+    key_choice_down_ = GetScanCodeField(lua, "choice_down");
+    key_choice_left_ = GetScanCodeField(lua, "choice_left");
+    key_choice_right_ = GetScanCodeField(lua, "choice_right");
+    key_select_ = GetScanCodeField(lua, "select");
+    key_back_ = GetScanCodeField(lua, "back");
+
+    for(int i = 0; i < SDL_NumJoysticks(); ++i)
+    {
+      if(SDL_IsGameController(i))
+      {
+        if(SDL_GameController* game_controller = SDL_GameControllerOpen(i))
+        {
+          int joystick = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(game_controller));
+          if(joystick == -1)
+          {
+            BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
+          }
+          controllers_.emplace(joystick, ControllerState{ game_controller, 0.f, 0.f, 0.f, 0.f });
+        }
+        else
+        {
+          BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
+        }
+      }
+    }
+
+    double max, min, threshold;
+    lua.Field("update_max"); lua.PopBack(max);
+    lua.Field("update_min"); lua.PopBack(min);
+    lua.Field("update_threshold"); lua.PopBack(threshold);
+
+    update_offset_ = -float(min);
+    update_scale_ = float(1. / (max - min));
+    update_threshold_ = float(threshold * threshold);
+  }
+  catch(...)
+  {
+    Destroy();
+    throw;
+  }
 }
 
 Event::Impl::Impl(json::JSON const& json) : sdl_(SDL_INIT_EVENTS | SDL_INIT_GAMECONTROLLER), x_report_(0.f), y_report_(0.f), x_key_(0.f), y_key_(0.f), key_state_up_(false), key_state_down_(false), key_state_left_(false), key_state_right_(false)
@@ -549,6 +613,10 @@ void Event::Impl::Check()
       }
     }
   }
+}
+
+Event::Event(lua::Stack& lua) : impl_(std::make_shared<Impl>(lua))
+{
 }
 
 Event::Event(json::JSON const& json) : impl_(std::make_shared<Impl>(json))

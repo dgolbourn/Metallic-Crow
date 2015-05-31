@@ -20,6 +20,7 @@
 #include "game_joint.h"
 #include "music.h"
 #include "sound.h"
+#include "timer.h"
 namespace game
 {
 typedef std::list<Actor::WeakPtr> ActorList;
@@ -81,6 +82,8 @@ public:
   bool Pause(StagePtr const& stage);
   void Resume(StagePtr const& stage, bool& paused);
   void Add(event::Command const& command);
+  
+  void Collect();
 
   void ActorInit();
   void ActorLoad();
@@ -93,6 +96,7 @@ public:
   void ActorForce();
   void ActorImpulse();
   void ActorModulation();
+  void ActorDilation();
 
   void SceneryInit();
   void SceneryLoad();
@@ -167,6 +171,7 @@ public:
   bool begun_;
   boost::filesystem::path path_;
   float volume_;
+  event::Timer collect_;
 };
 }
 #endif

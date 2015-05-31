@@ -3,10 +3,11 @@
 #include "log.h"
 #include "event.h"
 #include "controller.h"
+#include "lua_stack.h"
 namespace
 {
 bool run = true;
-bool Quit(void)
+bool Quit()
 {
   run = false;
   return false;
@@ -20,7 +21,11 @@ int main(int argc, char* argv[])
   {
     if(config::OptionalArgs args = config::Parse(argc, argv))
     {
-      event::Event event(json::JSON(args->control));
+      lua::Stack lua(args->path);
+      lua.Load(args->control);
+      lua.Get("control");
+      event::Event event(lua);
+
       event::Queue queue;
       game::Controller controller(json::JSON(args->game), queue, args->path);
 

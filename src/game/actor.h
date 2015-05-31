@@ -33,6 +33,8 @@ public:
   void Eyes(std::string const& expression);
   void Mouth(std::string const& expression);
   void Mouth(int open);
+  double Dilation() const;
+  void Dilation(double dilation);
   explicit operator bool() const;
 private:
   class Impl;

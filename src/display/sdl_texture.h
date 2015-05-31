@@ -3,16 +3,18 @@
 #include "SDL_render.h"
 #include <memory>
 #include "weak_ptr.h"
+#include "boost/filesystem.hpp"
 namespace sdl
 {
 class Texture
 {
 public:
-  Texture(void) = default;
+  Texture() = default;
   Texture(SDL_Renderer* renderer, SDL_Surface* surface);
-  explicit operator SDL_Texture*(void) const;
-  SDL_Texture* operator->(void) const;
-  explicit operator bool(void) const;
+  Texture::Texture(SDL_Renderer* renderer, boost::filesystem::path const& file);
+  explicit operator SDL_Texture*() const;
+  SDL_Texture* operator->() const;
+  explicit operator bool() const;
   typedef memory::WeakPtr<class Texture, SDL_Texture> WeakPtr;
 private:
   std::shared_ptr<SDL_Texture> impl_;

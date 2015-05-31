@@ -12,6 +12,7 @@ struct Frame
 {
   game::Scene scene_;
   std::vector<std::pair<display::BoundingBox, display::BoundingBox>> boxes_;
+  double period_;
 };
 
 struct Frames
@@ -30,11 +31,12 @@ class Body::Impl
 {
 public:
   Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path, Feature const& eyes, Feature const& mouth);
-  void Expression(std::string const& expression, bool left_facing);
-  void Expression(std::string const& expression);
-  void Expression(bool left_facing);
-  void Expression();
-  void Next();
+  double Expression(std::string const& expression, bool left_facing);
+  double Expression(std::string const& expression);
+  double Expression(bool left_facing);
+  double Expression();
+  double Next();
+  double Period() const;
   void Position(game::Position const& position);
   game::Position Position() const;
   void Modulation(float r, float g, float b, float a);
@@ -102,7 +104,7 @@ Body::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesys
       json_t* jmouth_parallax;
       json_t* jeyes_plane;
       json_t* jmouth_plane;
-      frame.Unpack("{sosososososososo}",
+      frame.Unpack("{sosososososososfso}",
         "left facing", &jframe_facing,
         "eyes box", &jeyes_box,
         "eyes parallax", &jeyes_parallax,
@@ -110,6 +112,7 @@ Body::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesys
         "mouth box", &jmouth_box,
         "mouth parallax", &jmouth_parallax,
         "mouth plane", &jmouth_plane,
+        "period", &frame_iter->period_,
         "textures", &jtextures);
 
       if(eyes_command)
@@ -189,26 +192,26 @@ Body::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesys
   }
 }
 
-void Body::Impl::Expression(std::string const& expression, bool left_facing)
+double Body::Impl::Expression(std::string const& expression, bool left_facing)
 {
   state_.first = expression;
   state_.second = left_facing;
-  Expression();
+  return Expression();
 }
 
-void Body::Impl::Expression(std::string const& expression)
+double Body::Impl::Expression(std::string const& expression)
 {
   state_.first = expression;
-  Expression();
+  return Expression();
 }
 
-void Body::Impl::Expression(bool left_facing)
+double Body::Impl::Expression(bool left_facing)
 {
   state_.second = left_facing;
-  Expression();
+  return Expression();
 }
 
-void Body::Impl::Expression()
+double Body::Impl::Expression()
 {
   auto next = expressions_.find(state_);
   if(next != expressions_.end())
@@ -233,9 +236,10 @@ void Body::Impl::Expression()
       }
     }
   }
+  return current_frame_->period_;
 }
 
-void Body::Impl::Next()
+double Body::Impl::Next()
 {
   ++current_frame_;
   if(current_frame_ == current_frames_->second.frames_.end())
@@ -258,6 +262,12 @@ void Body::Impl::Next()
     box.first.x(box.second.x() + position_.first);
     box.first.y(box.second.y() + position_.second);
   }
+  return current_frame_->period_;
+}
+
+double Body::Impl::Period() const
+{
+  return current_frame_->period_;
 }
 
 void Body::Impl::Render()
@@ -297,24 +307,24 @@ Body::Body(json::JSON const& json, display::Window& window, boost::filesystem::p
 {
 }
 
-void Body::Expression(std::string const& expression, bool left_facing)
+double Body::Expression(std::string const& expression, bool left_facing)
 {
-  impl_->Expression(expression, left_facing);
+  return impl_->Expression(expression, left_facing);
 }
 
-void Body::Expression(bool left_facing)
+double Body::Expression(bool left_facing)
 {
-  impl_->Expression(left_facing);
+  return impl_->Expression(left_facing);
 }
 
-void Body::Expression(std::string const& expression)
+double Body::Expression(std::string const& expression)
 {
-  impl_->Expression(expression);
+  return impl_->Expression(expression);
 }
 
-void Body::Next()
+double Body::Next()
 {
-  impl_->Next();
+  return impl_->Next();
 }
 
 void Body::Render()
@@ -341,6 +351,12 @@ display::Modulation Body::Modulation() const
 {
   return impl_->Modulation();
 }
+
+double Body::Period() const
+{
+  return impl_->Period();
+}
+
 
 Body::operator bool() const
 {

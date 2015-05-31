@@ -29,6 +29,9 @@ public:
 Timer::Impl::Impl(double interval, int loops) 
 {
   Reset(interval, loops);
+
+  remaining_ = interval_;
+  paused_ = true;
 }
 
 void Timer::Impl::Reset(double interval, int loops)
@@ -46,8 +49,6 @@ void Timer::Impl::Reset(double interval, int loops)
   static const double scale = double(Clock::period::den) / double(Clock::period::num);
   interval *= scale;
   interval_ = Clock::duration(Clock::rep(interval));
-  remaining_ = interval_;
-  paused_ = true;
   loops_ = loops;
 }
 

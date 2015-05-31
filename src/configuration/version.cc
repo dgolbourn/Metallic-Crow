@@ -14,7 +14,7 @@ namespace config
 std::string Version(void)
 {
   static const int major = 0;
-  static const int minor = 1;
+  static const int minor = 2;
   static const int patch = 0;
   static const std::string pre("");
   static const std::string build("");

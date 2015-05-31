@@ -15,10 +15,11 @@ class Body
 public:
   Body() = default;
   Body(json::JSON const& json, display::Window& window, boost::filesystem::path const& path, Feature const& eyes, Feature const& mouth);
-  void Expression(std::string const& expression, bool left_facing);
-  void Expression(std::string const& expression);
-  void Expression(bool left_facing);
-  void Next();
+  double Expression(std::string const& expression, bool left_facing);
+  double Expression(std::string const& expression);
+  double Expression(bool left_facing);
+  double Next();
+  double Period() const;
   void Position(Position const& position);
   game::Position Position() const;
   void Modulation(float r, float g, float b, float a);

@@ -23,19 +23,16 @@ public:
 Texture::Impl::Impl(boost::filesystem::path const& file, Window& window) : window_(window)
 {
   texture_ = window.impl_->Load(file);
-  clip_ = BoundingBox(0.f, 0.f, float(texture_->w), float(texture_->h));
 }
 
 Texture::Impl::Impl(std::string const& text, sdl::Font const& font, float width, Window& window) : window_(window)
 {
   texture_ = window.impl_->Text(text, font, width);
-  clip_ = BoundingBox(0.f, 0.f, float(texture_->w), float(texture_->h));
 }
 
 Texture::Impl::Impl(std::string const& text, sdl::Font const& font, Window& window) : window_(window)
 {
   texture_ = window.impl_->Text(text, font);
-  clip_ = BoundingBox(0.f, 0.f, float(texture_->w), float(texture_->h));
 }
 
 namespace 
@@ -75,8 +72,11 @@ bool Texture::Impl::Render(BoundingBox const& source, BoundingBox const& destina
   bool locked = false;
   if(auto window = window_.Lock())
   {
+    if(texture_)
+    {
       window.impl_->Render(texture_, Clip(clip_, source), destination, parallax, tile, angle, modulation);
-      locked = true;
+    }
+    locked = true;
   }
   return locked;
 }
@@ -88,7 +88,20 @@ bool Texture::Impl::Check() const
 
 Shape Texture::Impl::Shape() const
 {
-  return display::Shape(clip_.w(), clip_.h());
+  display::Shape shape;
+  if(clip_)
+  {
+    shape = display::Shape(clip_.w(), clip_.h());
+  }
+  else if(texture_)
+  {
+    shape = display::Shape(float(texture_->w), float(texture_->h));
+  }
+  else
+  {
+    shape = display::Shape(0.f, 0.f);
+  }
+  return shape;
 }
 
 bool Texture::operator()(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const

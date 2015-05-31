@@ -178,7 +178,7 @@ sdl::Texture WindowImpl::Load(boost::filesystem::path const& file)
   
   if(!texture)
   {
-    texture = sdl::Texture(renderer_, (SDL_Surface*)sdl::Surface(file));
+    texture = sdl::Texture(renderer_, file);
     textures_.emplace(file, texture);
   }
   return texture;

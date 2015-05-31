@@ -30,6 +30,8 @@ public:
   void End();
   void Blink();
   void Next();
+  double Dilation() const;
+  void Dilation(double dilation);
 
   game::Position position_;
   display::Modulation modulation_;
@@ -39,10 +41,10 @@ public:
 
   Feature mouth_;
   Feature eyes_;
-  bool paused_;
   event::Timer blink_;
   bool open_;
 
+  double dilation_;
   event::Timer animation_;
   game::Body game_body_;
 };

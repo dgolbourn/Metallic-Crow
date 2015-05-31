@@ -20,7 +20,6 @@ void Actor::Impl::Pause()
   }
   if(blink_)
   {
-    paused_ = true;
     blink_.Pause();
   }
 }
@@ -33,7 +32,6 @@ void Actor::Impl::Resume()
   }
   if(blink_)
   {
-    paused_ = false;
     blink_.Resume();
   }
 }
@@ -147,7 +145,7 @@ void Actor::Impl::Body(std::string const& expression, bool left_facing)
 {
   if(game_body_)
   {
-    game_body_.Expression(expression, left_facing);
+    animation_.Reset(dilation_ * game_body_.Expression(expression, left_facing), -1);
   }
 }
 
@@ -155,7 +153,7 @@ void Actor::Impl::Body(std::string const& expression)
 {
   if(game_body_)
   {
-    game_body_.Expression(expression);
+    animation_.Reset(dilation_ * game_body_.Expression(expression), -1);
   }
 }
 
@@ -163,7 +161,7 @@ void Actor::Impl::Body(bool left_facing)
 {
   if(game_body_)
   {
-    game_body_.Expression(left_facing);
+    animation_.Reset(dilation_ * game_body_.Expression(left_facing), -1);
   }
 }
 
@@ -199,28 +197,24 @@ void Actor::Impl::Blink()
     t = interval();
   }
 
-  blink_.Reset(t, 0);
-  if(!paused_)
-  {
-    blink_.Resume();
-  }
+  blink_.Reset(t, -1);
 
   open_ ^= true;
   eyes_.Expression(open_);
 }
 
-Actor::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, int& plane, boost::filesystem::path const& path) : paused_(true), force_(0.f, 0.f), open_(true)
+Actor::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, int& plane, boost::filesystem::path const& path) : force_(0.f, 0.f), open_(true)
 {
   json_t* dynamics_body;
   json_t* game_body;
   json_t* eyes;
   json_t* mouth;
   json_t* blink;
-  json_t* period;
   json_t* plane_ref;
+  json_t* dilation;
   json.Unpack("{sososososososo}",
     "dynamics body", &dynamics_body,
-    "frame period", &period,
+    "dilation", &dilation,
     "game body", &game_body,
     "eyes", &eyes,
     "mouth", &mouth,
@@ -230,8 +224,6 @@ Actor::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue&
   dynamics_body_ = MakeBody(json::JSON(dynamics_body), world, collision);
   if(json::JSON json = json::JSON(game_body))
   {
-    json::JSON(plane_ref).Unpack("i", &plane);
-
     if(json::JSON json = json::JSON(eyes))
     {
       eyes_ = game::Feature(json, window, path);
@@ -242,26 +234,21 @@ Actor::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue&
     }
   
     game_body_ = game::Body(json, window, path, eyes_, mouth_);
-  
+
+    json::JSON(dilation).Unpack("f", &dilation_);
+    animation_ = event::Timer(dilation_ * game_body_.Period(), -1);
+    queue.Add(function::Bind(&event::Timer::operator(), animation_));
+
+    json::JSON(plane_ref).Unpack("i", &plane);
+
     if(json::JSON json = json::JSON(blink))
     {
       int bblink;
       json.Unpack("b", &bblink);
       if((bblink != 0) && bool(eyes_))
       {
-        blink_ = event::Timer(interval(), 0);
+        blink_ = event::Timer(interval(), -1);
         queue.Add(function::Bind(&event::Timer::operator(), blink_));
-      }
-    }
-    
-    if(json::JSON json = json::JSON(period))
-    {
-      double fperiod;
-      json.Unpack("f", &fperiod);
-      if(fperiod)
-      {
-        animation_ = event::Timer(fperiod, -1);
-        queue.Add(function::Bind(&event::Timer::operator(), animation_));
       }
     }
   }
@@ -294,7 +281,7 @@ void Actor::Impl::Init(Scene& scene, dynamics::World& world, int plane)
   }
   if(blink_)
   {
-    blink_.End(function::Bind(&Impl::Blink, shared_from_this()));
+    blink_.Add(function::Bind(&Impl::Blink, shared_from_this()));
   }
   if(animation_)
   {
@@ -304,7 +291,17 @@ void Actor::Impl::Init(Scene& scene, dynamics::World& world, int plane)
 
 void Actor::Impl::Next()
 {
-  game_body_.Next();
+  animation_.Reset(dilation_ * game_body_.Next(), -1);
+}
+
+double Actor::Impl::Dilation() const
+{
+  return dilation_;
+}
+
+void Actor::Impl::Dilation(double dilation)
+{
+  dilation_ = dilation;
 }
 
 void Actor::Position(game::Position const& position)
@@ -380,6 +377,16 @@ void Actor::Mouth(std::string const& expression)
 void Actor::Mouth(int open)
 {
   impl_->Mouth(open);
+}
+
+double Actor::Dilation() const
+{
+  return impl_->Dilation();
+}
+
+void Actor::Dilation(double dilation)
+{
+  impl_->Dilation(dilation);
 }
 
 Actor::operator bool() const

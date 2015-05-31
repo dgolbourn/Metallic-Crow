@@ -22,7 +22,11 @@ public:
   void Pop(std::string& out, bool front);
   void Pop(bool& out, bool front);
   void Pop(event::Command& out, bool front);
+  void Pop(bool front);
   void Add(event::Command const& command, std::string const& name, int out);
+  void Collect(int size);
+  void Pause();
+  void Resume();
   lua_State* state_;
   CommandMap map_;
   int weak_registry_;

@@ -1,6 +1,6 @@
 #ifndef SUBTITLE_H_
 #define SUBTITLE_H_
-#include "json.h"
+#include "lua_stack.h"
 #include "window.h"
 #include <memory>
 #include "boost/filesystem.hpp"
@@ -10,7 +10,7 @@ class Subtitle
 {
 public:
   Subtitle() = default;
-  Subtitle(json::JSON const& json, display::Window& window, boost::filesystem::path const& path);
+  Subtitle(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path);
   void operator()(std::string const& text);
   void Modulation(float r, float g, float b, float a);
   void Render() const;

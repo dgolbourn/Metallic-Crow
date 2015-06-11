@@ -1,13 +1,13 @@
 #ifndef LIGHT_H_
 #define LIGHT_H_
 #include "Box2D/Box2D.h"
-#include "json.h"
+#include "lua_stack.h"
 namespace dynamics
 {
 struct Light
 {
-  Light(void);
-  Light(json::JSON const& json);
+  Light();
+  Light(lua::Stack& lua);
 
   b2Vec3 illumination;
 

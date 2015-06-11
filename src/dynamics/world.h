@@ -1,7 +1,7 @@
 #ifndef WORLD_H_
 #define WORLD_H_
 #include <memory>
-#include "json.h"
+#include "lua_stack.h"
 #include "weak_ptr.h"
 #include "command.h"
 #include "collision.h"
@@ -11,13 +11,13 @@ namespace dynamics
 class World
 {
 public:
-  World(void) = default;
-  World(json::JSON const& json, collision::Collision& collision, event::Queue& queue);
-  explicit operator bool(void) const;
+  World() = default;
+  World(lua::Stack& lua, collision::Collision& collision, event::Queue& queue);
+  explicit operator bool() const;
   void Begin(event::Command const& command);
   void End(event::Command const& command);
-  void Pause(void);
-  void Resume(void);
+  void Pause();
+  void Resume();
   void Ambient(float r, float g, float b);
   bool operator==(World const& other) const;
   typedef memory::WeakPtr<World, class WorldImpl> WeakPtr;

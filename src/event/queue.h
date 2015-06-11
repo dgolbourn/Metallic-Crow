@@ -7,9 +7,9 @@ namespace event
 class Queue
 {
 public:
-  Queue(void);
+  Queue();
   void Add(Command const& command);
-  void operator()(void);
+  void operator()();
 private:
   std::shared_ptr<class QueueImpl> impl_;
 };

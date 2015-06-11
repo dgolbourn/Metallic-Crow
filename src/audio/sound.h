@@ -2,14 +2,14 @@
 #define SOUND_H_
 #include <memory>
 #include "boost/filesystem.hpp"
-#include "json.h"
+#include "lua_stack.h"
 namespace audio
 {
 class Sound
 {
 public:
   Sound() = default;
-  Sound(json::JSON const& json, boost::filesystem::path const& path);
+  Sound(lua::Stack& lua, boost::filesystem::path const& path);
   Sound(boost::filesystem::path const& file, float volume, bool repeat);
   void Pause();
   void Resume();

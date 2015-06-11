@@ -1,6 +1,6 @@
 #ifndef CHOICE_H_
 #define CHOICE_H_
-#include "json.h"
+#include "lua_stack.h"
 #include "window.h"
 #include <memory>
 #include "queue.h"
@@ -11,7 +11,7 @@ class Choice
 {
 public:
   Choice() = default;
-  Choice(json::JSON const& json, display::Window& window, event::Queue& queue, boost::filesystem::path const& path);
+  Choice(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path);
   void operator()(std::string const& up, std::string const& down, std::string const& left, std::string const& right, double timer);
   void Up(event::Command const& command);
   void Down(event::Command const& command);

@@ -1,7 +1,7 @@
 #ifndef SCENERY_H_
 #define SCENERY_H_
 #include "scene.h"
-#include "json.h"
+#include "lua_stack.h"
 #include "window.h"
 #include "queue.h"
 #include "boost/filesystem.hpp"
@@ -11,7 +11,7 @@ class Scenery
 {
 public:
   Scenery() = default;
-  Scenery(json::JSON const& json, event::Queue& queue, display::Window& window, Scene& scene, boost::filesystem::path const& path);
+  Scenery(lua::Stack& lua, event::Queue& queue, display::Window& window, Scene& scene, boost::filesystem::path const& path);
   void Modulation(float r, float g, float b, float a);
 private:
   class Impl;

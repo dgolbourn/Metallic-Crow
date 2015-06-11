@@ -1,6 +1,6 @@
 #ifndef MENU_H_
 #define MENU_H_
-#include "json.h"
+#include "lua_stack.h"
 #include "window.h"
 #include <memory>
 #include <command.h>
@@ -12,7 +12,7 @@ class Menu
 {
 public:
   Menu() = default;
-  Menu(json::JSON const& json, display::Window& window, boost::filesystem::path const& path);
+  Menu(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path);
   void Add(int index, event::Command const& command);
   void Previous();
   void Next();

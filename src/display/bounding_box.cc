@@ -8,7 +8,7 @@ class BoundingBox::Impl
 public:
   Impl() = default;
   Impl(float x, float y, float w, float h);
-  Impl(json::JSON const& json);
+  Impl(lua::Stack& lua);
   SDL_FRect rect_;
 };
 
@@ -17,7 +17,7 @@ bool BoundingBox::operator<(BoundingBox const& other) const
   return impl_.owner_before(other.impl_);
 }
 
-BoundingBox::operator bool(void) const
+BoundingBox::operator bool() const
 {
   return bool(impl_);
 }
@@ -42,22 +42,22 @@ void BoundingBox::h(float h)
   impl_->rect_.h = h;
 }
 
-float BoundingBox::x(void) const
+float BoundingBox::x() const
 {
   return impl_->rect_.x;
 }
 
-float BoundingBox::y(void) const
+float BoundingBox::y() const
 {
   return impl_->rect_.y;
 }
 
-float BoundingBox::w(void) const
+float BoundingBox::w() const
 {
   return impl_->rect_.w;
 }
 
-float BoundingBox::h(void) const
+float BoundingBox::h() const
 {
   return impl_->rect_.h;
 }
@@ -70,21 +70,34 @@ BoundingBox::Impl::Impl(float x, float y, float w, float h) : rect_({x, y, w, h}
 {
 }
 
-BoundingBox::Impl::Impl(json::JSON const& json)
+BoundingBox::Impl::Impl(lua::Stack& lua)
 {
-  double x, y, w, h;
-  json.Unpack("[ffff]", &x, &y, &w, &h);
-  rect_.x = (float)x;
-  rect_.y = (float)y;
-  rect_.w = (float)w;
-  rect_.h = (float)h;
+  {
+    lua::Guard guard = lua.Field(1);
+    lua.Pop(rect_.x);
+  }
+
+  {
+    lua::Guard guard = lua.Field(2);
+    lua.Pop(rect_.y);
+  }
+
+  {
+    lua::Guard guard = lua.Field(3);
+    lua.Pop(rect_.w);
+  }
+
+  {
+    lua::Guard guard = lua.Field(4);
+    lua.Pop(rect_.h);
+  }
 }
 
-BoundingBox::BoundingBox(json::JSON const& json)
+BoundingBox::BoundingBox(lua::Stack& lua)
 {
-  if(json)
+  if(lua.Check())
   {
-    impl_ = std::make_shared<Impl>(json);
+    impl_ = std::make_shared<Impl>(lua);
   }
 }
 

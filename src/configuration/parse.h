@@ -7,9 +7,8 @@ namespace config
 {
 struct Args
 {
-  boost::filesystem::path control;
+  boost::filesystem::path config;
   boost::filesystem::path path;
-  boost::filesystem::path game;
 };
 typedef boost::optional<Args> OptionalArgs;
 

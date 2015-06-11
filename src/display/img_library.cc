@@ -18,7 +18,7 @@ Library::Library(int flags)
   ++reference_count;
 }
 
-Library::~Library(void)
+Library::~Library()
 {
   --reference_count;
   if(reference_count == 0)

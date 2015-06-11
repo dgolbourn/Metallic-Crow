@@ -10,26 +10,36 @@ void Script::Impl::JointInit()
 
 void Script::Impl::JointLoad()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  lua_.PopFront(name);
-  std::string file;
-  lua_.PopFront(file);
-  std::string actor_a_name;
-  lua_.PopFront(actor_a_name);
-  std::string actor_b_name;
-  lua_.PopFront(actor_b_name);
-
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-5);
+    stage = StageGet();
+  }
   if(stage)
   {
-    json::JSON json(path_ / file);
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-4);
+      lua_.Pop(name);
+    }
+    std::string actor_a_name;
+    {
+      lua::Guard guard = lua_.Get(-3);
+      lua_.Pop(actor_a_name);
+    }
+    std::string actor_b_name;
+    {
+      lua::Guard guard = lua_.Get(-2);
+      lua_.Pop(actor_b_name);
+    }
     auto range_a = stage->actors_.equal_range(actor_a_name);
     auto range_b = stage->actors_.equal_range(actor_b_name);
     for(auto& actor_a = range_a.first; actor_a != range_a.second; ++actor_a)
     {
       for(auto& actor_b = range_b.first; actor_b != range_b.second; ++actor_b)
       {
-        stage->joints_.emplace(name, Joint(json, actor_a->second, actor_b->second, stage->world_));
+        lua::Guard guard = lua_.Get(-1);
+        stage->joints_.emplace(name, Joint(lua_, actor_a->second, actor_b->second, stage->world_));
       }
     }
   }
@@ -37,11 +47,18 @@ void Script::Impl::JointLoad()
 
 void Script::Impl::JointFree()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  lua_.PopFront(name);
-  if(stage)
+  StagePtr stage;
   {
+    lua::Guard guard = lua_.Get(-2);
+    stage = StageGet();
+  }
+  if (stage)
+  {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(name);
+    }
     stage->joints_.erase(name);
   }
 }

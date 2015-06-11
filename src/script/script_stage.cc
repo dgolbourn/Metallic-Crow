@@ -3,11 +3,12 @@
 #include <algorithm>
 namespace game
 {
-StagePtr Script::Impl::StagePop()
+StagePtr Script::Impl::StageGet()
 {
   StagePtr ptr;
   std::string name;
-  lua_.PopFront(name);
+  lua_.Pop(name);
+
   if(name == stage_.first)
   {
     ptr = stage_.second;
@@ -36,7 +37,11 @@ void Script::Impl::StageInit()
 void Script::Impl::StageNominate()
 {
   std::string name;
-  lua_.PopFront(name);
+  {
+    lua::Guard guard = lua_.Get(-1);
+    lua_.Pop(name);
+  }
+
   if(name != stage_.first)
   {
     auto stage = stages_.find(name);
@@ -65,37 +70,50 @@ void Script::Impl::StageNominate()
 void Script::Impl::StageLoad()
 {
   std::string name;
-  std::string world_file;
-  std::string choice_file;
-  std::string collision_file;
-  std::string subtitle_file;
-  lua_.PopFront(name);
-  lua_.PopFront(world_file);
-  lua_.PopFront(choice_file);
-  lua_.PopFront(collision_file);
-  lua_.PopFront(subtitle_file);
-  
+  {
+    lua::Guard guard = lua_.Get(-2);
+    lua_.Pop(name);
+  }
+
   StagePtr stage = std::make_shared<Stage>();
   
   stage->collision_ = collision::Collision(queue_);
 
-  stage->world_ = dynamics::World(json::JSON(path_ / world_file), stage->collision_, queue_);
+  {
+    lua::Guard guard = lua_.Get(-1);
+    
+    {
+      lua::Guard guard = lua_.Field("world");
+      stage->world_ = dynamics::World(lua_, stage->collision_, queue_);
+    }
 
-  stage->paused_[0] = paused_;
-  stage->paused_[1] = true;
-  stage->zoom_ = 1.f;
+    stage->paused_[0] = paused_;
+    stage->paused_[1] = true;
+    stage->zoom_ = 1.f;
 
-  stage->group_ = collision::Group(json::JSON(path_ / collision_file), stage->collision_);
+    {
+      lua::Guard guard = lua_.Field("collisions");
+      stage->group_ = collision::Group(lua_, stage->collision_);
+    }
 
-  Choice choice(json::JSON(path_ / choice_file), window_, queue_, path_);
-  choice.Up(function::Bind(&Impl::Call, shared_from_this(), "choice_up"));
-  choice.Down(function::Bind(&Impl::Call, shared_from_this(), "choice_down"));
-  choice.Left(function::Bind(&Impl::Call, shared_from_this(), "choice_left"));
-  choice.Right(function::Bind(&Impl::Call, shared_from_this(), "choice_right"));
-  choice.Timer(function::Bind(&Impl::Call, shared_from_this(), "choice_timer"));
-  stage->choice_ = choice;
+    Choice choice;
+    {
+      lua::Guard guard = lua_.Field("choice");
+      choice = Choice(lua_, window_, queue_, path_);
+    }
 
-  stage->subtitle_ = Subtitle(json::JSON(path_ / subtitle_file), window_, path_);
+    choice.Up(function::Bind(&Impl::Call, shared_from_this(), "choice_up"));
+    choice.Down(function::Bind(&Impl::Call, shared_from_this(), "choice_down"));
+    choice.Left(function::Bind(&Impl::Call, shared_from_this(), "choice_left"));
+    choice.Right(function::Bind(&Impl::Call, shared_from_this(), "choice_right"));
+    choice.Timer(function::Bind(&Impl::Call, shared_from_this(), "choice_timer"));
+    stage->choice_ = choice;
+
+    {
+      lua::Guard guard = lua_.Field("subtitle");
+      stage->subtitle_ = Subtitle(lua_, window_, path_);
+    }
+  }
 
   stages_.emplace(name, stage);
 }
@@ -103,26 +121,51 @@ void Script::Impl::StageLoad()
 void Script::Impl::StageFree()
 {
   std::string name;
-  lua_.PopFront(name);
+  {
+    lua::Guard guard = lua_.Get(-1);
+    lua_.Pop(name);
+  }
   stages_.erase(name);
 }
 
 void Script::Impl::StageAmbient()
 {
-  StagePtr stage = StagePop();
-  float r, g, b;
-  lua_.PopFront(r);
-  lua_.PopFront(g);
-  lua_.PopFront(b);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-4);
+    stage = StageGet();
+  }
   if(stage)
   {
+    float r;
+    {
+      lua::Guard guard = lua_.Get(-3);
+      lua_.Pop(r);
+    }
+
+    float g;
+    {
+      lua::Guard guard = lua_.Get(-2);
+      lua_.Pop(g);
+    }
+
+    float b;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(b);
+    }
+
     stage->world_.Ambient(r, g, b);
   }
 }
 
 void Script::Impl::StagePause()
 {
-  StagePtr stage = StagePop();
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-1);
+    stage = StageGet();
+  }
   if(stage)
   {
     Pause(stage, stage->paused_[1]);
@@ -131,7 +174,11 @@ void Script::Impl::StagePause()
 
 void Script::Impl::StageResume()
 {
-  StagePtr stage = StagePop();
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-1);
+    stage = StageGet();
+  }
   if(stage)
   {
     Resume(stage, stage->paused_[1]);

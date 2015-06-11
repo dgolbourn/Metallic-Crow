@@ -1,6 +1,6 @@
 #ifndef WINDOW_IMPL_H_
 #define WINDOW_IMPl_H_
-#include "json.h"
+#include "lua_stack.h"
 #include "sdl_texture.h"
 #include <string>
 #include "font.h"
@@ -18,7 +18,7 @@ namespace display
 class WindowImpl
 {
 public:
-  WindowImpl(json::JSON const& json);
+  WindowImpl(lua::Stack& lua);
   sdl::Texture Load(boost::filesystem::path const& file);
   sdl::Texture Text(std::string const& text, sdl::Font const& font, float length);
   sdl::Texture Text(std::string const& text, sdl::Font const& font);

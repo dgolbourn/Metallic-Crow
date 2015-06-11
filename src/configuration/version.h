@@ -3,6 +3,6 @@
 #include <string>
 namespace config
 {
-std::string Version(void);
+std::string Version();
 }
 #endif

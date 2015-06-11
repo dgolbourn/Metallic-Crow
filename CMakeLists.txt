@@ -26,28 +26,17 @@ set (AUDIO_SOURCES
 
 source_group ("Source Files\\audio" FILES ${AUDIO_SOURCES})
 
-include_directories ("${PROJECT_SOURCE_DIR}/src/c")
-
-set (C_SOURCES
-	"${PROJECT_SOURCE_DIR}/src/c/cstd_exception.h"
-	"${PROJECT_SOURCE_DIR}/src/c/va_list.h")
-
-source_group ("Source Files\\c" FILES ${C_SOURCES})
-
 include_directories ("${PROJECT_SOURCE_DIR}/src/configuration")
 
 set (CONFIGURATION_SOURCES
-	"${PROJECT_SOURCE_DIR}/src/configuration/json.cc"
-	"${PROJECT_SOURCE_DIR}/src/configuration/json.h"
-	"${PROJECT_SOURCE_DIR}/src/configuration/json_exception.h"
-	"${PROJECT_SOURCE_DIR}/src/configuration/json_iterator.cc"
-	"${PROJECT_SOURCE_DIR}/src/configuration/json_iterator.h"
 	"${PROJECT_SOURCE_DIR}/src/configuration/lua_exception.h"
 	"${PROJECT_SOURCE_DIR}/src/configuration/lua_stack.cc"
 	"${PROJECT_SOURCE_DIR}/src/configuration/lua_stack.h"
 	"${PROJECT_SOURCE_DIR}/src/configuration/lua_stack_impl.h"
 	"${PROJECT_SOURCE_DIR}/src/configuration/lua_command.cc"
 	"${PROJECT_SOURCE_DIR}/src/configuration/lua_command.h"
+	"${PROJECT_SOURCE_DIR}/src/configuration/lua_guard.cc"
+	"${PROJECT_SOURCE_DIR}/src/configuration/lua_guard.h"
 	"${PROJECT_SOURCE_DIR}/src/configuration/parse.cc"
 	"${PROJECT_SOURCE_DIR}/src/configuration/parse.h"
 	"${PROJECT_SOURCE_DIR}/src/configuration/version.cc"
@@ -190,8 +179,6 @@ set (GAME_SOURCES
 	"${PROJECT_SOURCE_DIR}/src/game/game_body.h"
 	"${PROJECT_SOURCE_DIR}/src/game/game_joint.cc"
 	"${PROJECT_SOURCE_DIR}/src/game/game_joint.h"
-	"${PROJECT_SOURCE_DIR}/src/game/make_body.cc"
-	"${PROJECT_SOURCE_DIR}/src/game/make_body.h"
 	"${PROJECT_SOURCE_DIR}/src/game/position.h"
 	"${PROJECT_SOURCE_DIR}/src/game/scene.cc"
 	"${PROJECT_SOURCE_DIR}/src/game/scene.h"
@@ -243,7 +230,6 @@ source_group ("Source Files\\time" FILES ${TIME_SOURCES})
 add_executable (metallic-crow 
 				"${PROJECT_SOURCE_DIR}/src/main.cc"
 				${AUDIO_SOURCES}
-				${C_SOURCES}
 				${CONFIGURATION_SOURCES}
 				${CONTROLLER_SOURCES}
 				${DISPLAY_SOURCES}
@@ -319,13 +305,6 @@ add_library(lua STATIC IMPORTED)
 set_property(TARGET lua PROPERTY IMPORTED_LOCATION_RELEASE "${PROJECT_SOURCE_DIR}/bin/static/lua.lib")
 set_property(TARGET lua PROPERTY IMPORTED_LOCATION_DEBUG "${PROJECT_SOURCE_DIR}/bin/static/lua_d.lib")
 target_link_libraries(metallic-crow lua)
-
-include_directories ("${PROJECT_SOURCE_DIR}/lib/jansson/src")
-include_directories ("${PROJECT_SOURCE_DIR}/lib/jansson/win32")
-add_library(jansson STATIC IMPORTED)
-set_property(TARGET jansson PROPERTY IMPORTED_LOCATION_RELEASE "${PROJECT_SOURCE_DIR}/bin/static/jansson.lib")
-set_property(TARGET jansson PROPERTY IMPORTED_LOCATION_DEBUG "${PROJECT_SOURCE_DIR}/bin/static/jansson_d.lib")
-target_link_libraries(metallic-crow jansson)
 
 include_directories ("${PROJECT_SOURCE_DIR}/lib/boost")
 

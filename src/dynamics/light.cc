@@ -85,7 +85,7 @@ static b2Vec3 Attenuation(BodyImpl& source, BodyImpl& target, AttenuationMap& ma
 
 static const int max_hops = 3;
 
-void WorldImpl::Light(void)
+void WorldImpl::Light()
 { 
   AttenuationMap attenuations;
   LightQueue sources;
@@ -145,59 +145,146 @@ void WorldImpl::Light(void)
   }
 }
 
-Light::Light(json::JSON const& json) : emit(false), transmit(false), diffuse(false), illuminate(false), illumination({0.f, 0.f, 0.f})
+Light::Light(lua::Stack& lua) : emit(false), transmit(false), diffuse(false), illuminate(false), illumination({ 0.f, 0.f, 0.f })
 {
-  json_t* emit_json;
-  json_t* transmit_json;
-  json_t* diffuse_json;
-  json_t* intrinsic_json;
-  json_t* absorb_json;
-  json.Unpack("{sososososo}",
-    "emit", &emit_json,
-    "transmit", &transmit_json,
-    "diffuse", &diffuse_json,
-    "absorb", &absorb_json,
-    "intrinsic", &intrinsic_json);
-
-  if(json::JSON temp = json::JSON(emit_json))
   {
-    emit = true;
-    double x, y, z;
-    temp.Unpack("[fff]", &x, &y, &z);
-    emission.Set(float32(x), float32(y), float32(z));
+    lua::Guard guard = lua.Field("emit");
+    if(lua.Check())
+    {
+      emit = true;
+
+      float32 x;
+      {
+        lua::Guard guard = lua.Field(1);
+        lua.Pop(x);
+      }
+
+      float32 y;
+      {
+        lua::Guard guard = lua.Field(2);
+        lua.Pop(y);
+      }
+
+      float32 z;
+      {
+        lua::Guard guard = lua.Field(3);
+        lua.Pop(z);
+      }
+
+      emission.Set(x, y, z);
+    }
   }
 
-  if(json::JSON temp = json::JSON(transmit_json))
   {
-    transmit = true;
-    double x, y, z;
-    temp.Unpack("[fff]", &x, &y, &z);
-    transmission.Set(float32(x), float32(y), float32(z));
+    lua::Guard guard = lua.Field("transmit");
+    if(lua.Check())
+    {
+      transmit = true;
+
+      float32 x;
+      {
+        lua::Guard guard = lua.Field(1);
+        lua.Pop(x);
+      }
+
+      float32 y;
+      {
+        lua::Guard guard = lua.Field(2);
+        lua.Pop(y);
+      }
+
+      float32 z;
+      {
+        lua::Guard guard = lua.Field(3);
+        lua.Pop(z);
+      }
+      transmission.Set(x, y, z);
+    }
   }
 
-  if(json::JSON temp = json::JSON(diffuse_json))
   {
-    diffuse = true;
-    double x, y, z;
-    temp.Unpack("[fff]", &x, &y, &z);
-    diffusion.Set(float32(x), float32(y), float32(z));
+    lua.Field("diffuse");
+    if(lua.Check())
+    {
+      diffuse = true;
+
+      float32 x;
+      {
+        lua::Guard guard = lua.Field(1);
+        lua.Pop(x);
+      }
+
+      float32 y;
+      {
+        lua::Guard guard = lua.Field(2);
+        lua.Pop(y);
+      }
+
+      float32 z;
+      {
+        lua::Guard guard = lua.Field(3);
+        lua.Pop(z);
+      }
+
+      diffusion.Set(x, y, z);
+    }
   }
 
-  json::JSON temp_intrinsic = json::JSON(intrinsic_json);
-  json::JSON temp_absorb = json::JSON(absorb_json);
-  if(temp_intrinsic && temp_absorb)
   {
-    illuminate = true;
-    double x, y, z;
-    temp_intrinsic.Unpack("[fff]", &x, &y, &z);
-    intrinsic.Set(float32(x), float32(y), float32(z));
+    lua::Guard guard = lua.Field("intrinsic");
+    if(lua.Check())
+    { 
+      float32 x;
+      {
+        lua.Field(1);
+        lua.Pop(x);
+      }
 
-    temp_absorb.Unpack("[fff]", &x, &y, &z);
-    absorption.Set(float32(x), float32(y), float32(z));
+      float32 y;
+      {
+        lua.Field(2);
+        lua.Pop(y);
+      }
+
+      float32 z;
+      {
+        lua.Field(3);
+        lua.Pop(z);
+      }
+
+      lua::Guard guard = lua.Field("absorb");
+      if(lua.Check())
+      {
+        intrinsic.Set(x, y, z);
+
+        illuminate = true;
+
+        float32 x;
+        {
+          lua.Field(1);
+          lua.Pop(x);
+        }
+
+        float32 y;
+        {
+          lua.Field(2);
+          lua.Pop(y);
+        }
+
+        float32 z;
+        {
+          lua.Field(3);
+          lua.Pop(z);
+        }
+
+        absorption.Set(x, y, z);
+      }
+    }
   }
 }
 
-Light::Light(void) : emit(false), transmit(false), diffuse(false), illuminate(false)
+
+Light::Light() : emit(false), transmit(false), diffuse(false), illuminate(false)
 {
 }
 }

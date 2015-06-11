@@ -41,7 +41,6 @@ class Event::Impl
 {
 public:
   Impl(lua::Stack& lua);
-  Impl(json::JSON const& json);
   ~Impl();
   void Check();
   void Control(Command const& command);
@@ -152,8 +151,8 @@ namespace
 SDL_Scancode GetScanCodeField(lua::Stack& lua, std::string const& field)
 {
   int temp;
-  lua.Field(field);
-  lua.PopBack(temp);
+  lua::Guard guard = lua.Field(field);
+  lua.Pop(temp);
   return SDL_Scancode(temp);
 }
 }
@@ -193,72 +192,22 @@ Event::Impl::Impl(lua::Stack& lua) : sdl_(SDL_INIT_EVENTS | SDL_INIT_GAMECONTROL
       }
     }
 
-    double max, min, threshold;
-    lua.Field("update_max"); lua.PopBack(max);
-    lua.Field("update_min"); lua.PopBack(min);
-    lua.Field("update_threshold"); lua.PopBack(threshold);
-
-    update_offset_ = -float(min);
-    update_scale_ = float(1. / (max - min));
-    update_threshold_ = float(threshold * threshold);
-  }
-  catch(...)
-  {
-    Destroy();
-    throw;
-  }
-}
-
-Event::Impl::Impl(json::JSON const& json) : sdl_(SDL_INIT_EVENTS | SDL_INIT_GAMECONTROLLER), x_report_(0.f), y_report_(0.f), x_key_(0.f), y_key_(0.f), key_state_up_(false), key_state_down_(false), key_state_left_(false), key_state_right_(false)
-{
-  try
-  {
-    int up, down, left, right, choice_up, choice_down, choice_left, choice_right, select, back;
-    double max, min, threshold;
-    json.Unpack("{sisisisisisisisisisisfsfsf}",
-      "up", &up,
-      "down", &down,
-      "left", &left,
-      "right", &right,
-      "choice up", &choice_up,
-      "choice down", &choice_down,
-      "choice left", &choice_left,
-      "choice right", &choice_right,
-      "select", &select,
-      "back", &back,
-      "update max", &max,
-      "update min", &min,
-      "update threshold", &threshold);
-
-    key_up_ = SDL_Scancode(up);
-    key_down_ = SDL_Scancode(down);
-    key_left_ = SDL_Scancode(left);
-    key_right_ = SDL_Scancode(right);
-    key_choice_up_ = SDL_Scancode(choice_up);
-    key_choice_down_ = SDL_Scancode(choice_down);
-    key_choice_left_ = SDL_Scancode(choice_left);
-    key_choice_right_ = SDL_Scancode(choice_right);
-    key_select_ = SDL_Scancode(select);
-    key_back_ = SDL_Scancode(back);
-
-    for(int i = 0; i < SDL_NumJoysticks(); ++i)
+    double max;
     {
-      if(SDL_IsGameController(i))
-      {
-        if(SDL_GameController* game_controller = SDL_GameControllerOpen(i))
-        {
-          int joystick = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(game_controller));
-          if(joystick == -1)
-          {
-            BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
-          }
-          controllers_.emplace(joystick, ControllerState{game_controller, 0.f, 0.f, 0.f, 0.f});
-        }
-        else
-        {
-          BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
-        }
-      }
+      lua::Guard guard = lua.Field("update_max");
+      lua.Pop(max);
+    }
+
+    double min;
+    {
+      lua::Guard guard = lua.Field("update_min");
+      lua.Pop(min);
+    }
+
+    double threshold;
+    {
+      lua::Guard guard = lua.Field("update_threshold");
+      lua.Pop(threshold);
     }
 
     update_offset_ = -float(min);
@@ -616,10 +565,6 @@ void Event::Impl::Check()
 }
 
 Event::Event(lua::Stack& lua) : impl_(std::make_shared<Impl>(lua))
-{
-}
-
-Event::Event(json::JSON const& json) : impl_(std::make_shared<Impl>(json))
 {
 }
 

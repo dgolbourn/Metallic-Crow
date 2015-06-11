@@ -12,18 +12,18 @@ bool BoxSearch::ReportFixture(b2Fixture* fixture)
   {
     if(BodyImpl* impl = (BodyImpl*)body->GetUserData())
     {
-      (void)impl_.insert(impl);
+      impl_.insert(impl);
     }
   }
   return true;
 }
 
-BoxSearch::Iterator BoxSearch::begin(void)
+BoxSearch::Iterator BoxSearch::begin()
 {
   return impl_.begin();
 }
   
-BoxSearch::Iterator BoxSearch::end(void)
+BoxSearch::Iterator BoxSearch::end()
 {
   return impl_.end();
 }

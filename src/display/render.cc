@@ -36,7 +36,7 @@ public:
     }
   }
 
-  ~Modulator(void)
+  ~Modulator()
   {
     try
     {

@@ -9,12 +9,12 @@ namespace event
 class Signal
 {
 public:
-  Signal(void);
-  void operator()(void);
+  Signal();
+  void operator()();
   void operator()(Queue& queue);
   void Add(Command const& command);
-  void Clear(void);
-  explicit operator bool(void) const;
+  void Clear();
+  explicit operator bool() const;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

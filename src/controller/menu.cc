@@ -1,5 +1,4 @@
 #include "menu.h"
-#include "json_iterator.h"
 #include "texture.h"
 #include "font.h"
 #include "bounding_box.h"
@@ -25,7 +24,7 @@ namespace game
 class Menu::Impl
 {
 public:
-  Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path);
+  Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path);
   void Add(int index, event::Command const& command);
   void Previous();
   void Next();
@@ -50,35 +49,51 @@ public:
   display::Modulation active_modulation_;
 };
 
-Menu::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path) : selection_(0), selections_(0), window_(window), path_(path)
+Menu::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path) : selection_(0), selections_(0), window_(window), path_(path)
 {
-  json_t* idle_ref;
-  json_t* active_ref;
-  char const* background_file;
-  json_t* clip;
-  json_t* render_box_ref;
-  json_t* idle_mod;
-  json_t* active_mod;
-  json_t* page_mod;
+  {
+    lua::Guard guard = lua.Field("idle_font");
+    idle_font_ = sdl::Font(lua, path);
+  }
 
-  json.Unpack("{sososososssososo}",
-    "idle font", &idle_ref,
-    "idle font modulation", &idle_mod,
-    "active font", &active_ref,
-    "active font modulation", &active_mod,
-    "page", &background_file,
-    "clip", &clip,
-    "render box", &render_box_ref,
-    "page modulation", &page_mod);
+  {
+    lua::Guard guard = lua.Field("active_font");
+    active_font_ = sdl::Font(lua, path);
+  }
 
-  idle_font_ = sdl::Font(json::JSON(idle_ref), path);
-  active_font_ = sdl::Font(json::JSON(active_ref), path);
+  {
+    lua::Guard guard = lua.Field("active_font_modulation");
+    active_modulation_ = display::Modulation(lua);
+  }
 
-  active_modulation_ = display::Modulation(json::JSON(active_mod));
-  idle_modulation_ = display::Modulation(json::JSON(idle_mod));
-  background_.texture_ = display::Texture(display::Texture(path_ / background_file, window), display::BoundingBox(json::JSON(clip)));
-  background_.render_box_ = display::BoundingBox(json::JSON(render_box_ref));
-  background_.modulation_ = display::Modulation(json::JSON(page_mod));
+  {
+    lua::Guard guard = lua.Field("idle_font_modulation");
+    idle_modulation_ = display::Modulation(lua);
+  }
+
+  display::BoundingBox clip;
+  {
+    lua::Guard guard = lua.Field("clip");
+    clip = display::BoundingBox(lua);
+  }
+
+  std::string file;
+  {
+    lua::Guard guard = lua.Field("page");
+    lua.Pop(file);
+  }
+
+  background_.texture_ = display::Texture(display::Texture(path_ / file, window), clip);
+
+  {
+    lua::Guard guard = lua.Field("render_box");
+    background_.render_box_ = display::BoundingBox(lua);
+  }
+
+  {
+    lua::Guard guard = lua.Field("page_modulation");
+    background_.modulation_ = display::Modulation(lua);
+  }
 }
 
 void Menu::Impl::Choice(Options const& options)
@@ -233,7 +248,7 @@ void Menu::operator()(Options const& options)
   impl_->Choice(options);
 }
 
-Menu::Menu(json::JSON const& json, display::Window& window, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, window, path))
+Menu::Menu(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(lua, window, path))
 {
 }
 }

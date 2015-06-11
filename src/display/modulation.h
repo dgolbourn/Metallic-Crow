@@ -1,7 +1,7 @@
 #ifndef MODULATION_H_
 #define MODULATION_H_
 #include <memory>
-#include "json.h"
+#include "lua_stack.h"
 namespace display
 {
 class Modulation
@@ -9,7 +9,7 @@ class Modulation
 public:
   Modulation() = default;
   Modulation(float r, float g, float b, float a);
-  Modulation(json::JSON const& json);
+  Modulation(lua::Stack& lua);
   explicit operator bool() const;
   void r(float r);
   void g(float g);

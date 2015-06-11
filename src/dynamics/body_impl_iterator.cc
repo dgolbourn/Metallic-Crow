@@ -1,7 +1,7 @@
 #include "body_impl_iterator.h"
 namespace dynamics
 {
-BodyImpl::Iterator::Iterator(void) : impl_(nullptr)
+BodyImpl::Iterator::Iterator() : impl_(nullptr)
 {
 }
 
@@ -9,7 +9,7 @@ BodyImpl::Iterator::Iterator(BodyImpl* impl) : impl_(impl)
 {
 }
 
-void BodyImpl::Iterator::increment(void)
+void BodyImpl::Iterator::increment()
 {
   if(impl_)
   {
@@ -34,7 +34,7 @@ bool BodyImpl::Iterator::equal(Iterator const& other) const
   return impl_ == other.impl_;
 }
 
-BodyImpl& BodyImpl::Iterator::dereference(void) const
+BodyImpl& BodyImpl::Iterator::dereference() const
 { 
   return *impl_; 
 }

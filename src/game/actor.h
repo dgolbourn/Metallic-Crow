@@ -3,7 +3,6 @@
 #include <memory>
 #include <string>
 #include "window.h"
-#include "json.h"
 #include "scene.h"
 #include "position.h"
 #include "weak_ptr.h"
@@ -11,13 +10,14 @@
 #include "collision_group.h"
 #include "world.h"
 #include "boost/filesystem.hpp"
+#include "lua_stack.h"
 namespace game
 {
 class Actor
 {
 public:
   Actor() = default;
-  Actor(json::JSON const& json, display::Window& window, Scene& scene, collision::Group& collision, event::Queue& queue, dynamics::World& world, boost::filesystem::path const& path);
+  Actor(lua::Stack& lua, display::Window& window, Scene& scene, collision::Group& collision, event::Queue& queue, dynamics::World& world, boost::filesystem::path const& path);
   void Position(game::Position const& position);
   game::Position Position() const;
   void Velocity(game::Position const& velocity);

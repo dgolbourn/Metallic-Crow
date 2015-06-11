@@ -10,30 +10,62 @@ void Script::Impl::CollisionInit()
 
 void Script::Impl::CollisionBegin()
 {
-  StagePtr stage = StagePop();
-  std::string group_a;
-  std::string group_b;
-  event::Command command;
-  lua_.PopFront(group_a);
-  lua_.PopFront(group_b);
-  lua_.PopFront(command);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-4);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string group_a;
+    {
+      lua::Guard guard = lua_.Get(-3);
+      lua_.Pop(group_a);
+    }
+
+    std::string group_b;
+    {
+      lua::Guard guard = lua_.Get(-2);
+      lua_.Pop(group_b);
+    }
+
+    event::Command command;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(command);
+    }    
+    
     stage->group_.Begin(group_a, group_b, command);
   }
 }
 
 void Script::Impl::CollisionEnd()
 {
-  StagePtr stage = StagePop();
-  std::string group_a;
-  std::string group_b;
-  event::Command command;
-  lua_.PopFront(group_a);
-  lua_.PopFront(group_b);
-  lua_.PopFront(command);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-4);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string group_a;
+    {
+      lua::Guard guard = lua_.Get(-3);
+      lua_.Pop(group_a);
+    }
+
+    std::string group_b;
+    {
+      lua::Guard guard = lua_.Get(-2);
+      lua_.Pop(group_b);
+    }
+
+    event::Command command;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(command);
+    }
+
     stage->group_.End(group_a, group_b, command);
   }
 }

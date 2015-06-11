@@ -6,7 +6,7 @@ namespace ttf
 {
 static int reference_count;
 
-Library::Library(void)
+Library::Library()
 {
   if(!TTF_WasInit() && TTF_Init()==-1) 
   {
@@ -15,7 +15,7 @@ Library::Library(void)
   ++reference_count;
 }
 
-Library::~Library(void)
+Library::~Library()
 {
   if(reference_count > 0)
   {

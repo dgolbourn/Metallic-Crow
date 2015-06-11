@@ -1,9 +1,8 @@
 #ifndef EVENT_H_
 #define EVENT_H_
-#include "json.h"
+#include "lua_stack.h"
 #include "weak_ptr.h"
 #include "command.h"
-#include "lua_stack.h"
 namespace event
 {
 class Event
@@ -11,7 +10,6 @@ class Event
 public:
   Event() = default;
   Event(lua::Stack& lua);
-  Event(json::JSON const& json);
   void operator()();
   typedef std::function<bool(float, float)> Command;
   void Control(Command const& command);

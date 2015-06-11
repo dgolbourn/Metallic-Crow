@@ -5,7 +5,7 @@ class Modulation::Impl
 {
 public:
   Impl(float r, float g, float b, float a);
-  Impl(json::JSON const& json);
+  Impl(lua::Stack& lua);
   float r_;
   float g_;
   float b_;
@@ -65,21 +65,34 @@ Modulation::Modulation(float r, float g, float b, float a) : impl_(std::make_sha
 {
 }
 
-Modulation::Impl::Impl(json::JSON const& json)
+Modulation::Impl::Impl(lua::Stack& lua)
 {
-  double r, g, b, a;
-  json.Unpack("[ffff]", &r, &g, &b, &a);
-  r_ = (float)r;
-  g_ = (float)g;
-  b_ = (float)b;
-  a_ = (float)a;
+  {
+    lua::Guard guard = lua.Field(1);
+    lua.Pop(r_);
+  }
+
+  {
+    lua::Guard guard = lua.Field(2);
+    lua.Pop(g_);
+  }
+
+  {
+    lua::Guard guard = lua.Field(3);
+    lua.Pop(b_);
+  }
+
+  {
+    lua::Guard guard = lua.Field(4);
+    lua.Pop(a_);
+  }
 }
 
-Modulation::Modulation(json::JSON const& json)
+Modulation::Modulation(lua::Stack& lua)
 {
-  if(json)
+  if(lua.Check())
   {
-    impl_ = std::make_shared<Impl>(json);
+    impl_ = std::make_shared<Impl>(lua);
   }
   else
   {

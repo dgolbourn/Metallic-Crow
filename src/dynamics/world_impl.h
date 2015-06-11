@@ -18,17 +18,17 @@ typedef std::map<BodyImplPair, int> BodyImplCount;
 class WorldImpl final : public b2DestructionListener, public b2ContactFilter, public b2ContactListener, public std::enable_shared_from_this<WorldImpl>
 {
 public:
-  WorldImpl(json::JSON const& json, collision::Collision& collision);
+  WorldImpl(lua::Stack& lua, collision::Collision& collision);
   void Init(event::Queue& queue);
-  void Update(void);
-  void Pause(void);
-  void Resume(void);
+  void Update();
+  void Pause();
+  void Resume();
   void BeginContact(b2Contact* contact) override;
   void EndContact(b2Contact* contact) override;
   bool ShouldCollide(b2Fixture* fixtureA, b2Fixture* fixtureB) override;
   void Begin(event::Command const& command);
   void End(event::Command const& command);
-  void Light(void);
+  void Light();
   void Ambient(float r, float g, float b);
   void SayGoodbye(b2Joint* joint) override;
   void SayGoodbye(b2Fixture* fixture) override;

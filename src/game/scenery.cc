@@ -1,7 +1,6 @@
 #include "scenery.h"
 #include "bounding_box.h"
 #include "bind.h"
-#include "json_iterator.h"
 #include "exception.h"
 #include "animation.h"
 #include "timer.h"
@@ -33,7 +32,7 @@ typedef std::vector<Animation> Animations;
 class Scenery::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(json::JSON const& json, display::Window& window, int& plane, boost::filesystem::path const& path);
+  Impl(lua::Stack& lua, display::Window& window, int& plane, boost::filesystem::path const& path);
   void Init(Scene& scene, event::Queue&, int plane);
   void Render() const;
   void Next();
@@ -44,7 +43,7 @@ public:
   display::Modulation modulation_;
 };
 
-void Scenery::Impl::Render(void) const
+void Scenery::Impl::Render() const
 {
   for(auto& animation : animations_)
   {
@@ -70,38 +69,57 @@ void Scenery::Impl::Modulation(float r, float g, float b, float a)
   modulation_ = display::Modulation(r, g, b, a);
 }
 
-Scenery::Impl::Impl(json::JSON const& json, display::Window& window, int& plane, boost::filesystem::path const& path)
+Scenery::Impl::Impl(lua::Stack& lua, display::Window& window, int& plane, boost::filesystem::path const& path)
 {
-  json_t* animations;
-  double parallax;
-  json_t* modulation;
-  double interval;
-  json.Unpack("{sosfsisfso}",
-    "animations", &animations,
-    "interval",  &interval,
-    "plane", &plane,
-    "parallax", &parallax,
-    "modulation", &modulation);
- 
-  modulation_ = display::Modulation(json::JSON(modulation));
- 
-  for(json::JSON animation : json::JSON(animations))
   {
-    json_t* render_box;
-    json_t* animation_ref;
-    animation.Unpack("{soso}",
-      "animation", &animation_ref,
-      "render box", &render_box);
-    animations_.emplace_back(display::MakeAnimation(json::JSON(animation_ref), window, path), display::BoundingBox(json::JSON(render_box)));
-    if(animations_.back().animation_.empty())
+    lua::Guard guard = lua.Field("parallax");
+    lua.Pop(parallax_);
+  }
+
+  {
+    lua::Guard guard = lua.Field("plane");
+    lua.Pop(plane);
+  }
+
+  {
+    lua::Guard guard = lua.Field("modulation");
+    modulation_ = display::Modulation(lua);
+  }
+ 
+  
+  {
+    lua::Guard guard = lua.Field("animations");
+    for(int index = 1, end = lua.Size(); index <= end; ++index)
     {
-      animations_.pop_back();
+      lua::Guard guard = lua.Field(index);
+
+      display::BoundingBox render_box;
+      {
+        lua::Guard guard = lua.Field("render_box");
+        render_box = display::BoundingBox(lua);
+      }
+
+      {
+        lua::Guard guard = lua.Field("animation");
+        animations_.emplace_back(display::MakeAnimation(lua, window, path), render_box);
+      }
+
+      if(animations_.back().animation_.empty())
+      {
+        animations_.pop_back();
+      }
     }
   }
 
+  double interval;
   if(animations_.empty())
   {
     interval = -1.;
+  }
+  else
+  {
+    lua::Guard guard = lua.Field("interval");
+    lua.Pop(interval);
   }
   timer_ = event::Timer(interval, -1);
 }
@@ -113,10 +131,10 @@ void Scenery::Impl::Init(Scene& scene, event::Queue& queue, int plane)
   scene.Add(function::Bind(&Scenery::Impl::Render, shared_from_this()), plane);
 }
 
-Scenery::Scenery(json::JSON const& json, event::Queue& queue, display::Window& window, Scene& scene, boost::filesystem::path const& path)
+Scenery::Scenery(lua::Stack& lua, event::Queue& queue, display::Window& window, Scene& scene, boost::filesystem::path const& path)
 {
   int plane;
-  impl_ = std::make_shared<Impl>(json, window, plane, path);
+  impl_ = std::make_shared<Impl>(lua, window, plane, path);
   impl_->Init(scene, queue, plane);
 }
 

@@ -1,27 +1,27 @@
 #ifndef BODY_H_
 #define BODY_H_
 #include <memory>
-#include "json.h"
 #include "weak_ptr.h"
 #include "position.h"
 #include "command.h"
 #include "modulation.h"
+#include "lua_stack.h"
 namespace dynamics
 {
 class Body
 {
 public:
-  Body(void) = default;
-  Body(json::JSON const& json, class World& world);
-  explicit operator bool(void) const;
+  Body() = default;
+  Body(lua::Stack& lua, class World& world);
+  explicit operator bool() const;
   bool operator<(Body const& other) const;
-  game::Position Position(void) const;
+  game::Position Position() const;
   void Position(float x, float y);
-  game::Position Velocity(void) const;
+  game::Position Velocity() const;
   void Velocity(float x, float y);
   void Force(float x, float y);
   void Impulse(float x, float y);
-  display::Modulation Modulation(void) const;
+  display::Modulation Modulation() const;
   typedef memory::WeakPtr<Body, class BodyImpl> WeakPtr;
 private:
   std::shared_ptr<class BodyImpl> impl_;

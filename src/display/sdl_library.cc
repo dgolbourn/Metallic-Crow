@@ -39,7 +39,7 @@ Library::Library(Uint32 flags) : flags_(flags)
   }
 }
 
-Library::~Library(void)
+Library::~Library()
 {
   int index = 0;
   Uint32 quit_flags = 0x00u;

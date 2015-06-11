@@ -186,16 +186,27 @@ Music::Music(boost::filesystem::path const& file, float volume, bool repeat) : i
 {
 }
 
-Music::Music(json::JSON const& json, boost::filesystem::path const& path)
+Music::Music(lua::Stack& lua, boost::filesystem::path const& path)
 {
-  char const* file;
-  double volume;
-  int repeat;
-  json.Unpack("{sssfsb}",
-    "file", &file,
-    "volume", &volume,
-    "repeat", &repeat);
-  impl_ = std::make_shared<Impl>(path / file, float(volume), repeat != 0);
+  float volume;
+  {
+    lua::Guard guard = lua.Field("volume");
+    lua.Pop(volume);
+  }
+
+  std::string file;
+  {
+    lua::Guard guard = lua.Field("file");
+    lua.Pop(file);
+  }
+
+  bool repeat;
+  {
+    lua::Guard guard = lua.Field("repeat");
+    lua.Pop(repeat);
+  }
+
+  impl_ = std::make_shared<Impl>(path / file, volume, repeat);
 }
 
 bool Music::operator()(float volume)

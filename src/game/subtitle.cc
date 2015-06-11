@@ -4,10 +4,10 @@ namespace game
 class Subtitle::Impl
 {
 public:
-  Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path);
+  Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path);
   void Subtitle(std::string const& text);
   void Modulation(float r, float g, float b, float a);
-  void Render(void) const;
+  void Render() const;
 
   sdl::Font font_;
   display::Modulation modulation_;
@@ -17,17 +17,17 @@ public:
   display::Window window_;
 };
 
-Subtitle::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path) : window_(window)
+Subtitle::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path) : window_(window)
 {
-  json_t* font;
-  json_t* clip;
-  
-  json.Unpack("{soso}",
-    "font", &font,
-    "render box", &clip);
+  {
+    lua::Guard guard = lua.Field("font");
+    font_ = sdl::Font(lua, path);
+  }
 
-  font_ = sdl::Font(json::JSON(font), path);
-  clip_ = display::BoundingBox(json::JSON(clip));
+  {
+    lua::Guard guard = lua.Field("render_box");
+    clip_ = display::BoundingBox(lua);
+  }
 }
 
 void Subtitle::Impl::Render() const
@@ -63,7 +63,7 @@ void Subtitle::Modulation(float r, float g, float b, float a)
   impl_->Modulation(r, g, b, a);
 }
 
-Subtitle::Subtitle(json::JSON const& json, display::Window& window, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, window, path))
+Subtitle::Subtitle(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(lua, window, path))
 {
 }
 }

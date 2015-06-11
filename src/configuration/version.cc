@@ -1,7 +1,6 @@
 #include "version.h"
 #include "boost/config.hpp"
 #include "boost/version.hpp"
-#include "jansson.h"
 #include "lua.h"
 #include "sdl.h"
 #include "sdl_mixer.h"
@@ -11,7 +10,7 @@
 #include <sstream>
 namespace config
 {
-std::string Version(void)
+std::string Version()
 {
   static const int major = 0;
   static const int minor = 2;
@@ -36,7 +35,6 @@ std::string Version(void)
   stream << "Compiler: " << BOOST_COMPILER << std::endl;
   stream << "Standard Library: " << BOOST_STDLIB << std::endl;
   stream << "Boost: " << BOOST_VERSION / 100000 << "." << BOOST_VERSION / 100 % 1000 << "." <<  BOOST_VERSION % 100  << std::endl;
-  stream << "Jansson: " << JANSSON_MAJOR_VERSION << "." << JANSSON_MINOR_VERSION << "." << JANSSON_MICRO_VERSION << std::endl;
   stream << "Lua: " << LUA_VERSION_MAJOR << "." << LUA_VERSION_MINOR << "." << LUA_VERSION_RELEASE << std::endl;
   stream << "SDL: " << SDL_MAJOR_VERSION << "." << SDL_MINOR_VERSION << "." << SDL_PATCHLEVEL << std::endl;
   stream << "SDL Mixer: " << SDL_MIXER_MAJOR_VERSION << "." << SDL_MIXER_MINOR_VERSION << "." << SDL_MIXER_PATCHLEVEL << std::endl;

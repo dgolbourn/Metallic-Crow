@@ -1,27 +1,27 @@
 #ifndef BOUNDING_BOX_H_
 #define BOUNDING_BOX_H_
 #include <memory>
-#include "json.h"
+#include "lua_stack.h"
 #include "weak_ptr.h"
 namespace display
 {
 class BoundingBox
 {
 public:
-  BoundingBox(void) = default;
+  BoundingBox() = default;
   BoundingBox(float x, float y, float w, float h);
-  BoundingBox(json::JSON const& json);
+  BoundingBox(lua::Stack& lua);
   BoundingBox(BoundingBox const& first, BoundingBox const& second);
   bool operator<(BoundingBox const& other) const;
-  explicit operator bool(void) const;
+  explicit operator bool() const;
   void x(float x);
   void y(float y);
   void w(float w);
   void h(float h);
-  float x(void) const;
-  float y(void) const;
-  float w(void) const;
-  float h(void) const;
+  float x() const;
+  float y() const;
+  float w() const;
+  float h() const;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

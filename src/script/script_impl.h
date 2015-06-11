@@ -75,7 +75,6 @@ public:
   void ChoiceLeft();
   void ChoiceRight();
   void Control(float x, float y);
-
   void Call(std::string const& call);
   void View();
   void Pause(StagePtr const& stage, bool& paused);
@@ -115,7 +114,7 @@ public:
   void StageNominate();
   void StagePause();
   void StageResume();
-  StagePtr StagePop();
+  StagePtr StageGet();
 
   void ChoiceInit();
   void ChoiceChoice();

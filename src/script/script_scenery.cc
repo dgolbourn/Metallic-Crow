@@ -11,40 +11,77 @@ void Script::Impl::SceneryInit()
 
 void Script::Impl::SceneryLoad()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  std::string file;
-  lua_.PopFront(name);
-  lua_.PopFront(file);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-3);
+    stage = StageGet();
+  }
   if(stage)
   {
-    stage->scenery_.emplace(name, Scenery(json::JSON(path_ / file), queue_, window_, stage->scene_, path_));
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-2);
+      lua_.Pop(name);
+    }
+
+    lua::Guard guard = lua_.Get(-1);
+    stage->scenery_.emplace(name, Scenery(lua_, queue_, window_, stage->scene_, path_));
   }
 }
 
 void Script::Impl::SceneryFree()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  lua_.PopFront(name);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-2);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(name);
+    }
     stage->scenery_.erase(name);
   }
 }
 
 void Script::Impl::SceneryModulation()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  float r, g, b, a;
-  lua_.PopFront(name);
-  lua_.PopFront(r);
-  lua_.PopFront(g);
-  lua_.PopFront(b);
-  lua_.PopFront(a);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-6);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-5);
+      lua_.Pop(name);
+    }
+    float r;
+    {
+      lua::Guard guard = lua_.Get(-4);
+      lua_.Pop(r);
+    }
+    float g;
+    {
+      lua::Guard guard = lua_.Get(-3);
+      lua_.Pop(g);
+    }
+    float b;
+    {
+      lua::Guard guard = lua_.Get(-2);
+      lua_.Pop(b);
+    }
+    float a;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(a);
+    }
+
     auto range = stage->scenery_.equal_range(name);
     for(auto& scenery = range.first; scenery != range.second; ++scenery)
     {

@@ -24,17 +24,17 @@ Texture::Texture(SDL_Renderer* renderer, boost::filesystem::path const& file)
   impl_ = std::shared_ptr<SDL_Texture>(impl, SDL_DestroyTexture);
 }
 
-Texture::operator SDL_Texture*(void) const
+Texture::operator SDL_Texture*() const
 {
   return impl_.get();
 }
 
-SDL_Texture* Texture::operator->(void) const
+SDL_Texture* Texture::operator->() const
 {
   return impl_.get();
 }
 
-Texture::operator bool(void) const
+Texture::operator bool() const
 {
   return bool(impl_);
 }

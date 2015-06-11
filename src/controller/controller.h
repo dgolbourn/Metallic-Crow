@@ -1,7 +1,7 @@
 #ifndef CONTROLLER_H_
 #define CONTROLLER_H_
 #include <memory>
-#include "json.h"
+#include "lua_stack.h"
 #include "queue.h"
 #include "command.h"
 #include "weak_ptr.h"
@@ -12,7 +12,7 @@ class Controller
 {
 public:
   Controller() = default;
-  Controller(json::JSON const& json, event::Queue& queue, boost::filesystem::path const& path);
+  Controller(lua::Stack& lua, event::Queue& queue, boost::filesystem::path const& path);
   void Control(float x, float y);
   void ChoiceUp();
   void ChoiceDown();

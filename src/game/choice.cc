@@ -19,19 +19,12 @@ typedef std::array<display::BoundingBox, 5> Boxes;
 typedef std::array<display::Texture, 4> Textures;
 typedef std::array<game::Position, 4> Vectors;
 typedef std::array<display::Modulation, 4> Modulations;
-
-game::Position MakeVector(json::JSON const& json)
-{
-  double x, y;
-  json.Unpack("[ff]", &x, &y);
-  return game::Position(float(x), float(y));
-}
 }
 
 class Choice::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(json::JSON const& json, display::Window& window, event::Queue& queue, boost::filesystem::path const& path);
+  Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path);
   
   void Render() const;
   void Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right, double timer);
@@ -72,62 +65,71 @@ public:
   double interval_;
 };
 
-Choice::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : window_(window), paused_(true), count_(0), queue_(queue)
+Choice::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : window_(window), paused_(true), count_(0), queue_(queue)
 {
-  json_t* font;
-  json_t* icon[5];
-  json_t* box[5];
-  json_t* vector[4];
-  json_t* fade_mod;
-  json_t* choice_mod[4];
-  
-  json.Unpack("{sos{sososososo}s{sososososo}s{sosososo}sfsos{sosososo}}",
-    "font", &font,
-    "icons", 
-    "up", &icon[0],
-    "down", &icon[1],
-    "left", &icon[2],
-    "right", &icon[3],
-    "timer", &icon[4],
-    "icon boxes",
-    "up", &box[0],
-    "down", &box[1],
-    "left", &box[2],
-    "right", &box[3],
-    "timer", &box[4],
-    "text vectors",
-    "up", &vector[0],
-    "down", &vector[1],
-    "left", &vector[2],
-    "right", &vector[3],
-    "interval", &interval_,
-    "fade modulation", &fade_mod,
-    "text modulation", 
-    "up", &choice_mod[0],
-    "down", &choice_mod[1],
-    "left", &choice_mod[2],
-    "right", &choice_mod[3]);
-
-  font_ = sdl::Font(json::JSON(font), path);
-
-  for(int i = 0; i < 5; ++i)
   {
-    icons_[i] = display::MakeAnimation(json::JSON(icon[i]), window_, path);
-    current_icons_[i] = icons_[i].cbegin();
-    icon_boxes_[i] = display::BoundingBox(json::JSON(box[i]));
-  }
-  
-  for(int i = 0; i < 4; ++i)
-  {
-    text_vectors_[i] = MakeVector(json::JSON(vector[i]));
+    lua::Guard guard = lua.Field("interval");
+    lua.Pop(interval_);
   }
 
-  fade_modulation_ = display::Modulation(json::JSON(fade_mod));
+  {
+    lua::Guard guard = lua.Field("font");
+    font_ = sdl::Font(lua, path);
+  }
+
+  static const std::string index[] = { "up", "down", "left", "right", "timer" };
+
+  {
+    lua::Guard guard = lua.Field("icons");
+    for(int i = 0; i < 5; ++i)
+    {
+      lua::Guard guard = lua.Field(index[i]);
+      icons_[i] = display::MakeAnimation(lua, window_, path);
+      current_icons_[i] = icons_[i].cbegin();
+    }
+  }
+
+  {
+    lua::Guard guard = lua.Field("icon_boxes");
+    for(int i = 0; i < 5; ++i)
+    {
+      lua::Guard guard = lua.Field(index[i]);
+      icon_boxes_[i] = display::BoundingBox(lua);
+    }
+  }
+
+  {
+    lua::Guard guard = lua.Field("text_vectors");
+    for(int i = 0; i < 4; ++i)
+    {
+      lua::Guard guard = lua.Field(index[i]);
+      
+      {
+        lua::Guard guard = lua.Field(1);
+        lua.Pop(text_vectors_[i].first);
+      }
+
+      {
+        lua::Guard guard = lua.Field(2);
+        lua.Pop(text_vectors_[i].second);
+      }
+    }
+  }
+
+  {
+    lua::Guard guard = lua.Field("fade_modulation");
+    fade_modulation_ = display::Modulation(lua);
+  }
   current_fade_modulation_ = display::Modulation(1.f, 1.f, 1.f, 1.f);
-  for(int i = 0; i < 4; ++i)
+
   {
-    modulation_[i] = display::Modulation(json::JSON(choice_mod[i]));
-    current_modulation_[i] = display::Modulation(modulation_[i].r(), modulation_[i].g(), modulation_[i].b(), modulation_[i].a());
+    lua::Guard guard = lua.Field("text_modulation");
+    for(int i = 0; i < 4; ++i)
+    {
+      lua::Guard guard = lua.Field(index[i]);
+      modulation_[i] = display::Modulation(lua);
+      current_modulation_[i] = display::Modulation(modulation_[i].r(), modulation_[i].g(), modulation_[i].b(), modulation_[i].a());
+    }
   }
 
   for(bool& choice : choices_)
@@ -409,7 +411,7 @@ Choice::operator bool() const
   return bool(impl_);
 }
 
-Choice::Choice(json::JSON const& json, display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, window, queue, path))
+Choice::Choice(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(lua, window, queue, path))
 {
 }
 }

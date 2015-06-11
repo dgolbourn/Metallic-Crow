@@ -12,18 +12,18 @@ float32 RaySearch::ReportFixture(b2Fixture* fixture, b2Vec2 const&, b2Vec2 const
   {
     if(BodyImpl* impl = (BodyImpl*)body->GetUserData())
     {
-      (void)impl_.insert(impl);
+      impl_.insert(impl);
     }
   }
   return fraction;
 }
 
-RaySearch::Iterator RaySearch::begin(void)
+RaySearch::Iterator RaySearch::begin()
 {
   return impl_.begin();
 }
   
-RaySearch::Iterator RaySearch::end(void)
+RaySearch::Iterator RaySearch::end()
 {
   return impl_.end();
 }

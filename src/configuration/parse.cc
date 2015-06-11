@@ -15,10 +15,9 @@ OptionalArgs Parse(int argc, char* argv[])
 
   boost::program_options::options_description config("Configuration");
   config.add_options()
-    ("control,c", boost::program_options::value<std::string>()->composing(), "control configuration file")
-    ("root,r", boost::program_options::value<std::string>()->composing(), "root filesystem path")
-    ("game,g", boost::program_options::value<std::string>()->composing(), "game configuration file");
-
+    ("config,c", boost::program_options::value<std::string>()->composing(), "control configuration file")
+    ("root,r", boost::program_options::value<std::string>()->composing(), "root filesystem path");
+    
   boost::program_options::options_description hidden("Hidden options");
   hidden.add_options()
     ("initialisation", boost::program_options::value<std::string>(), "initialisation file");
@@ -72,16 +71,11 @@ OptionalArgs Parse(int argc, char* argv[])
     args = Args();
     args->path = variables["root"].as<std::string>();
     
-    if(variables.count("control"))
+    if(variables.count("config"))
     {
-      args->control = args->path / variables["control"].as<std::string>();
-
-      if(variables.count("game"))
-      {
-        args->game = args->path / variables["game"].as<std::string>();
-        valid = true;
-        help = false;
-      }
+      args->config = variables["config"].as<std::string>();
+      valid = true;
+      help = false;
     }
   }
 

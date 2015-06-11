@@ -8,22 +8,22 @@ typedef std::list<Command> CommandList;
 class Signal::Impl final : public std::enable_shared_from_this<Signal::Impl>
 {
 public:
-  Signal::Impl(void);
-  void Notify(void);
+  Signal::Impl();
+  void Notify();
   void Queue(Queue& queue);
   void Add(Command const& comand);
-  bool Empty(void) const;
-  void Clear(void);
+  bool Empty() const;
+  void Clear();
   CommandList commands_;
   bool active_;
   bool clear_;
 };
 
-Signal::Impl::Impl(void) : active_(false), clear_(false)
+Signal::Impl::Impl() : active_(false), clear_(false)
 {
 }
 
-void Signal::Impl::Notify(void)
+void Signal::Impl::Notify()
 {
   if(!active_)
   {
@@ -60,12 +60,12 @@ void Signal::Impl::Add(Command const& comand)
   commands_.push_back(comand);
 }
 
-bool Signal::Impl::Empty(void) const
+bool Signal::Impl::Empty() const
 {
   return commands_.empty();
 }
 
-void Signal::Impl::Clear(void)
+void Signal::Impl::Clear()
 {
   if(active_)
   {
@@ -82,7 +82,7 @@ void Signal::operator()(Queue& queue)
   impl_->Queue(queue);
 }
 
-void Signal::operator()(void)
+void Signal::operator()()
 {
   impl_->Notify();
 }
@@ -92,16 +92,16 @@ void Signal::Add(Command const& comand)
   impl_->Add(comand);
 }
 
-Signal::Signal(void) : impl_(std::make_shared<Impl>())
+Signal::Signal() : impl_(std::make_shared<Impl>())
 {
 }
 
-Signal::operator bool(void) const
+Signal::operator bool() const
 {
   return !impl_->Empty();
 }
 
-void Signal::Clear(void)
+void Signal::Clear()
 {
   impl_->Clear();
 }

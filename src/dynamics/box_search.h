@@ -12,8 +12,8 @@ public:
   BoxSearch(b2AABB const& box, b2World const& world);
   bool ReportFixture(b2Fixture* fixture);
   typedef BodySet::iterator Iterator;
-  Iterator begin(void);
-  Iterator end(void);
+  Iterator begin();
+  Iterator end();
 private:
   BodySet impl_;
 };

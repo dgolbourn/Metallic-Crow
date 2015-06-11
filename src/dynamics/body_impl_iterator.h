@@ -7,13 +7,13 @@ namespace dynamics
 class BodyImpl::Iterator : public boost::iterator_facade<Iterator, BodyImpl, boost::forward_traversal_tag>
 { 
 public:
-  Iterator(void);
+  Iterator();
   explicit Iterator(BodyImpl* impl);
 private:
   friend class boost::iterator_core_access;
-  void increment(void);
+  void increment();
   bool equal(Iterator const& other) const;
-  BodyImpl& dereference(void) const;
+  BodyImpl& dereference() const;
   BodyImpl* impl_;
 };
 }

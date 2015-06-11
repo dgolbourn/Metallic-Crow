@@ -9,7 +9,7 @@ class SyncImpl
 {
 public:
   SyncImpl(double frame_rate);
-  void Synchronise(void);
+  void Synchronise();
   Clock::duration interval_;
   Clock::time_point tick_;
 };
@@ -22,7 +22,7 @@ SyncImpl::SyncImpl(double frame_rate)
   tick_ = Clock::now();
 }
 
-void SyncImpl::Synchronise(void)
+void SyncImpl::Synchronise()
 {
   tick_ += interval_;
   std::this_thread::sleep_until(tick_);
@@ -33,7 +33,7 @@ Sync::Sync(double frame_rate)
   impl_ = std::make_shared<SyncImpl>(frame_rate);
 }
 
-void Sync::operator()(void)
+void Sync::operator()()
 {
   impl_->Synchronise();
 }

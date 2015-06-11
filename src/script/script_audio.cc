@@ -16,14 +16,25 @@ void Script::Impl::AudioInit()
 
 void Script::Impl::SoundLoad()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  std::string file;
-  lua_.PopFront(name);
-  lua_.PopFront(file);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-3);
+    stage = StageGet();
+  }
   if(stage)
   {
-    audio::Sound sound(json::JSON(path_ / file), path_);
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-2);
+      lua_.Pop(name);
+    }
+    
+    audio::Sound sound;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      sound = audio::Sound(lua_, path_);
+    }
+
     if(!Pause(stage))
     {
       sound.Resume();
@@ -34,22 +45,38 @@ void Script::Impl::SoundLoad()
 
 void Script::Impl::SoundFree()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  lua_.PopFront(name);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-2);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(name);
+    }
+    
     stage->sounds_.erase(name);
   }
 }
 
 void Script::Impl::SoundPlay()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  lua_.PopFront(name);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-2);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(name);
+    }
+    
     float volume = 0.f;
     if(stage == stage_.second)
     {
@@ -66,11 +93,19 @@ void Script::Impl::SoundPlay()
 
 void Script::Impl::SoundEnd()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  lua_.PopFront(name);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-2);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(name);
+    }
+
     auto range = stage->sounds_.equal_range(name);
     for(auto& sound = range.first; sound != range.second; ++sound)
     {
@@ -81,14 +116,25 @@ void Script::Impl::SoundEnd()
 
 void Script::Impl::MusicLoad()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  std::string file;
-  lua_.PopFront(name);
-  lua_.PopFront(file);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-3);
+    stage = StageGet();
+  }
   if(stage)
   {
-    audio::Music music(json::JSON(path_ / file), path_);
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-2);
+      lua_.Pop(name);
+    }
+    
+    audio::Music music;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      music = audio::Music(lua_, path_);
+    }
+
     if(!Pause(stage))
     {
       music.Resume();
@@ -99,22 +145,36 @@ void Script::Impl::MusicLoad()
 
 void Script::Impl::MusicFree()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  lua_.PopFront(name);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-2);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(name);
+    }
     stage->music_.erase(name);
   }
 }
 
 void Script::Impl::MusicEnd()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  lua_.PopFront(name);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-2);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(name);
+    }
     auto iter = stage->music_.find(name);
     if(iter != stage->music_.end())
     {
@@ -125,11 +185,18 @@ void Script::Impl::MusicEnd()
 
 void Script::Impl::MusicPlay()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  lua_.PopFront(name);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-2);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(name);
+    }
     auto iter = stage->music_.find(name);
     if(iter != stage->music_.end())
     {

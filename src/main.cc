@@ -21,13 +21,24 @@ int main(int argc, char* argv[])
   {
     if(config::OptionalArgs args = config::Parse(argc, argv))
     {
-      lua::Stack lua(args->path);
-      lua.Load(args->control);
-      lua.Get("control");
-      event::Event event(lua);
-
+      event::Event event;
       event::Queue queue;
-      game::Controller controller(json::JSON(args->game), queue, args->path);
+      game::Controller controller;
+
+      {
+        lua::Stack lua(args->path);
+        lua.Load(args->path / args->config);
+
+        {
+          lua::Guard guard = lua.Get("control");
+          event = event::Event(lua);
+        }
+
+        {
+          lua::Guard guard = lua.Get("game");
+          controller = game::Controller(lua, queue, args->path);
+        }
+      }
 
       queue.Add(function::Bind(&event::Event::operator(), event));
       

@@ -1,7 +1,6 @@
 #include "world_impl.h"
 #include "body_impl.h"
 #include <vector>
-#include "json_iterator.h"
 #include "exception.h"
 #include "log.h"
 namespace dynamics
@@ -9,10 +8,31 @@ namespace dynamics
 typedef std::unique_ptr<b2Shape> Shape;
 typedef std::pair<Shape, float32> ShapePair;
 
-static ShapePair Box(WorldImpl const& world, json::JSON json)
+static ShapePair Box(WorldImpl const& world, lua::Stack& lua)
 {
-  double x, y, w, h;
-  json.Unpack("[ffff]", &x, &y, &w, &h);
+  double x;
+  {
+    lua::Guard guard = lua.Field(1);
+    lua.Pop(x);
+  }
+
+  double y;
+  {
+    lua::Guard guard = lua.Field(2);
+    lua.Pop(y);
+  }
+
+  double w;
+  {
+    lua::Guard guard = lua.Field(3);
+    lua.Pop(w);
+  }
+
+  double h;
+  {
+    lua::Guard guard = lua.Field(4);
+    lua.Pop(h);
+  }
 
   float32 width = world.Metres(w);
   float32 height = world.Metres(h);
@@ -26,10 +46,25 @@ static ShapePair Box(WorldImpl const& world, json::JSON json)
   return shape;
 }
 
-static ShapePair Circle(WorldImpl const& world, json::JSON json)
+static ShapePair Circle(WorldImpl const& world, lua::Stack& lua)
 {
-  double x, y, radius;
-  json.Unpack("[fff]", &x, &y, &radius);
+  double x;
+  {
+    lua::Guard guard = lua.Field(1);
+    lua.Pop(x);
+  }
+
+  double y;
+  {
+    lua::Guard guard = lua.Field(2);
+    lua.Pop(y);
+  }
+
+  double radius;
+  {
+    lua::Guard guard = lua.Field(3);
+    lua.Pop(radius);
+  }
 
   ShapePair shape;
   shape.first = Shape(new b2CircleShape);
@@ -41,13 +76,25 @@ static ShapePair Circle(WorldImpl const& world, json::JSON json)
   return shape;
 }
 
-static ShapePair Chain(WorldImpl const& world, json::JSON json)
+static ShapePair Chain(WorldImpl const& world, lua::Stack& lua)
 {
   std::vector<b2Vec2> vertices;
-  for(json::JSON value : json)
+  for(int index = 1, end = lua.Size(); index <= end; ++index)
   {
-    double x, y;
-    value.Unpack("[ff]", &x, &y);
+    lua::Guard guard = lua.Field(index);
+   
+    double x;
+    {
+      lua::Guard guard = lua.Field(1);
+      lua.Pop(x);
+    }
+
+    double y;
+    {
+      lua::Guard guard = lua.Field(2);
+      lua.Pop(y);
+    }
+
     vertices.emplace_back(world.Metres(x), world.Metres(y));
   }
 
@@ -68,14 +115,26 @@ static ShapePair Chain(WorldImpl const& world, json::JSON json)
   return shape;
 }
 
-static b2BodyDef BodyDefinition(WorldImpl const& world, json::JSON velocity, float32 damping, float32 x, float32 y)
+static b2BodyDef BodyDefinition(WorldImpl const& world, lua::Stack& lua, float32 damping, float32 x, float32 y)
 {
   b2BodyDef body_def;
-  if(velocity)
+ 
+  lua::Guard guard = lua.Field("velocity");
+  if(lua.Check())
   {
+    double u;
+    {
+      lua::Guard guard = lua.Field(1);
+      lua.Pop(u);
+    }
+
+    double v;
+    {
+      lua::Guard guard = lua.Field(2);
+      lua.Pop(v);
+    }
+
     body_def.type = b2_dynamicBody;
-    double u, v;
-    velocity.Unpack("[ff]", &u, &v);
     body_def.linearVelocity.Set(world.Metres(u), world.Metres(v));
   }
   else
@@ -83,6 +142,7 @@ static b2BodyDef BodyDefinition(WorldImpl const& world, json::JSON velocity, flo
     body_def.type = b2_staticBody;
     body_def.linearVelocity.SetZero();
   }
+
   body_def.position.Set(x, y);
   body_def.angularVelocity = 0.f;
   body_def.linearDamping = damping;
@@ -115,71 +175,106 @@ static b2FixtureDef FixtureDefinition(float32 area, float32 mass, float32 fricti
   return fixture;
 }
 
-BodyImpl::BodyImpl(json::JSON const& json, World& world)
+BodyImpl::BodyImpl(lua::Stack& lua, World& world)
 {
-  json_t* shapes_ref;
-  json_t* light;
-  json_t* velocity;
-  double x, y, m, c, d, k;
- 
-  json.Unpack("{s[ff]sososfsfsfsfso}",
-    "position", &x, &y,
-    "velocity", &velocity,
-    "shapes", &shapes_ref,
-    "mass", &m,
-    "restitution", &c,
-    "drag", &d,
-    "friction", &k,
-    "light", &light);
-
   float32 area = 0.f;
-  std::vector<Shape> shapes(json::JSON(shapes_ref).Size());
+  std::vector<Shape> shapes;
 
-  auto shape = shapes.begin();
-  for(json::JSON fixture_ref : json::JSON(shapes_ref))
   {
-    char const* type_ref;
-    json_t* shape_ref;
-    fixture_ref.Unpack("{ssso}",
-      "type", &type_ref,
-      "shape", &shape_ref);
+    lua::Guard guard = lua.Field("shapes");
+    int size = lua.Size();
+    shapes.reserve(size);
 
-    std::string type(type_ref);
-    if(type == "box")
+    for(int index = 1; index <= size; ++index)
     {
-      float32 temp;
-      std::tie(*shape, temp) = Box(*world.impl_, json::JSON(shape_ref));
-      area += temp;
+      lua::Guard guard = lua.Field(index);
+
+      std::string type;
+      {
+        lua::Guard guard = lua.Field("type");
+        lua.Pop(type);
+      }
+
+      Shape shape;
+      if(type == "box")
+      {
+        lua::Guard guard = lua.Field("shape");
+        float32 temp;
+        std::tie(shape, temp) = Box(*world.impl_, lua);
+        area += temp;
+      }
+      else if(type == "circle")
+      {
+        lua::Guard guard = lua.Field("shape");
+        float32 temp;
+        std::tie(shape, temp) = Circle(*world.impl_, lua);
+        area += temp;
+      }
+      else if(type == "chain")
+      {
+        lua::Guard guard = lua.Field("shape");
+        float32 temp;
+        std::tie(shape, temp) = Chain(*world.impl_, lua);
+        area += temp;
+      }
+      else
+      {
+        BOOST_THROW_EXCEPTION(exception::Exception());
+      }
+      
+      shapes.emplace_back(std::move(shape));
     }
-    else if(type == "circle")
-    {
-      float32 temp;
-      std::tie(*shape, temp) = Circle(*world.impl_, json::JSON(shape_ref));
-      area += temp;
-    }
-    else if(type == "chain")
-    {
-      float32 temp;
-      std::tie(*shape, temp) = Chain(*world.impl_, json::JSON(shape_ref));
-      area += temp;
-    }
-    else
-    {
-      BOOST_THROW_EXCEPTION(exception::Exception());
-    }
-    ++shape;
   }
 
-  b2BodyDef body_def = BodyDefinition(*world.impl_, json::JSON(velocity), float32(d), world.impl_->Metres(x), world.impl_->Metres(y));
+  float32 drag;
+  {
+    lua::Guard guard = lua.Field("drag");
+    lua.Pop(drag);
+  }
+
+  double x, y;
+  {
+    lua::Guard guard = lua.Field("position");
+    {
+      lua::Guard guard = lua.Field(1);
+      lua.Pop(x);
+    }
+
+    {
+      lua::Guard guard = lua.Field(2);
+      lua.Pop(y);
+    }
+  }
+
+  b2BodyDef body_def = BodyDefinition(*world.impl_, lua, drag, world.impl_->Metres(x), world.impl_->Metres(y));
+
   body_ = world.impl_->world_.CreateBody(&body_def);
   body_->SetUserData(this);
 
-  b2FixtureDef fixture = FixtureDefinition(area, float32(m), float32(k), float32(c));
+  float32 mass;
+  {
+    lua::Guard guard = lua.Field("mass");
+    lua.Pop(mass);
+  }
+
+  float32 restitution;
+  {
+    lua::Guard guard = lua.Field("restitution");
+    lua.Pop(restitution);
+  }
+
+  float32 friction;
+  {
+    lua::Guard guard = lua.Field("friction");
+    lua.Pop(friction);
+  }
+
+  b2FixtureDef fixture = FixtureDefinition(area, mass, friction, restitution);
 
   for(auto& shape : shapes)
   {
     fixture.shape = shape.get();
-    (void)body_->CreateFixture(&fixture);
+    body_->CreateFixture(&fixture);
   }
 
   body_->ResetMassData();
@@ -188,9 +283,12 @@ BodyImpl::BodyImpl(json::JSON const& json, World& world)
   position_ = body_->GetPosition();
   velocity_ = body_->GetLinearVelocity();
 
-  if(json::JSON temp = json::JSON(light))
   {
-    light_ = Light(temp);
+    lua::Guard guard = lua.Field("light");
+    if (lua.Check())
+    {
+      light_ = Light(lua);
+    }
   }
 }
 
@@ -208,7 +306,7 @@ Body BodyImpl::MakeBody(b2Body* body_ptr)
   return body;
 }
 
-game::Position BodyImpl::Position(void) const
+game::Position BodyImpl::Position() const
 {
   auto world = world_.Lock().impl_;
   return game::Position(world->Pixels(position_.x), world->Pixels(position_.y));
@@ -220,7 +318,7 @@ void BodyImpl::Position(float x, float y)
   body_->SetTransform(b2Vec2(world->Metres(x), world->Metres(y)), 0.f);
 }
 
-game::Position BodyImpl::Velocity(void) const
+game::Position BodyImpl::Velocity() const
 {
   auto world = world_.Lock().impl_;
   return game::Position(world->Pixels(velocity_.x), world->Pixels(velocity_.y));
@@ -244,7 +342,7 @@ void BodyImpl::Impulse(float x, float y)
   body_->ApplyLinearImpulse(b2Vec2(world->Metres(x), world->Metres(y)), body_->GetWorldCenter(), true);
 }
 
-void BodyImpl::Begin(void)
+void BodyImpl::Begin()
 {
   if(body_->GetType() != b2_staticBody)
   {
@@ -275,12 +373,12 @@ void BodyImpl::Update(float32 ds)
   }
 }
 
-display::Modulation BodyImpl::Modulation(void) const
+display::Modulation BodyImpl::Modulation() const
 {
   return display::Modulation(light_.illumination.x, light_.illumination.y, light_.illumination.z, 1.f);
 }
 
-BodyImpl::~BodyImpl(void)
+BodyImpl::~BodyImpl()
 {
   try
   { 
@@ -296,22 +394,17 @@ BodyImpl::~BodyImpl(void)
   }
 }
 
-Body::Body(json::JSON const& json, World& world)
-{
-  impl_ = std::make_shared<BodyImpl>(json, world);
-}
-
 bool Body::operator<(Body const& other) const
 {
   return impl_.owner_before(other.impl_);
 }
 
-Body::operator bool(void) const
+Body::operator bool() const
 {
   return bool(impl_) && bool(impl_->world_.Lock());
 }
 
-game::Position Body::Position(void) const
+game::Position Body::Position() const
 {
   return impl_->Position();
 }
@@ -321,7 +414,7 @@ void Body::Position(float x, float y)
   impl_->Position(x, y);
 }
 
-game::Position Body::Velocity(void) const
+game::Position Body::Velocity() const
 {
   return impl_->Velocity();
 }
@@ -341,8 +434,12 @@ void Body::Impulse(float x, float y)
   impl_->Impulse(x, y);
 }
 
-display::Modulation Body::Modulation(void) const
+display::Modulation Body::Modulation() const
 {
   return impl_->Modulation();
+}
+
+Body::Body(lua::Stack& lua, World& world) : impl_(std::make_shared<BodyImpl>(lua, world))
+{
 }
 }

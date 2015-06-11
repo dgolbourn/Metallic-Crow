@@ -6,11 +6,11 @@ namespace ttf
 class Library
 {
 public:
-  Library(void);
+  Library();
   Library(Library const& other);
   Library(Library&& other);
   Library& operator=(Library other);
-  ~Library(void);
+  ~Library();
 };
 }
 #endif

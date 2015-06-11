@@ -37,25 +37,35 @@ sdl::Font::Impl::Font MakeFont(boost::filesystem::path const& file, int point)
 
 namespace sdl
 {
-Font::Impl::Impl(json::JSON const& json, boost::filesystem::path const& path)
+Font::Impl::Impl(lua::Stack& lua, boost::filesystem::path const& path)
 {
-  char const* file;
-  int point;
-  int bold;
-  int italic;
-  int outline;
-  
-  json.Unpack("{sssisbsbsb}",
-    "file", &file,
-    "point", &point,
-    "bold", &bold,
-    "italic", &italic,
-    "outline", &outline);
+  std::string file;
+  {
+    lua::Guard guard = lua.Field("file");
+    lua.Pop(file);
+  }
 
+  int point;
+  {
+    lua::Guard guard = lua.Field("point");
+    lua.Pop(point);
+  }
   font_ = MakeFont(path / file, point);
-  bold_ = (bold != 0);
-  italic_ = (italic != 0);
-  outline_ = (outline != 0);
+
+  {
+    lua::Guard guard = lua.Field("bold");
+    lua.Pop(bold_);
+  }
+
+  {
+    lua::Guard guard = lua.Field("italic");
+    lua.Pop(italic_);
+  }
+
+  {
+    lua::Guard guard = lua.Field("outline");
+    lua.Pop(outline_);
+  }
 }
 
 float Font::Impl::LineSpacing() const
@@ -68,7 +78,7 @@ float Font::LineSpacing() const
   return impl_->LineSpacing();
 }
 
-Font::Font(json::JSON const& json, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, path))
+Font::Font(lua::Stack& lua, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(lua, path))
 {
 }
 }

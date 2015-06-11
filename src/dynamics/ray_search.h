@@ -12,8 +12,8 @@ public:
   RaySearch(b2Vec2 const& point_a, b2Vec2 const& point_b, b2World const& world);
   float32 ReportFixture(b2Fixture* fixture, b2Vec2 const& point, b2Vec2 const& normal, float32 fraction) override;
   typedef BodySet::iterator Iterator;
-  Iterator begin(void);
-  Iterator end(void);
+  Iterator begin();
+  Iterator end();
 private:
   BodySet impl_;
 };

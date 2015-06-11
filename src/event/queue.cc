@@ -6,7 +6,7 @@ class QueueImpl
 {
 public:
   void Add(Command const& command);
-  void Check(void);
+  void Check();
   std::list<Command> commands_;
 };
 
@@ -15,7 +15,7 @@ void QueueImpl::Add(Command const& command)
   commands_.push_back(command);
 }
 
-void QueueImpl::Check(void)
+void QueueImpl::Check()
 {
   for(auto iter = commands_.begin(); iter != commands_.end();)
   {
@@ -35,12 +35,12 @@ void Queue::Add(Command const& command)
   impl_->Add(command);
 }
 
-void Queue::operator()(void)
+void Queue::operator()()
 {
   impl_->Check();
 }
 
-Queue::Queue(void)
+Queue::Queue()
 {
   impl_ = std::make_shared<QueueImpl>();
 }

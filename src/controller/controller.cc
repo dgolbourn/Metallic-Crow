@@ -6,7 +6,7 @@
 #include "signal.h"
 #include <vector>
 #include "saves.h"
-#include "json_iterator.h"
+
 #include <sstream>
 #include <algorithm>
 #include "sound.h"
@@ -26,15 +26,24 @@ enum class State : int
 typedef std::vector<std::string> Strings;
 typedef std::vector<boost::filesystem::path> Paths;
 
-void Chapters(json::JSON json, Strings& names, Paths& files, boost::filesystem::path const& path)
+void Chapters(lua::Stack& lua, Strings& names, Paths& files, boost::filesystem::path const& path)
 {
-  for(json::JSON const& element : json)
+  for(int index = 1, end = lua.Size(); index <= end; ++index)
   {
-    char const* name;
-    char const* file;
-    element.Unpack("{ssss}", 
-      "name", &name,
-      "file", &file);
+    lua::Guard guard = lua.Field(index);
+
+    std::string name;
+    {
+      lua::Guard guard = lua.Field("name");
+      lua.Pop(name);
+    }
+
+    std::string file;
+    {
+      lua::Guard guard = lua.Field("file");
+      lua.Pop(file);
+    }
+
     names.emplace_back(name);
     files.emplace_back(path / file);
   }
@@ -100,7 +109,7 @@ void LoadOptions(Menu& menu, Saves& saves, Strings const& chapters)
 class Controller::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(json::JSON const& json, event::Queue& queue, boost::filesystem::path const& path);
+  Impl(lua::Stack& lua, event::Queue& queue, boost::filesystem::path const& path);
   void Init();
   void Control(float x, float y);
   void ChoiceUp();
@@ -163,57 +172,89 @@ void Controller::Impl::Chapter(int chapter)
   state_ = State::Start;
 }
 
-Controller::Impl::Impl(json::JSON const& json, event::Queue& queue, boost::filesystem::path const& path) : state_(State::Start), queue_(queue), path_(path), sign_(0)
+Controller::Impl::Impl(lua::Stack& lua, event::Queue& queue, boost::filesystem::path const& path) : state_(State::Start), queue_(queue), path_(path), sign_(0)
 {
-  json_t* window;
-  json_t* menu;
-  char const* pause;
-  char const* start;
-  char const* saves;
-  json_t* chapters;
-  double volume;
-  json_t* navigate;
-  json_t* select;
-  json_t* back;
-  json.Unpack("{sososssssssosfsososo}",
-    "window", &window,
-    "menu", &menu,
-    "pause menu script", &pause,
-    "start menu script", &start,
-    "saves", &saves,
-    "chapters", &chapters,
-    "volume", &volume, 
-    "sound navigate", &navigate,
-    "sound select", &select,
-    "sound back", &back);
+  {
+    lua::Guard guard = lua.Field("window");
+    window_ = display::Window(lua);
+  }
 
-  window_ = display::Window(json::JSON(window));
+  {
+    lua::Guard guard = lua.Field("menu");
+    pause_menu_ = Menu(lua, window_, path_);
+  }
 
-  pause_menu_ = Menu(json::JSON(menu), window_, path_);
   pause_menu_({"Continue", "Main Menu"});
+
+  std::string pause;
+  {
+    lua::Guard guard = lua.Field("pause_menu_script");
+    lua.Pop(pause);
+  }
   pause_script_ = Script(path_ / pause, window_, queue_, path_, volume_);
 
-  start_menu_ = Menu(json::JSON(menu), window_, path_);
+  {
+    lua::Guard guard = lua.Field("menu");
+    start_menu_ = Menu(lua, window_, path_);
+  }
+
   start_menu_({"Play", "Chapters", "Load", "Quit"});
+  
+  std::string start;
+  {
+    lua::Guard guard = lua.Field("start_menu_script");
+    lua.Pop(start);
+  }
   start_script_ = Script(path_ / start, window_, queue_, path_, volume_);
 
+  std::string saves;
+  {
+    lua::Guard guard = lua.Field("saves");
+    lua.Pop(saves);
+  }
   saves_ = Saves(path_ / saves);
+  
   slot_ = saves_.LastPlayed();
   chapter_ = saves_.Current(slot_);
 
-  Chapters(json::JSON(chapters), chapter_names_, chapter_files_, path_);
+  {
+    lua::Guard guard = lua.Field("chapters");
+    Chapters(lua, chapter_names_, chapter_files_, path_);
+  }
 
-  chapter_menu_ = Menu(json::JSON(menu), window_, path_);
+  {
+    lua::Guard guard = lua.Field("menu");
+    chapter_menu_ = Menu(lua, window_, path_);
+  }
+
   ChapterOptions(chapter_menu_, saves_.Progress(slot_), chapter_names_);
 
-  load_menu_ = Menu(json::JSON(menu), window_, path_);
+  {
+    lua::Guard guard = lua.Field("menu");
+    load_menu_ = Menu(lua, window_, path_);
+  }
+
   LoadOptions(load_menu_, saves_, chapter_names_);
 
-  volume_ = float(volume);
+  {
+    lua::Guard guard = lua.Field("volume");
+    lua.Pop(volume_);
+  }
 
-  navigate_ = audio::Sound(json::JSON(navigate), path_);
-  select_ = audio::Sound(json::JSON(select), path_);
-  back_ = audio::Sound(json::JSON(back), path_);
+  {
+    lua::Guard guard = lua.Field("sound_navigate");
+    navigate_ = audio::Sound(lua, path_);
+  }
+
+  {
+    lua::Guard guard = lua.Field("sound_select");
+    select_ = audio::Sound(lua, path_);
+  }
+
+  {
+    lua::Guard guard = lua.Field("sound_back");
+    back_ = audio::Sound(lua, path_);
+  }
   
   navigate_.Resume();
   select_.Resume();
@@ -571,7 +612,7 @@ void Controller::Impl::Render()
   }
 }
 
-Controller::Controller(json::JSON const& json, event::Queue& queue, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, queue, path))
+Controller::Controller(lua::Stack& lua, event::Queue& queue, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(lua, queue, path))
 {
   impl_->Init();
 }

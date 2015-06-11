@@ -93,36 +93,52 @@ void WindowImpl::Destroy() noexcept
   }
 }
 
-WindowImpl::WindowImpl(json::JSON const& json) : sdl_(SDL_INIT_VIDEO), img_(IMG_INIT_PNG), renderer_(nullptr), window_(nullptr)
+WindowImpl::WindowImpl(lua::Stack& lua) : sdl_(SDL_INIT_VIDEO), img_(IMG_INIT_PNG), renderer_(nullptr), window_(nullptr)
 {
   try
   {
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "2");
 
-    char const* name;
-    int width;
-    int height;
-    char const* mode;
-
-    json.Unpack("{sssisiss}",
-      "name", &name,
-      "width", &width,
-      "height", &height,
-      "mode", &mode);
+    std::string mode;
+    {
+      lua::Guard guard = lua.Field("mode");
+      if (lua.Check())
+      {
+        lua.Pop(mode);
+      }
+    }
 
     Uint32 flags = 0u;
-    if(std::string(mode) == "full screen")
+    if (mode == "full screen")
     {
       flags |= SDL_WINDOW_FULLSCREEN;
       SDL_ShowCursor(SDL_DISABLE);
     }
-    else if(std::string(mode) == "borderless")
+    else if (mode == "borderless")
     {
       flags |= SDL_WINDOW_BORDERLESS | SDL_WINDOW_MAXIMIZED;
     }
 
-    window_ = SDL_CreateWindow(name, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, flags);
+    std::string name;
+    {
+      lua::Guard guard = lua.Field("name");
+      lua.Pop(name);
+    }
+
+    int width;
+    {
+      lua::Guard guard = lua.Field("width");
+      lua.Pop(width);
+    }
+
+    int height;
+    {
+      lua::Guard guard = lua.Field("height");
+      lua.Pop(height);
+    }
+
+    window_ = SDL_CreateWindow(name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, flags);
     if(!window_)
     {
       BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
@@ -308,9 +324,8 @@ void WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, 
   }
 }
 
-Window::Window(json::JSON const& json)
+Window::Window(lua::Stack& lua) : impl_(std::make_shared<WindowImpl>(lua))
 {
-  impl_ = std::make_shared<WindowImpl>(json);
 }
 
 void Window::Clear() const

@@ -2,7 +2,7 @@
 #include "SDL_ttf.h"
 namespace ttf
 {
-std::string Error(void)
+std::string Error()
 {
   return TTF_GetError();
 }

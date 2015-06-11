@@ -19,14 +19,25 @@ void Script::Impl::ActorInit()
 
 void Script::Impl::ActorLoad()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  std::string file;
-  lua_.PopFront(name);
-  lua_.PopFront(file);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-3);
+    stage = StageGet();
+  }
   if(stage)
   {
-    Actor actor(json::JSON(path_ / file), window_, stage->scene_, stage->group_, queue_, stage->world_, path_);
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-2);
+      lua_.Pop(name);
+    }
+
+    Actor actor;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      Actor actor(lua_, window_, stage->scene_, stage->group_, queue_, stage->world_, path_);
+    }
+  
     if(!Pause(stage))
     {
       actor.Resume();
@@ -36,27 +47,50 @@ void Script::Impl::ActorLoad()
 }
 
 void Script::Impl::ActorFree()
-{
-  StagePtr stage = StagePop();
-  std::string name;
-  lua_.PopFront(name);
+{  
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-3);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-2);
+      lua_.Pop(name);
+    }
     stage->actors_.erase(name);
   }
 }
 
 void Script::Impl::ActorBody()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  std::string expression;
-  int facing;
-  lua_.PopFront(name);
-  lua_.PopFront(expression);
-  lua_.PopFront(facing);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-4);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-3);
+      lua_.Pop(name);
+    }
+
+    std::string expression;
+    {
+      lua::Guard guard = lua_.Get(-2);
+      lua_.Pop(expression);
+    }
+
+    int facing;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(facing);
+    }
+
     auto range = stage->actors_.equal_range(name);
     for(auto& actor = range.first; actor != range.second; ++actor)
     {
@@ -81,13 +115,24 @@ void Script::Impl::ActorBody()
 
 void Script::Impl::ActorEyes()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  std::string expression;
-  lua_.PopFront(name);
-  lua_.PopFront(expression);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-4);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-3);
+      lua_.Pop(name);
+    }
+    std::string expression;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(expression);
+    }
+
     auto range = stage->actors_.equal_range(name);
     for(auto& actor = range.first; actor != range.second; ++actor)
     {
@@ -98,13 +143,24 @@ void Script::Impl::ActorEyes()
 
 void Script::Impl::ActorMouth()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  std::string expression;
-  lua_.PopFront(name);
-  lua_.PopFront(expression);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-4);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-3);
+      lua_.Pop(name);
+    }
+    std::string expression;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(expression);
+    }
+
     auto range = stage->actors_.equal_range(name);
     for(auto& actor = range.first; actor != range.second; ++actor)
     {
@@ -115,92 +171,171 @@ void Script::Impl::ActorMouth()
 
 void Script::Impl::ActorPosition()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  float x;
-  float y;
-  lua_.PopFront(name);
-  lua_.PopFront(x);
-  lua_.PopFront(y);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-4);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-3);
+      lua_.Pop(name);
+    }
+
+    Position position;
+    {
+      lua::Guard guard = lua_.Get(-2);
+      lua_.Pop(position.first);
+    }
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(position.second);
+    }
+
     auto range = stage->actors_.equal_range(name);
     for(auto& actor = range.first; actor != range.second; ++actor)
     {
-      actor->second.Position(Position(x, y));
+      actor->second.Position(position);
     }
   }
 }
 
 void Script::Impl::ActorVelocity()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  float u;
-  float v;
-  lua_.PopFront(name);
-  lua_.PopFront(u);
-  lua_.PopFront(v);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-4);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-3);
+      lua_.Pop(name);
+    }
+
+    Position velocity;
+    {
+      lua::Guard guard = lua_.Get(-2);
+      lua_.Pop(velocity.first);
+    }
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(velocity.second);
+    }
+
     auto range = stage->actors_.equal_range(name);
     for(auto& actor = range.first; actor != range.second; ++actor)
     {
-      actor->second.Velocity(Position(u, v));
+      actor->second.Velocity(velocity);
     }
   }
 }
 
 void Script::Impl::ActorForce()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  float f;
-  float g;
-  lua_.PopFront(name);
-  lua_.PopFront(f);
-  lua_.PopFront(g);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-4);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-3);
+      lua_.Pop(name);
+    }
+
+    Position force;
+    {
+      lua::Guard guard = lua_.Get(-2);
+      lua_.Pop(force.first);
+    }
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(force.second);
+    }
+
     auto range = stage->actors_.equal_range(name);
     for(auto& actor = range.first; actor != range.second; ++actor)
     {
-      actor->second.Force(Position(f, g));
+      actor->second.Force(force);
     }
   }
 }
 
 void Script::Impl::ActorImpulse()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  float i;
-  float j;
-  lua_.PopFront(name);
-  lua_.PopFront(i);
-  lua_.PopFront(j);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-4);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-3);
+      lua_.Pop(name);
+    }
+
+    Position impulse;
+    {
+      lua::Guard guard = lua_.Get(-2);
+      lua_.Pop(impulse.first);
+    }
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(impulse.second);
+    }
+
     auto range = stage->actors_.equal_range(name);
     for(auto& actor = range.first; actor != range.second; ++actor)
     {
-      actor->second.Impulse(Position(i, j));
+      actor->second.Impulse(impulse);
     }
   }
 }
 
 void Script::Impl::ActorModulation()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  float r, g, b, a;
-  lua_.PopFront(name);
-  lua_.PopFront(r);
-  lua_.PopFront(g);
-  lua_.PopFront(b);
-  lua_.PopFront(a);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-6);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-5);
+      lua_.Pop(name);
+    }
+    float r;
+    {
+      lua::Guard guard = lua_.Get(-4);
+      lua_.Pop(r);
+    }
+    float g;
+    {
+      lua::Guard guard = lua_.Get(-3);
+      lua_.Pop(g);
+    }
+    float b;
+    {
+      lua::Guard guard = lua_.Get(-2);
+      lua_.Pop(b);
+    }
+    float a;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(a);
+    }
+
     auto range = stage->actors_.equal_range(name);
     for(auto& actor = range.first; actor != range.second; ++actor)
     {
@@ -211,13 +346,23 @@ void Script::Impl::ActorModulation()
 
 void Script::Impl::ActorDilation()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  float dilation;
-  lua_.PopFront(name);
-  lua_.PopFront(dilation);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-6);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-5);
+      lua_.Pop(name);
+    }
+    float dilation;
+    {
+      lua::Guard guard = lua_.Get(-4);
+      lua_.Pop(dilation);
+    }
     auto range = stage->actors_.equal_range(name);
     for(auto& actor = range.first; actor != range.second; ++actor)
     {

@@ -15,18 +15,18 @@ typedef std::array<b2Vec2, 4> Cubic;
 class BodyImpl final : public std::enable_shared_from_this<BodyImpl>
 {
 public:
-  BodyImpl(json::JSON const& json, World& world);
-  ~BodyImpl(void);
-  game::Position Position(void) const;
+  BodyImpl(lua::Stack& lua, World& world);
+  ~BodyImpl();
+  game::Position Position() const;
   void Position(float x, float y);
-  game::Position Velocity(void) const;
+  game::Position Velocity() const;
   void Velocity(float x, float y);
   void Force(float x, float y);
   void Impulse(float x, float y);
-  void Begin(void);
+  void Begin();
   void End(float32 dt);
   void Update(float32 ds);
-  display::Modulation Modulation(void) const;
+  display::Modulation Modulation() const;
 
   static Body MakeBody(b2Body* body);
   World::WeakPtr world_;

@@ -7,7 +7,7 @@ namespace game
 class Screen::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(json::JSON const& json, display::Window& window, int& plane, boost::filesystem::path const& path);
+  Impl(lua::Stack& lua, display::Window& window, int& plane, boost::filesystem::path const& path);
   void Init(Scene& scene, event::Queue& queue, int plane);
   void Pause();
   void Resume();
@@ -25,32 +25,50 @@ public:
   double angle_;
 };
 
-Screen::Impl::Impl(json::JSON const& json, display::Window& window, int& plane, boost::filesystem::path const& path)
+Screen::Impl::Impl(lua::Stack& lua, display::Window& window, int& plane, boost::filesystem::path const& path)
 {
-  json_t* animation;
-  json_t* render_box;
-  double parallax;
-  double interval;
-  json_t* modulation;
+  {
+    lua::Guard guard = lua.Field("angle");
+    lua.Pop(angle_);
+  }
 
-  json.Unpack("{sososfsisfsfso}",
-    "animation", &animation,
-    "render box", &render_box,
-    "interval", &interval,
-    "plane", &plane,
-    "parallax", &parallax,
-    "angle", &angle_,
-    "modulation", &modulation);
+  {
+    lua::Guard guard = lua.Field("modulation");
+    modulation_ = display::Modulation(lua);
+  }
 
-  modulation_ = display::Modulation(json::JSON(modulation));
-  parallax_ = float(parallax);
-  animation_ = display::MakeAnimation(json::JSON(animation), window, path);
+  {
+    lua::Guard guard = lua.Field("parallax");
+    lua.Pop(parallax_);
+  }
+
+  {
+    lua::Guard guard = lua.Field("animation");
+    animation_ = display::MakeAnimation(lua, window, path);
+  }
+
   iterator_ = animation_.begin();
   texture_ = *iterator_;
-  render_box_ = display::BoundingBox(json::JSON(render_box));
+
+  {
+    lua::Guard guard = lua.Field("render_box");
+    render_box_ = display::BoundingBox(lua);
+  }
+
+  {
+    lua::Guard guard = lua.Field("plane");
+    lua.Pop(plane);
+  }
+
+  double interval;
   if(animation_.empty())
   {
     interval = -1.;
+  }
+  else
+  {
+    lua::Guard guard = lua.Field("interval");
+    lua.Pop(interval);
   }
   timer_ = event::Timer(interval, -1);
 }
@@ -95,10 +113,10 @@ void Screen::Impl::Modulation(float r, float g, float b, float a)
   modulation_.a(a);
 }
 
-Screen::Screen(json::JSON const& json, display::Window& window, Scene& scene, event::Queue& queue, boost::filesystem::path const& path)
+Screen::Screen(lua::Stack& lua, display::Window& window, Scene& scene, event::Queue& queue, boost::filesystem::path const& path)
 {
   int plane;
-  impl_ = std::make_shared<Impl>(json, window, plane, path);
+  impl_ = std::make_shared<Impl>(lua, window, plane, path);
   impl_->Init(scene, queue, plane);
 }
 

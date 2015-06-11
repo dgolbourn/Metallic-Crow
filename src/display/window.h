@@ -4,7 +4,7 @@
 #include <memory>
 #include "font.h"
 #include "bounding_box.h"
-#include "json.h"
+#include "lua_stack.h"
 #include "texture.h"
 #include "weak_ptr.h"
 namespace display
@@ -13,7 +13,7 @@ class Window
 {
 public:
   Window() = default;
-  Window(json::JSON const& json);
+  Window(lua::Stack& lua);
   void Load(boost::filesystem::path const& file);
   void Free(boost::filesystem::path const& file);
   void Clear() const;

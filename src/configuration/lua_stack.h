@@ -4,6 +4,7 @@
 #include <string>
 #include "command.h"
 #include "boost/filesystem.hpp"
+#include "lua_guard.h"
 namespace lua
 {
 class Stack
@@ -11,28 +12,25 @@ class Stack
 public:
   Stack(boost::filesystem::path const& path);
   void Load(boost::filesystem::path const& file);
-  void Call(int in, int out);
-  void PopBack(int& out);
-  void PopBack(float& out);
-  void PopBack(double& out);
-  void PopBack(std::string& out);
-  void PopBack(bool& out);
-  void PopBack(event::Command& out);
-  void PopBack();
-  void PopFront(int& out);
-  void PopFront(float& out);
-  void PopFront(double& out);
-  void PopFront(std::string& out);
-  void PopFront(bool& out);
-  void PopFront(event::Command& out);
-  void PopFront();
-  void Get(std::string const& global);
-  void Field(std::string const& field);
-  void Push(int in);
-  void Push(float in);
-  void Push(double in);
-  void Push(std::string const& in);
-  void Push(bool in);
+  std::vector<Guard> Call(std::string const& call, int in, int out);
+  void Pop(int& out);
+  void Pop(float& out);
+  void Pop(double& out);
+  void Pop(std::string& out);
+  void Pop(bool& out);
+  void Pop(event::Command& out);
+  void Pop();
+  Guard Get(std::string const& global);
+  Guard Get(int index);
+  Guard Field(std::string const& field);
+  Guard Field(int index);
+  bool Check();
+  int Size();
+  Guard Push(int in);
+  Guard Push(float in);
+  Guard Push(double in);
+  Guard Push(std::string const& in);
+  Guard Push(bool in);
   void Add(event::Command const& command, std::string const& name, int out);
   void Collect(int size);
   void Pause();

@@ -3,6 +3,6 @@
 #include <functional>
 namespace event
 {
-typedef std::function<bool(void)> Command;
+typedef std::function<bool()> Command;
 }
 #endif

@@ -1,9 +1,7 @@
 #include "actor.h"
 #include "bounding_box.h"
 #include "bind.h"
-#include "json_iterator.h"
 #include <random>
-#include "make_body.h"
 #include "actor_impl.h"
 namespace
 {
@@ -203,56 +201,90 @@ void Actor::Impl::Blink()
   eyes_.Expression(open_);
 }
 
-Actor::Impl::Impl(json::JSON const& json, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, int& plane, boost::filesystem::path const& path) : force_(0.f, 0.f), open_(true)
+namespace
 {
-  json_t* dynamics_body;
-  json_t* game_body;
-  json_t* eyes;
-  json_t* mouth;
-  json_t* blink;
-  json_t* plane_ref;
-  json_t* dilation;
-  json.Unpack("{sososososososo}",
-    "dynamics body", &dynamics_body,
-    "dilation", &dilation,
-    "game body", &game_body,
-    "eyes", &eyes,
-    "mouth", &mouth,
-    "plane", &plane_ref,
-    "blink", &blink);
-
-  dynamics_body_ = MakeBody(json::JSON(dynamics_body), world, collision);
-  if(json::JSON json = json::JSON(game_body))
+dynamics::Body MakeBody(lua::Stack& lua, dynamics::World& world, collision::Group& collision)
+{
+  dynamics::Body body;
   {
-    if(json::JSON json = json::JSON(eyes))
+    lua::Guard guard = lua.Field("body");
+    body = dynamics::Body(lua, world);
+  }
+
+  {
+    lua::Guard guard = lua.Field("names");
+    for(int index = 1, end = lua.Size(); index <= end; ++index)
     {
-      eyes_ = game::Feature(json, window, path);
+      std::string name;
+      lua::Guard guard = lua.Field(index);
+      lua.Pop(name);
+
+      collision.Add(name, body);
     }
-    if(json::JSON json = json::JSON(mouth))
+  }
+  return body;
+}
+}
+
+Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, int& plane, boost::filesystem::path const& path) : force_(0.f, 0.f), open_(true)
+{
+  {
+    lua::Guard guard = lua.Field("dynamics_body");
+    if(lua.Check())
     {
-      mouth_ = game::Feature(json, window, path);
-    }
-  
-    game_body_ = game::Body(json, window, path, eyes_, mouth_);
-
-    json::JSON(dilation).Unpack("f", &dilation_);
-    animation_ = event::Timer(dilation_ * game_body_.Period(), -1);
-    queue.Add(function::Bind(&event::Timer::operator(), animation_));
-
-    json::JSON(plane_ref).Unpack("i", &plane);
-
-    if(json::JSON json = json::JSON(blink))
-    {
-      int bblink;
-      json.Unpack("b", &bblink);
-      if((bblink != 0) && bool(eyes_))
-      {
-        blink_ = event::Timer(interval(), -1);
-        queue.Add(function::Bind(&event::Timer::operator(), blink_));
-      }
+      dynamics_body_ = MakeBody(lua, world, collision);
     }
   }
 
+  {
+    lua::Guard guard = lua.Field("game_body");
+    if(lua.Check())
+    {
+      {
+        lua::Guard guard = lua.Field("eyes");
+        if(lua.Check())
+        {
+          eyes_ = game::Feature(lua, window, path);
+          
+          lua::Guard guard = lua.Field("blink");
+          if(lua.Check())
+          {
+            bool blink;
+            lua.Pop(blink);
+            if(blink)
+            {
+              blink_ = event::Timer(interval(), -1);
+              queue.Add(function::Bind(&event::Timer::operator(), blink_));
+            }
+          }
+        }
+      }
+
+      {
+        lua::Guard guard = lua.Field("mouth");
+        if(lua.Check())
+        {
+          mouth_ = game::Feature(lua, window, path);
+        }
+      }
+
+      game_body_ = game::Body(lua, window, path, eyes_, mouth_);
+    
+      {
+        lua::Guard guard = lua.Field("dilation");
+        lua.Pop(dilation_);
+      }
+
+      animation_ = event::Timer(dilation_ * game_body_.Period(), -1);
+      queue.Add(function::Bind(&event::Timer::operator(), animation_));
+
+      {
+        lua::Guard guard = lua.Field("plane");
+        lua.Pop(plane);
+      }
+    }
+  }
+  
   if(bool(dynamics_body_) && bool(game_body_))
   {
     modulation_ = game_body_.Modulation();
@@ -394,10 +426,10 @@ Actor::operator bool() const
   return bool(impl_);
 }
 
-Actor::Actor(json::JSON const& json, display::Window& window, Scene& scene, collision::Group& collision, event::Queue& queue, dynamics::World& world, boost::filesystem::path const& path)
+Actor::Actor(lua::Stack& lua, display::Window& window, Scene& scene, collision::Group& collision, event::Queue& queue, dynamics::World& world, boost::filesystem::path const& path)
 {
   int plane;
-  impl_ = std::make_shared<Impl>(json, window, queue, world, collision, plane, path);
+  impl_ = std::make_shared<Impl>(lua, window, queue, world, collision, plane, path);
   impl_->Init(scene, world, plane);
 }
 }

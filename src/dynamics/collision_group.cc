@@ -2,7 +2,6 @@
 #include <map>
 #include <set>
 #include "signal.h"
-#include "json_iterator.h"
 #include "bind.h"
 namespace collision
 {
@@ -15,7 +14,7 @@ typedef std::map<std::string, std::map<std::string, std::pair<event::Signal, eve
 class Group::Impl
 {
 public:
-  Impl(json::JSON const& json, Collision const& collision);
+  Impl(lua::Stack& lua, Collision const& collision);
   void Add(std::string const& group_a, std::string const& group_b, event::Command const& command, bool begin);
   void Add(std::string const& group_a, dynamics::Body const& body_a);
   Members members_;
@@ -23,19 +22,24 @@ public:
   Collision collision_;
 };
 
-Group::Impl::Impl(json::JSON const& json, Collision const& collision) : collision_(collision)
+Group::Impl::Impl(lua::Stack& lua, Collision const& collision) : collision_(collision)
 {
-  json_t* collisions;
-
-  json.Unpack("{so}", 
-    "allowed collisions", 
-    &collisions);
-
-  for(json::JSON element : json::JSON(collisions))
+  for(int index = 1, end = lua.Size(); index <= end; ++index)
   {
-    char const* group_a;
-    char const* group_b;
-    element.Unpack("[ss]", &group_a, &group_b);
+    lua::Guard guard = lua.Field(index);
+
+    std::string group_a;
+    {
+      lua::Guard guard = lua.Field(1);
+      lua.Pop(group_a);
+    }
+
+    std::string group_b;
+    {
+      lua::Guard guard = lua.Field(2);
+      lua.Pop(group_b);
+    }
+
     collisions_[group_a][group_b] = collisions_[group_b][group_a];
     members_[group_a];
     members_[group_b];
@@ -115,7 +119,7 @@ void Group::Add(std::string const& group_a, dynamics::Body const& body_a)
   impl_->Add(group_a, body_a);
 }
 
-Group::Group(json::JSON const& json, Collision const& collision) : impl_(std::make_shared<Impl>(json, collision))
+Group::Group(lua::Stack& lua, Collision const& collision) : impl_(std::make_shared<Impl>(lua, collision))
 {
 }
 }

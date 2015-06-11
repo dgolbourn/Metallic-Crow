@@ -2,7 +2,7 @@
 #define GAME_BODY_H_
 #include <memory>
 #include "window.h"
-#include "json.h"
+#include "lua_stack.h"
 #include "position.h"
 #include "boost/filesystem.hpp"
 #include "modulation.h"
@@ -14,7 +14,7 @@ class Body
 {
 public:
   Body() = default;
-  Body(json::JSON const& json, display::Window& window, boost::filesystem::path const& path, Feature const& eyes, Feature const& mouth);
+  Body(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes, Feature const& mouth);
   double Expression(std::string const& expression, bool left_facing);
   double Expression(std::string const& expression);
   double Expression(bool left_facing);

@@ -10,7 +10,7 @@ public:
   Library(Library const& other);
   Library(Library&& other);
   Library& operator=(Library other);
-  ~Library(void);
+  ~Library();
 private:
   Uint32 flags_;
 };

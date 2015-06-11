@@ -1,7 +1,7 @@
 #include "feature.h"
 #include <unordered_map>
 #include "boost/functional/hash.hpp"
-#include "json_iterator.h"
+
 namespace game
 {
 namespace
@@ -13,7 +13,7 @@ typedef std::unordered_map<Key, std::pair<display::Texture, display::Texture>, b
 class Feature::Impl
 {
 public:
-  Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path);
+  Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path);
   void Expression(std::string const& expression, int index);
   void Expression(std::string const& expression);
   void Expression(int index);
@@ -24,41 +24,68 @@ public:
   Key state_;
 };
 
-Feature::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path)
+Feature::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path)
 {
-  json_t* expressions;
-  char const* begin_expression;
-  int begin_index;
-  json.Unpack("{sosssi}",
-    "expressions", &expressions,
-    "begin expression", &begin_expression,
-    "begin index", &begin_index);
-
-  for(json::JSON value : json::JSON(expressions))
   {
-    char const* expression;
-    int index;
-    int facing;
-    char const* page;
-    json_t* clip;
-
-    value.Unpack("{sssisbssso}",
-      "expression", &expression,
-      "index", &index,
-      "left facing", &facing,
-      "page", &page,
-      "clip", &clip);
-
-    display::Texture texture(display::Texture(path / page, window), display::BoundingBox(json::JSON(clip)));
-    if(facing)
+    lua::Guard guard = lua.Field("expressions");
+    for(int index = 1, end = lua.Size(); index <= end; ++index)
     {
-      textures_[Key(expression, index)].first = texture;
-    }
-    else
-    {
-      textures_[Key(expression, index)].second = texture;
+      lua::Guard guard = lua.Field(index);
+
+      std::string expression;
+      {
+        lua::Guard guard = lua.Field("expression");
+        lua.Pop(expression);
+      }
+
+      int expession_index;
+      {
+        lua::Guard guard = lua.Field("index");
+        lua.Pop(expession_index);
+      }
+
+      bool facing;
+      {
+        lua::Guard guard = lua.Field("left_facing");
+        lua.Pop(facing);
+      }
+
+      std::string page;
+      {
+        lua::Guard guard = lua.Field("page");
+        lua.Pop(page);
+      }
+
+      display::BoundingBox clip;
+      {
+        lua::Guard guard = lua.Field("clip");
+        clip = display::BoundingBox(lua);
+      }
+
+      display::Texture texture(display::Texture(path / page, window), clip);
+      if(facing)
+      {
+        textures_[Key(expression, expession_index)].first = texture;
+      }
+      else
+      {
+        textures_[Key(expression, expession_index)].second = texture;
+      }
     }
   }
+
+  std::string begin_expression;
+  {
+    lua::Guard guard = lua.Field("begin_expression");
+    lua.Pop(begin_expression);
+  }
+
+  int begin_index;
+  {
+    lua::Guard guard = lua.Field("begin_index");
+    lua.Pop(begin_index);
+  }
+
   state_ = Key(begin_expression, begin_index);
   current_ = textures_.find(state_);
 }
@@ -108,7 +135,7 @@ void Feature::Impl::Render(display::BoundingBox const& render_box, display::Modu
   }
 }
 
-Feature::Feature(json::JSON const& json, display::Window& window, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(json, window, path))
+Feature::Feature(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(lua, window, path))
 {
 }
 

@@ -4,7 +4,7 @@
 #include <vector>
 #include <list>
 #include "boost/functional/hash.hpp"
-#include "json_iterator.h"
+
 #include "scene.h"
 namespace
 {
@@ -30,7 +30,7 @@ namespace game
 class Body::Impl
 {
 public:
-  Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path, Feature const& eyes, Feature const& mouth);
+  Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes, Feature const& mouth);
   double Expression(std::string const& expression, bool left_facing);
   double Expression(std::string const& expression);
   double Expression(bool left_facing);
@@ -52,121 +52,167 @@ public:
   Frames::Key state_;
 };
 
-Body::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command)
+Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command)
 {
-  json_t* expressions;
-  char const* begin_expression;
-  int begin_facing;
-  double x, y;
-  json_t* modulation;
-  json.Unpack("{sosssbs[ff]so}",
-    "expressions", &expressions,
-    "expression", &begin_expression,
-    "left facing", &begin_facing,
-    "position", &x, &y,
-    "modulation", &modulation);
- 
-  modulation_ = display::Modulation(json::JSON(modulation));
+  {
+    lua::Guard guard = lua.Field("modulation");
+    modulation_ = display::Modulation(lua);
+  }
 
   std::map<Frames::Key, std::list<Frames::Map::iterator*>> next;
-
-  for(json::JSON expression : json::JSON(expressions))
   {
-    char const* name;
-    char const* next_expression;
-    int facing;
-    int next_facing;
-    int interruptable;
-    json_t* frames_ref;
-
-    expression.Unpack("{sssbsssbsbso}", 
-      "name", &name,
-      "left facing", &facing,
-      "next name", &next_expression,
-      "next left facing", &next_facing,
-      "interruptable", &interruptable,
-      "frames", &frames_ref);
-
-    Frames& frames = expressions_[Frames::Key(name, facing != 0)];
-    frames.iterruptable_ = (interruptable != 0);
-
-    next[Frames::Key(next_expression, (next_facing != 0))].push_back(&frames.next_);
-
-    frames.frames_.resize(json::JSON(frames_ref).Size());
-    auto frame_iter = frames.frames_.begin();
-    for(json::JSON frame : json::JSON(frames_ref))
+    lua::Guard guard = lua.Field("expressions");
+    for(int index = 1, end = lua.Size(); index <= end; ++index)
     {
-      json_t* jframe_facing;
-      json_t* jeyes_box;
-      json_t* jmouth_box;
-      json_t* jtextures;
-      json_t* jeyes_parallax;
-      json_t* jmouth_parallax;
-      json_t* jeyes_plane;
-      json_t* jmouth_plane;
-      frame.Unpack("{sosososososososfso}",
-        "left facing", &jframe_facing,
-        "eyes box", &jeyes_box,
-        "eyes parallax", &jeyes_parallax,
-        "eyes plane", &jeyes_plane,
-        "mouth box", &jmouth_box,
-        "mouth parallax", &jmouth_parallax,
-        "mouth plane", &jmouth_plane,
-        "period", &frame_iter->period_,
-        "textures", &jtextures);
+      lua::Guard guard = lua.Field(index);
 
-      if(eyes_command)
+      std::string name;
       {
-        int ifacing;
-        json::JSON(jframe_facing).Unpack("b", &ifacing);
-        bool facing = (ifacing != 0);
-        double dparallax;
-        json::JSON(jeyes_parallax).Unpack("f", &dparallax);
-        float eyes_parallax = float(dparallax);
-        display::BoundingBox eyes((json::JSON(jeyes_box)));
-        int iplane;
-        json::JSON(jeyes_plane).Unpack("i", &iplane);
-        frame_iter->boxes_.emplace_back(eyes, display::BoundingBox(eyes, display::BoundingBox()));
-        frame_iter->scene_.Add([=](){return eyes_command(eyes, modulation_, eyes_parallax, facing);}, iplane);
+        lua::Guard guard = lua.Field("name");
+        lua.Pop(name);
       }
 
-      if(mouth_command)
+      bool facing;
       {
-        int ifacing;
-        json::JSON(jframe_facing).Unpack("b", &ifacing);
-        bool facing = (ifacing != 0);
-        double dparallax;
-        json::JSON(jmouth_parallax).Unpack("f", &dparallax);
-        float mouth_parallax = float(dparallax);
-        display::BoundingBox mouth((json::JSON(jmouth_box)));
-        int iplane;
-        json::JSON(jmouth_plane).Unpack("i", &iplane);
-        frame_iter->boxes_.emplace_back(mouth, display::BoundingBox(mouth, display::BoundingBox()));
-        frame_iter->scene_.Add([=](){return mouth_command(mouth, modulation_, mouth_parallax, facing); }, iplane);
+        lua::Guard guard = lua.Field("left_facing");
+        lua.Pop(facing);
       }
 
-      for(json::JSON texture : json::JSON(jtextures))
+      bool interruptable;
       {
-        char const* page;
-        json_t* clip;
-        json_t* render_box;
-        int plane;
-        double dparallax;
-        texture.Unpack("{sssososfsi}",
-          "page", &page,
-          "clip", &clip,
-          "render box", &render_box,
-          "parallax", &dparallax,
-          "plane", &plane);
-
-        display::BoundingBox render((json::JSON(render_box)));
-        frame_iter->boxes_.emplace_back(render, display::BoundingBox(render, display::BoundingBox()));
-
-        float parallax = float(dparallax);
-        display::Texture texture(display::Texture(path / page, window), display::BoundingBox(json::JSON(clip)));
-        frame_iter->scene_.Add([=](){return texture(display::BoundingBox(), render, parallax, false, 0., modulation_);}, plane);
+        lua::Guard guard = lua.Field("interruptable");
+        lua.Pop(interruptable);
       }
-      ++frame_iter;
+
+      std::string next_expression;
+      {
+        lua::Guard guard = lua.Field("next_name");
+        lua.Pop(next_expression);
+      }
+
+      bool next_facing;
+      {
+        lua::Guard guard = lua.Field("next_left_facing");
+        lua.Pop(next_facing);
+      }
+
+      Frames& frames = expressions_[Frames::Key(name, facing)];
+      frames.iterruptable_ = (interruptable != 0);
+
+      next[Frames::Key(next_expression, next_facing)].push_back(&frames.next_);
+
+      {
+        lua::Guard guard = lua.Field("frames");
+        frames.frames_.resize(lua.Size());
+        for(int index = 1, end = lua.Size(); index <= end; ++index)
+        {
+          Frame& frame = frames.frames_[index - 1];
+          lua::Guard guard = lua.Field(index);
+
+          if(eyes_command)
+          {
+            bool facing;
+            {
+              lua::Guard guard = lua.Field("left_facing");
+              lua.Pop(facing);
+            }
+
+            float eyes_parallax;
+            {
+              lua::Guard guard = lua.Field("eyes_parallax");
+              lua.Pop(eyes_parallax);
+            }
+
+            display::BoundingBox eyes;
+            {
+              lua::Guard guard = lua.Field("eyes_box");
+              eyes = display::BoundingBox(lua);
+            }
+
+            int plane;
+            {
+              lua::Guard guard = lua.Field("eyes_plane");
+              lua.Pop(plane);
+            }
+
+            frame.boxes_.emplace_back(eyes, display::BoundingBox(eyes, display::BoundingBox()));
+            frame.scene_.Add([=](){return eyes_command(eyes, modulation_, eyes_parallax, facing); }, plane);
+          }
+
+          if(mouth_command)
+          {
+            bool facing;
+            {
+              lua::Guard guard = lua.Field("left_facing");
+              lua.Pop(facing);
+            }
+
+            float mouth_parallax;
+            {
+              lua::Guard guard = lua.Field("mouth_parallax");
+              lua.Pop(mouth_parallax);
+            }
+
+            display::BoundingBox mouth;
+            {
+              lua::Guard guard = lua.Field("mouth_box");
+              mouth = display::BoundingBox(lua);
+            }
+
+            int plane;
+            {
+              lua::Guard guard = lua.Field("mouth_plane");
+              lua.Pop(plane);
+            }
+
+            frame.boxes_.emplace_back(mouth, display::BoundingBox(mouth, display::BoundingBox()));
+            frame.scene_.Add([=](){return mouth_command(mouth, modulation_, mouth_parallax, facing); }, plane);
+          }
+
+          {
+            lua::Guard guard = lua.Field("textures");
+            for(int index = 1, end = lua.Size(); index <= end; ++index)
+            {
+              lua::Guard guard = lua.Field(index);
+
+              display::BoundingBox render;
+              {
+                lua.Field("render_box");
+                render = display::BoundingBox(lua);
+              }
+
+              frame.boxes_.emplace_back(render, display::BoundingBox(render, display::BoundingBox()));
+
+              float parallax;
+              {
+                lua::Guard guard = lua.Field("parallax");
+                lua.Pop(parallax);
+              }
+
+              std::string page;
+              {
+                lua::Guard guard = lua.Field("page");
+                lua.Pop(page);
+              }
+
+              display::BoundingBox clip;
+              {
+                lua::Guard guard = lua.Field("clip");
+                clip = display::BoundingBox(lua);
+              }
+
+              int plane;
+              {
+                lua::Guard guard = lua.Field("plane");
+                lua.Pop(plane);
+              }
+
+              display::Texture texture(display::Texture(path / page, window), clip);
+              frame.scene_.Add([=](){return texture(display::BoundingBox(), render, parallax, false, 0., modulation_); }, plane);
+            }
+          }
+        }
+      }
     }
   }
 
@@ -179,12 +225,36 @@ Body::Impl::Impl(json::JSON const& json, display::Window& window, boost::filesys
     }
   }
 
-  state_ = Frames::Key(begin_expression, begin_facing != 0);
+  bool begin_facing;
+  {
+    lua::Guard guard = lua.Field("left_facing");
+    lua.Pop(begin_facing);
+  }
+
+  std::string begin_expression;
+  {
+    lua::Guard guard = lua.Field("expression");
+    lua.Pop(begin_expression);
+  }
+
+  {
+    lua::Guard guard = lua.Field("position");
+
+    {
+      lua::Guard guard = lua.Field(1);
+      lua.Pop(position_.first);
+    }
+
+    {
+      lua::Guard guard = lua.Field(2);
+      lua.Pop(position_.second);
+    }
+  }
+
+  state_ = Frames::Key(begin_expression, begin_facing);
   current_frames_ = expressions_.find(state_);
   current_frame_ = current_frames_->second.frames_.begin();
   next_ = expressions_.end();
-  position_.first = float(x);
-  position_.second = float(y);
   for(auto& box : current_frame_->boxes_)
   {
     box.first.x(box.second.x() + position_.first);
@@ -303,7 +373,7 @@ display::Modulation Body::Impl::Modulation() const
   return display::Modulation(modulation_.r(), modulation_.g(), modulation_.b(), modulation_.a());
 }
 
-Body::Body(json::JSON const& json, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command) : impl_(std::make_shared<Impl>(json, window, path, eyes_command, mouth_command))
+Body::Body(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command) : impl_(std::make_shared<Impl>(lua, window, path, eyes_command, mouth_command))
 {
 }
 

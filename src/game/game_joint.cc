@@ -6,15 +6,15 @@ namespace game
 class JointImpl
 {
 public:
-  JointImpl(json::JSON const& json, Actor const& actor_a, Actor const& actor_b, dynamics::World& world);
+  JointImpl(lua::Stack& lua, Actor const& actor_a, Actor const& actor_b, dynamics::World& world);
   dynamics::Joint joint_;
 };
 
-JointImpl::JointImpl(json::JSON const& json, Actor const& actor_a, Actor const& actor_b, dynamics::World& world) : joint_(json, actor_a.impl_->dynamics_body_, actor_b.impl_->dynamics_body_, world)
+JointImpl::JointImpl(lua::Stack& lua, Actor const& actor_a, Actor const& actor_b, dynamics::World& world) : joint_(lua, actor_a.impl_->dynamics_body_, actor_b.impl_->dynamics_body_, world)
 {
 }
 
-Joint::Joint(json::JSON const& json, Actor const& actor_a, Actor const& actor_b, dynamics::World& world) : impl_(std::make_shared<JointImpl>(json, actor_a, actor_b, world))
+Joint::Joint(lua::Stack& lua, Actor const& actor_a, Actor const& actor_b, dynamics::World& world) : impl_(std::make_shared<JointImpl>(lua, actor_a, actor_b, world))
 {
 }
 }

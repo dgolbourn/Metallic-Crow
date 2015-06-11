@@ -11,11 +11,18 @@ void Script::Impl::ViewInit()
 
 void Script::Impl::ViewAddActor()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  lua_.PopFront(name);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-2);
+    stage = StageGet();
+  }
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(name);
+    }
     auto range = stage->actors_.equal_range(name);
     for(auto& actor = range.first; actor != range.second; ++actor)
     {
@@ -26,11 +33,19 @@ void Script::Impl::ViewAddActor()
 
 void Script::Impl::ViewActor()
 {
-  StagePtr stage = StagePop();
-  std::string name;
-  lua_.PopFront(name);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-2);
+    stage = StageGet();
+  }  
   if(stage)
   {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(name);
+    }
+
     stage->subjects_.clear();
     auto range = stage->actors_.equal_range(name);
     for(auto& actor = range.first; actor != range.second; ++actor)
@@ -42,12 +57,15 @@ void Script::Impl::ViewActor()
 
 void Script::Impl::ViewZoom()
 {
-  StagePtr stage = StagePop();
-  float z;
-  lua_.PopFront(z);
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-2);
+    stage = StageGet();
+  }
   if(stage)
   {
-    stage->zoom_ = z;
+    lua::Guard guard = lua_.Get(-1);
+    lua_.Pop(stage->zoom_);
   }
 }
 

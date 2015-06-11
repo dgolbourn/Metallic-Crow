@@ -73,7 +73,7 @@ void WorldImpl::EndContact(b2Contact* contact)
   }
 }
 
-void WorldImpl::Update(void)
+void WorldImpl::Update()
 {
   if(!paused_)
   {
@@ -129,22 +129,39 @@ void WorldImpl::End(event::Command const& command)
   end_.Add(command);
 }
 
-WorldImpl::WorldImpl(json::JSON const& json, collision::Collision& collision) : world_(b2Vec2(0, 0)), collision_(collision), paused_(true)
+WorldImpl::WorldImpl(lua::Stack& lua, collision::Collision& collision) : world_(b2Vec2(0, 0)), collision_(collision), paused_(true)
 {
-  double x, y, r, g, b, rate, scale;
+  {
+    lua::Guard guard = lua.Field("scale");
+    lua.Pop(scale_);
+  }
 
-  json.Unpack("{s[ff]s[fff]sfsf}",
-    "gravity", &x, &y,
-    "ambient", &r, &g, &b,
-    "frame rate", &rate,
-    "scale", &scale);
+  {
+    lua::Guard guard = lua.Field("ambient");
 
-  scale_ = float32(scale);
+    {
+      lua::Guard guard = lua.Field(1);
+      lua.Pop(ambient_.x);
+    }
 
-  ambient_.Set(float32(r), float32(g), float32(b));
+    {
+      lua::Guard guard = lua.Field(2);
+      lua.Pop(ambient_.y);
+    }
+
+    {
+      lua::Guard guard =lua.Field(3);
+      lua.Pop(ambient_.z);
+    }
+  }
+
+  double rate;
+  {
+    lua::Guard guard = lua.Field("frame_rate");
+    lua.Pop(rate);
+  }
 
   f_ = float32(rate);
-
   double interval = 1. / rate;
 
   dt_ = float32(interval);
@@ -152,7 +169,24 @@ WorldImpl::WorldImpl(json::JSON const& json, collision::Collision& collision) : 
   interval_ = Clock::duration(Clock::rep(interval));
   remaining_ = interval_;
 
-  world_.SetGravity(b2Vec2(Metres(x), Metres(y)));
+  {
+    lua::Guard guard = lua.Field("gravity");
+
+    double f;
+    {
+      lua::Guard guard = lua.Field(1);
+      lua.Pop(f);
+    }
+
+    double g;
+    {
+      lua::Guard guard = lua.Field(2);
+      lua.Pop(g);
+    }
+
+    world_.SetGravity(b2Vec2(Metres(f), Metres(g)));
+  }
+
   world_.SetAutoClearForces(false);
   world_.SetContactListener(this);
   world_.SetContactFilter(this);
@@ -164,7 +198,7 @@ void WorldImpl::Init(event::Queue& queue)
   queue.Add(function::Bind(&WorldImpl::Update, shared_from_this()));
 }
 
-void WorldImpl::Pause(void)
+void WorldImpl::Pause()
 {
   if(!paused_)
   {
@@ -173,7 +207,7 @@ void WorldImpl::Pause(void)
   }
 }
 
-void WorldImpl::Resume(void)
+void WorldImpl::Resume()
 {
   if(paused_)
   {
@@ -197,9 +231,8 @@ float WorldImpl::Pixels(float32 metres) const
   return float(metres * scale_);
 }
 
-World::World(json::JSON const& json, collision::Collision& collision, event::Queue& queue)
+World::World(lua::Stack& lua, collision::Collision& collision, event::Queue& queue) : impl_(std::make_shared<WorldImpl>(lua, collision))
 {
-  impl_ = std::make_shared<WorldImpl>(json, collision);
   impl_->Init(queue);
 }
 
@@ -213,17 +246,17 @@ void World::End(event::Command const& command)
   impl_->End(command);
 }
 
-World::operator bool(void) const
+World::operator bool() const
 {
   return bool(impl_);
 }
 
-void World::Pause(void)
+void World::Pause()
 {
   impl_->Pause();
 }
 
-void World::Resume(void)
+void World::Resume()
 {
   impl_->Resume();
 }

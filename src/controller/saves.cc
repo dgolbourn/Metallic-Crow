@@ -1,10 +1,11 @@
 #include "saves.h"
 #include <array>
-#include "json.h"
+#include "lua_stack.h"
 #include "now.h"
 #include <tuple>
 #include "log.h"
 #include <iostream>
+#include <fstream>
 namespace game
 {
 namespace
@@ -31,7 +32,7 @@ public:
   bool Check(int slot) const;
   void Save();
   
-  SaveArray progress_;
+  SaveArray saves_;
   SaveArray::size_type slot_;
   boost::filesystem::path file_;
   bool playing_;
@@ -39,45 +40,60 @@ public:
 
 Saves::Impl::Impl(boost::filesystem::path const& file) : file_(file), slot_(0), playing_(false)
 {
-  char const* last_played[8];
-  json::JSON json(file);
-  
-  json.Unpack("{s[{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}]si}",
-    "saves",
-    "progress", &std::get<0>(progress_[0]), "current", &std::get<1>(progress_[0]), "last played", &last_played[0],
-    "progress", &std::get<0>(progress_[1]), "current", &std::get<1>(progress_[1]), "last played", &last_played[1],
-    "progress", &std::get<0>(progress_[2]), "current", &std::get<1>(progress_[2]), "last played", &last_played[2],
-    "progress", &std::get<0>(progress_[3]), "current", &std::get<1>(progress_[3]), "last played", &last_played[3],
-    "progress", &std::get<0>(progress_[4]), "current", &std::get<1>(progress_[4]), "last played", &last_played[4],
-    "progress", &std::get<0>(progress_[5]), "current", &std::get<1>(progress_[5]), "last played", &last_played[5],
-    "progress", &std::get<0>(progress_[6]), "current", &std::get<1>(progress_[6]), "last played", &last_played[6],
-    "progress", &std::get<0>(progress_[7]), "current", &std::get<1>(progress_[7]), "last played", &last_played[7],
-    "last active save", &slot_);
+  lua::Stack lua("");
+  lua.Load(file);
 
-  for(SaveArray::size_type i = 0; i < progress_.size(); ++i)
+  int slot;
   {
-    std::get<2>(progress_[i]) = std::string(last_played[i]);
+    lua::Guard guard = lua.Get("last_active_save");
+    lua.Pop(slot);
+  }
+  slot_ = SaveArray::size_type(slot);
+
+  lua::Guard guard = lua.Get("saves");
+  for (SaveArray::size_type i = 0; i < saves_.size(); ++i)
+  {
+    lua::Guard guard = lua.Field(i + 1);
+    auto& saves = saves_[i];
+
+    {
+      lua::Guard guard = lua.Field("progress");
+      lua.Pop(std::get<0>(saves));
+    }
+
+    {
+      lua::Guard guard = lua.Field("current");
+      lua.Pop(std::get<1>(saves));
+    }
+
+    {
+      lua::Guard guard = lua.Field("last_played");
+      lua.Pop(std::get<2>(saves));
+    }
   }
 }
 
 void Saves::Impl::Save()
-{
+{ 
   if(playing_)
   {
-    std::get<2>(progress_.at(slot_)) = calendar::Now();
+    std::get<2>(saves_.at(slot_)) = calendar::Now();
   }
 
-  json::JSON("{s[{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}{sisiss}]si}",
-    "saves",
-    "progress", std::get<0>(progress_[0]), "current", std::get<1>(progress_[0]), "last played", std::get<2>(progress_[0]).c_str(),
-    "progress", std::get<0>(progress_[1]), "current", std::get<1>(progress_[1]), "last played", std::get<2>(progress_[1]).c_str(),
-    "progress", std::get<0>(progress_[2]), "current", std::get<1>(progress_[2]), "last played", std::get<2>(progress_[2]).c_str(),
-    "progress", std::get<0>(progress_[3]), "current", std::get<1>(progress_[3]), "last played", std::get<2>(progress_[3]).c_str(),
-    "progress", std::get<0>(progress_[4]), "current", std::get<1>(progress_[4]), "last played", std::get<2>(progress_[4]).c_str(),
-    "progress", std::get<0>(progress_[5]), "current", std::get<1>(progress_[5]), "last played", std::get<2>(progress_[5]).c_str(),
-    "progress", std::get<0>(progress_[6]), "current", std::get<1>(progress_[6]), "last played", std::get<2>(progress_[6]).c_str(),
-    "progress", std::get<0>(progress_[7]), "current", std::get<1>(progress_[7]), "last played", std::get<2>(progress_[7]).c_str(),
-    "last active save", slot_).Write(file_);
+  std::ofstream file(file_.string());
+
+  file << "last_active_save = " << slot_ << "\n"
+          "saves = {}\n";
+
+  for(SaveArray::size_type i = 0; i < saves_.size(); ++i)
+  {
+    SaveArray::size_type j = i + 1;
+    auto& saves = saves_[i];
+    file << "saves[" << j << "] = {}\n"
+            "saves[" << j << "].progress = " << std::get<0>(saves) << "\n"
+            "saves[" << j << "].current = " << std::get<1>(saves) << "\n"
+            "saves[" << j << "].last_played = \"" << std::get<2>(saves) << "\"\n";
+  }
 }
 
 Saves::Impl::~Impl()
@@ -94,7 +110,7 @@ Saves::Impl::~Impl()
 
 bool Saves::Impl::Check(int slot) const
 {
-  return (slot < int(progress_.size())) && (slot >= 0);
+  return (slot < int(saves_.size())) && (slot >= 0);
 }
 
 void Saves::Impl::Play(int slot)
@@ -113,7 +129,7 @@ void Saves::Impl::Stop()
   if(playing_)
   {
     playing_ = false;
-    std::get<2>(progress_.at(slot_)) = calendar::Now();
+    std::get<2>(saves_.at(slot_)) = calendar::Now();
   }
 }
 
@@ -124,31 +140,32 @@ bool Saves::Impl::Playing() const
 
 int Saves::Impl::Size() const
 {
-  return progress_.size();
+  return saves_.size();
 }
 
 int Saves::Impl::Progress(int slot) const
 {
-  return std::get<0>(progress_.at(slot));
+  return std::get<0>(saves_.at(slot));
 }
 
 int Saves::Impl::Current(int slot) const
 {
-  return std::get<1>(progress_.at(slot));
+  return std::get<1>(saves_.at(slot));
 }
 
 void Saves::Impl::Current(int slot, int current)
 {
-  std::get<1>(progress_.at(slot)) = current;
-  if(std::get<1>(progress_.at(slot)) > std::get<0>(progress_.at(slot)))
+  auto& saves = saves_.at(slot);
+  std::get<1>(saves) = current;
+  if(std::get<1>(saves) > std::get<0>(saves))
   {
-    std::get<0>(progress_.at(slot)) = std::get<1>(progress_.at(slot));
+    std::get<0>(saves) = std::get<1>(saves);
   }
 }
 
 std::string Saves::Impl::LastPlayed(int slot) const
 {
-  return std::get<2>(progress_.at(slot));
+  return std::get<2>(saves_.at(slot));
 }
 
 int Saves::Impl::LastPlayed() const

@@ -7,12 +7,12 @@ namespace function
 template<class Method, class Shared, class... Args> event::Command Bind(Method&& method, Shared const& shared, Args... args)
 {
   Shared::WeakPtr weak(shared);
-  return [=](void) mutable
+  return [=]() mutable
   {
     bool locked = false;
     if(auto shared_locked = weak.Lock())
     {
-      (void)(shared_locked.*method)(args...);
+      (shared_locked.*method)(args...);
       locked = true;
     }
     return locked;
@@ -27,7 +27,7 @@ template<class Return, class Shared, class... Args> std::function<bool(Args...)>
     bool locked = false;
     if(auto shared_locked = weak.Lock())
     {
-      (void)(shared_locked.*method)(args...);
+      (shared_locked.*method)(args...);
       locked = true;
     }
     return locked;
@@ -37,13 +37,13 @@ template<class Return, class Shared, class... Args> std::function<bool(Args...)>
 template<class Method, class Impl, class... Args> event::Command Bind(Method&& method, std::shared_ptr<Impl> const& shared, Args... args)
 {
   std::weak_ptr<Impl> weak = shared;
-  return [=](void)
+  return [=]()
   {
     bool locked = false;
     if(auto shared_locked = weak.lock())
     {
       Impl& ptr = *shared_locked.get();
-      (void)(ptr.*method)(args...);
+      (ptr.*method)(args...);
       locked = true;
     }
     return locked;
@@ -87,13 +87,13 @@ template<class Impl, class... Args> std::function<bool(Args...)> Bind(void(Impl:
 
 template<class Method, class Impl, class... Args> event::Command Bind(Method&& method, std::weak_ptr<Impl> weak, Args... args)
 {
-  return [=](void)
+  return [=]()
   {
     bool locked = false;
     if(auto shared_locked = weak.lock())
     {
       Impl* ptr = shared_locked.get();
-      (void)(ptr->*method)(args...);
+      (ptr->*method)(args...);
       locked = true;
     }
     return locked;
@@ -108,7 +108,7 @@ template<class Return, class Impl, class... Args> std::function<bool(Args...)> B
     if(auto shared_locked = weak.lock())
     {
       Impl* ptr = shared_locked.get();
-      (void)(ptr->*method)(args...);
+      (ptr->*method)(args...);
       locked = true;
     }
     return locked;

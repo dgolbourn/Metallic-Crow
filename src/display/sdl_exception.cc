@@ -2,7 +2,7 @@
 #include "SDL.h"
 namespace sdl
 {
-std::string Error(void)
+std::string Error()
 {
   return SDL_GetError();
 }

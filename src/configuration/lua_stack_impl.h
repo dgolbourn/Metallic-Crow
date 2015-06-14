@@ -18,7 +18,7 @@ public:
   StackImpl(boost::filesystem::path const& path);
   ~StackImpl();
   void Load(boost::filesystem::path const& file);
-  void Call(std::string const& call, int in, int out);
+  void Call(int in, int out);
   void Pop(int& out);
   void Pop(float& out);
   void Pop(double& out);
@@ -30,6 +30,7 @@ public:
   void Collect(int size);
   void Pause();
   void Resume();
+  void Release();
   lua_State* state_;
   CommandMap map_;
   int weak_registry_;

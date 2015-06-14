@@ -37,12 +37,14 @@ void Script::Impl::Init(boost::filesystem::path const& file)
   typedef void (event::Signal::*Notify)();
   lua_.Add(function::Bind((Notify)&event::Signal::operator(), signal_), "script_end", 0);
 
-  lua_.Call("script_initialise", 0, 0);
+  lua::Guard guard = lua_.Get("script_initialise");
+  lua_.Call(0, 0);
 }
 
 void Script::Impl::Call(std::string const& call)
 {
-  lua_.Call(call, 0, 0);
+  lua::Guard guard = lua_.Get(call);
+  lua_.Call(0, 0);
 }
 
 void Script::Impl::Collect()
@@ -71,7 +73,8 @@ void Script::Impl::Resume()
   if(!begun_)
   {
     begun_ = true;
-    lua_.Call("script_begin", 0, 0);
+    lua::Guard guard = lua_.Get("script_begin");
+    lua_.Call(0, 0);
   }
 
   if(paused_)
@@ -132,9 +135,10 @@ void Script::Impl::ChoiceRight()
 
 void Script::Impl::Control(float x, float y)
 {
-  lua::Guard guard0 = lua_.Push(x);
-  lua::Guard guard1 = lua_.Push(y);
-  lua_.Call("control", 2, 0);
+  lua::Guard guard0 = lua_.Get("control");
+  lua::Guard guard1 = lua_.Push(x);
+  lua::Guard guard2 = lua_.Push(y);
+  lua_.Call(2, 0);
 }
 
 void Script::Impl::Add(event::Command const& command)

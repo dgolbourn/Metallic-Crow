@@ -12,7 +12,7 @@ class Stack
 public:
   Stack(boost::filesystem::path const& path);
   void Load(boost::filesystem::path const& file);
-  std::vector<Guard> Call(std::string const& call, int in, int out);
+  std::vector<Guard> Call(int in, int out);
   void Pop(int& out);
   void Pop(float& out);
   void Pop(double& out);

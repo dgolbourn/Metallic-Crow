@@ -26,7 +26,7 @@ Guard& Guard::operator=(Guard&& other)
     while(*next != this)
     {
       iter = next++;
-      index--;
+      --index;
     }
     impl_->stack_.erase_after(iter);
     lua_remove(impl_->state_, index);
@@ -63,7 +63,7 @@ Guard::~Guard()
     while(*next != this)
     {
       iter = next++;
-      index--;
+      --index;
     }
     impl_->stack_.erase_after(iter);
     lua_remove(impl_->state_, index);

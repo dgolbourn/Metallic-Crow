@@ -64,7 +64,7 @@ static void InitException(lua_State* state)
   lua_pushcfunction(state, FinaliseException);
   lua_rawset(state, -3);
 
-  lua_pushliteral(state, "__-1");
+  lua_pushliteral(state, "__index");
   lua_pushvalue(state, -2);
   lua_rawset(state, -3);
 
@@ -111,40 +111,61 @@ void StackImpl::Load(boost::filesystem::path const& file)
   {
     PopException(state_);
  
-    std::string error(lua_tostring(state_, -1));
-    lua_pop(state_, 1);
-    BOOST_THROW_EXCEPTION(Exception()
-      << Exception::What(error)
-      << Exception::Code(ret));
+    char const* error = lua_tostring(state_, -1);
+    if(error != nullptr)
+    {
+      std::string error(error);
+      lua_pop(state_, 1);
+      BOOST_THROW_EXCEPTION(Exception()
+        << Exception::What(error)
+        << Exception::Code(ret));
+    }
+    else
+    {
+      BOOST_THROW_EXCEPTION(Exception());
+    }
   }
 }
 
-void StackImpl::Call(std::string const& call, int in, int out)
+void StackImpl::Release()
 {
-  lua_getglobal(state_, call.c_str());
-  for(int i = 0; i < in; ++i)
+  Guard* guard = *stack_.begin();
+  stack_.pop_front();
+  guard->impl_ = nullptr;
+}
+
+void StackImpl::Call(int in, int out)
+{
+  for(int i = 0; i <= in; ++i)
   {
-    lua_pushvalue(state_, -in - 1);
+    Release();
   }
-  
+
   int ret = lua_pcall(state_, in, out, 0);
+
   if(ret)
   {
     PopException(state_);
 
-    std::string error(lua_tostring(state_, -1));
-    lua_pop(state_, 1);
-    BOOST_THROW_EXCEPTION(Exception()
-      << Exception::What(error)
-      << Exception::Code(ret));
+    char const* error = lua_tostring(state_, -1);
+    if(error != nullptr)
+    {
+      std::string error(error);
+      lua_pop(state_, 1);
+      BOOST_THROW_EXCEPTION(Exception()
+        << Exception::What(error)
+        << Exception::Code(ret));
+    }
+    else
+    {
+      BOOST_THROW_EXCEPTION(Exception());
+    }
   }
 }
 
 void StackImpl::Pop(event::Command& out)
 {
-  Guard* guard = *stack_.begin();
-  stack_.pop_front();
-  guard->impl_ = nullptr;
+  Release();
 
   if(!lua_isfunction(state_, -1))
   {
@@ -159,9 +180,7 @@ void StackImpl::Pop(event::Command& out)
 
 void StackImpl::Pop(int& out)
 {
-  Guard* guard = *stack_.begin();
-  stack_.pop_front();
-  guard->impl_ = nullptr;
+  Release();
 
   int ret;
   out = (int)lua_tointegerx(state_, -1, &ret); 
@@ -174,9 +193,7 @@ void StackImpl::Pop(int& out)
 
 void StackImpl::Pop(float& out)
 {
-  Guard* guard = *stack_.begin();
-  stack_.pop_front();
-  guard->impl_ = nullptr;
+  Release();
 
   int ret;
   out = (float)lua_tonumberx(state_, -1, &ret);
@@ -189,9 +206,7 @@ void StackImpl::Pop(float& out)
 
 void StackImpl::Pop(double& out)
 {
-  Guard* guard = *stack_.begin();
-  stack_.pop_front();
-  guard->impl_ = nullptr;
+  Release();
 
   int ret;
   out = lua_tonumberx(state_, -1, &ret);
@@ -204,9 +219,7 @@ void StackImpl::Pop(double& out)
 
 void StackImpl::Pop(std::string& out)
 {
-  Guard* guard = *stack_.begin();
-  stack_.pop_front();
-  guard->impl_ = nullptr;
+  Release();
 
   if(!lua_isstring(state_, -1))
   {
@@ -219,18 +232,13 @@ void StackImpl::Pop(std::string& out)
 
 void StackImpl::Pop()
 {
-  Guard* guard = *stack_.begin();
-  stack_.pop_front();
-  guard->impl_ = nullptr;
-
+  Release();
   lua_pop(state_, 1);
 }
 
 void StackImpl::Pop(bool& out)
 {
-  Guard* guard = *stack_.begin();
-  stack_.pop_front();
-  guard->impl_ = nullptr;
+  Release();
 
   if(!lua_isboolean(state_, -1))
   {
@@ -339,16 +347,15 @@ void Stack::Load(boost::filesystem::path const& file)
   impl_->Load(file);
 }
 
-std::vector<Guard> Stack::Call(std::string const& call, int in, int out)
+std::vector<Guard> Stack::Call(int in, int out)
 {
-  impl_->Call(call, in, out);
+  impl_->Call(in, out);
 
   std::vector<Guard> guard;
   guard.reserve(out);
   for(int i = 0; i < out; ++i)
   {
-    Guard temp(impl_.get());
-    guard.push_back(std::move(temp));
+    guard.push_back(Guard(impl_.get()));
   }
   return guard;
 }

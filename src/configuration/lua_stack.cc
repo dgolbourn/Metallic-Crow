@@ -79,6 +79,11 @@ static lua_State* Init(boost::filesystem::path const& path)
     BOOST_THROW_EXCEPTION(Exception());
   }
 
+  if(lua_checkstack(state, 256) == 0)
+  {
+    BOOST_THROW_EXCEPTION(Exception());
+  }
+
   luaL_openlibs(state);
   
   Path(state, path);

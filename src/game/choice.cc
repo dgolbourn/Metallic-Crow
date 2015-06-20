@@ -124,11 +124,22 @@ Choice::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue
 
   {
     lua::Guard guard = lua.Field("text_modulation");
-    for(int i = 0; i < 4; ++i)
+    if(lua.Check())
     {
-      lua::Guard guard = lua.Field(index[i]);
-      modulation_[i] = display::Modulation(lua);
-      current_modulation_[i] = display::Modulation(modulation_[i].r(), modulation_[i].g(), modulation_[i].b(), modulation_[i].a());
+      for(int i = 0; i < 4; ++i)
+      {
+        lua::Guard guard = lua.Field(index[i]);
+        modulation_[i] = display::Modulation(lua);
+        current_modulation_[i] = display::Modulation(modulation_[i].r(), modulation_[i].g(), modulation_[i].b(), modulation_[i].a());
+      }
+    }
+    else
+    {
+      for(int i = 0; i < 4; ++i)
+      {
+        modulation_[i] = display::Modulation(1.f, 1.f, 1.f, 1.f);
+        current_modulation_[i] = display::Modulation(1.f, 1.f, 1.f, 1.f);
+      }
     }
   }
 

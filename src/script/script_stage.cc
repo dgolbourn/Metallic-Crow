@@ -92,7 +92,7 @@ void Script::Impl::StageLoad()
     stage->zoom_ = 1.f;
 
     {
-      lua::Guard guard = lua_.Field("collisions");
+      lua::Guard guard = lua_.Field("collision");
       stage->group_ = collision::Group(lua_, stage->collision_);
     }
 

@@ -177,7 +177,7 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
 
               display::BoundingBox render;
               {
-                lua.Field("render_box");
+                lua::Guard guard = lua.Field("render_box");
                 render = display::BoundingBox(lua);
               }
 

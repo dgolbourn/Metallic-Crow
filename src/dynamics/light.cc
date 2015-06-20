@@ -203,7 +203,7 @@ Light::Light(lua::Stack& lua) : emit(false), transmit(false), diffuse(false), il
   }
 
   {
-    lua.Field("diffuse");
+    lua::Guard guard = lua.Field("diffuse");
     if(lua.Check())
     {
       diffuse = true;
@@ -236,19 +236,19 @@ Light::Light(lua::Stack& lua) : emit(false), transmit(false), diffuse(false), il
     { 
       float32 x;
       {
-        lua.Field(1);
+        lua::Guard guard = lua.Field(1);
         lua.Pop(x);
       }
 
       float32 y;
       {
-        lua.Field(2);
+        lua::Guard guard = lua.Field(2);
         lua.Pop(y);
       }
 
       float32 z;
       {
-        lua.Field(3);
+        lua::Guard guard = lua.Field(3);
         lua.Pop(z);
       }
 
@@ -261,19 +261,19 @@ Light::Light(lua::Stack& lua) : emit(false), transmit(false), diffuse(false), il
 
         float32 x;
         {
-          lua.Field(1);
+          lua::Guard guard = lua.Field(1);
           lua.Pop(x);
         }
 
         float32 y;
         {
-          lua.Field(2);
+          lua::Guard guard = lua.Field(2);
           lua.Pop(y);
         }
 
         float32 z;
         {
-          lua.Field(3);
+          lua::Guard guard = lua.Field(3);
           lua.Pop(z);
         }
 

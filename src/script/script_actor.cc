@@ -35,7 +35,7 @@ void Script::Impl::ActorLoad()
     Actor actor;
     {
       lua::Guard guard = lua_.Get(-1);
-      Actor actor(lua_, window_, stage->scene_, stage->group_, queue_, stage->world_, path_);
+      actor = Actor(lua_, window_, stage->scene_, stage->group_, queue_, stage->world_, path_);
     }
   
     if(!Pause(stage))
@@ -117,14 +117,14 @@ void Script::Impl::ActorEyes()
 {
   StagePtr stage;
   {
-    lua::Guard guard = lua_.Get(-4);
+    lua::Guard guard = lua_.Get(-3);
     stage = StageGet();
   }
   if(stage)
   {
     std::string name;
     {
-      lua::Guard guard = lua_.Get(-3);
+      lua::Guard guard = lua_.Get(-2);
       lua_.Pop(name);
     }
     std::string expression;
@@ -145,14 +145,14 @@ void Script::Impl::ActorMouth()
 {
   StagePtr stage;
   {
-    lua::Guard guard = lua_.Get(-4);
+    lua::Guard guard = lua_.Get(-3);
     stage = StageGet();
   }
   if(stage)
   {
     std::string name;
     {
-      lua::Guard guard = lua_.Get(-3);
+      lua::Guard guard = lua_.Get(-2);
       lua_.Pop(name);
     }
     std::string expression;
@@ -348,19 +348,19 @@ void Script::Impl::ActorDilation()
 {
   StagePtr stage;
   {
-    lua::Guard guard = lua_.Get(-6);
+    lua::Guard guard = lua_.Get(-3);
     stage = StageGet();
   }
   if(stage)
   {
     std::string name;
     {
-      lua::Guard guard = lua_.Get(-5);
+      lua::Guard guard = lua_.Get(-2);
       lua_.Pop(name);
     }
     float dilation;
     {
-      lua::Guard guard = lua_.Get(-4);
+      lua::Guard guard = lua_.Get(-1);
       lua_.Pop(dilation);
     }
     auto range = stage->actors_.equal_range(name);

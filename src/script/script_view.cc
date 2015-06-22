@@ -4,9 +4,9 @@ namespace game
 {
 void Script::Impl::ViewInit()
 {
-  lua_.Add(function::Bind(&Impl::ViewAddActor, shared_from_this()), "view_add", 0);
-  lua_.Add(function::Bind(&Impl::ViewActor, shared_from_this()), "view", 0);
-  lua_.Add(function::Bind(&Impl::ViewZoom, shared_from_this()), "view_zoom", 0);
+  lua_.Add(function::Bind(&Impl::ViewAddActor, shared_from_this()), "view_add", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ViewActor, shared_from_this()), "view", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ViewZoom, shared_from_this()), "view_zoom", 0, "metallic_crow");
 }
 
 void Script::Impl::ViewAddActor()

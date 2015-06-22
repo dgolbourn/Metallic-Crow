@@ -4,9 +4,9 @@ namespace game
 {
 void Script::Impl::FadeInit()
 {
-  lua_.Add(function::Bind(&Impl::FadeUp, shared_from_this()), "fade_up", 0);
-  lua_.Add(function::Bind(&Impl::FadeDown, shared_from_this()), "fade_down", 0);
-  lua_.Add(function::Bind(&Impl::FadeEnd, shared_from_this()), "fade_end", 0);
+  lua_.Add(function::Bind(&Impl::FadeUp, shared_from_this()), "fade_up", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::FadeDown, shared_from_this()), "fade_down", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::FadeEnd, shared_from_this()), "fade_end", 0, "metallic_crow");
 }
 
 void Script::Impl::FadeUp()

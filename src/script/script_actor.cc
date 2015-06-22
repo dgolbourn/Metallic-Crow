@@ -4,17 +4,17 @@ namespace game
 {
 void Script::Impl::ActorInit()
 {
-  lua_.Add(function::Bind(&Impl::ActorLoad, shared_from_this()), "actor_load", 0);
-  lua_.Add(function::Bind(&Impl::ActorFree, shared_from_this()), "actor_free", 0);
-  lua_.Add(function::Bind(&Impl::ActorBody, shared_from_this()), "actor_body", 0);
-  lua_.Add(function::Bind(&Impl::ActorEyes, shared_from_this()), "actor_eyes", 0);
-  lua_.Add(function::Bind(&Impl::ActorMouth, shared_from_this()), "actor_mouth", 0);
-  lua_.Add(function::Bind(&Impl::ActorPosition, shared_from_this()), "actor_position", 0);
-  lua_.Add(function::Bind(&Impl::ActorVelocity, shared_from_this()), "actor_velocity", 0);
-  lua_.Add(function::Bind(&Impl::ActorForce, shared_from_this()), "actor_force", 0);
-  lua_.Add(function::Bind(&Impl::ActorImpulse, shared_from_this()), "actor_impulse", 0);
-  lua_.Add(function::Bind(&Impl::ActorModulation, shared_from_this()), "actor_modulation", 0);
-  lua_.Add(function::Bind(&Impl::ActorDilation, shared_from_this()), "actor_dilation", 0);
+  lua_.Add(function::Bind(&Impl::ActorLoad, shared_from_this()), "actor_load", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ActorFree, shared_from_this()), "actor_free", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ActorBody, shared_from_this()), "actor_body", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ActorEyes, shared_from_this()), "actor_eyes", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ActorMouth, shared_from_this()), "actor_mouth", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ActorPosition, shared_from_this()), "actor_position", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ActorVelocity, shared_from_this()), "actor_velocity", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ActorForce, shared_from_this()), "actor_force", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ActorImpulse, shared_from_this()), "actor_impulse", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ActorModulation, shared_from_this()), "actor_modulation", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ActorDilation, shared_from_this()), "actor_dilation", 0, "metallic_crow");
 }
 
 void Script::Impl::ActorLoad()

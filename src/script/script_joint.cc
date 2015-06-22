@@ -4,8 +4,8 @@ namespace game
 {
 void Script::Impl::JointInit()
 {
-  lua_.Add(function::Bind(&Impl::JointLoad, shared_from_this()), "joint_load", 0);
-  lua_.Add(function::Bind(&Impl::JointFree, shared_from_this()), "joint_free", 0);
+  lua_.Add(function::Bind(&Impl::JointLoad, shared_from_this()), "joint_load", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::JointFree, shared_from_this()), "joint_free", 0, "metallic_crow");
 }
 
 void Script::Impl::JointLoad()

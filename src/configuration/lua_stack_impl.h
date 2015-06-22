@@ -26,7 +26,7 @@ public:
   void Pop(bool& out);
   void Pop(event::Command& out);
   void Pop();
-  void Add(event::Command const& command, std::string const& name, int out);
+  void Add(event::Command const& command, std::string const& name, int out, std::string const& library);
   void Collect(int size);
   void Pause();
   void Resume();

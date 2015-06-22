@@ -19,8 +19,6 @@ void Script::Impl::Init(boost::filesystem::path const& file)
   collect_.Add(function::Bind(&Impl::Collect, shared_from_this()));
   queue_.Add(function::Bind(&event::Timer::operator(), collect_));
 
-  lua_.Load(file);
-
   ActorInit();
   StageInit();
   SceneryInit();
@@ -33,18 +31,23 @@ void Script::Impl::Init(boost::filesystem::path const& file)
   FadeInit();
   JointInit();
   AudioInit();
-  
-  typedef void (event::Signal::*Notify)();
-  lua_.Add(function::Bind((Notify)&event::Signal::operator(), signal_), "script_end", 0);
 
-  lua::Guard guard = lua_.Get("script_initialise");
-  lua_.Call(0, 0);
+  typedef void (event::Signal::*Notify)();
+  lua_.Add(function::Bind((Notify)&event::Signal::operator(), signal_), "script_end", 0, "metallic_crow");
+
+  lua_.Load(file);
 }
 
 void Script::Impl::Call(std::string const& call)
 {
-  lua::Guard guard = lua_.Get(call);
-  lua_.Call(0, 0);
+  lua::Guard guard0 = lua_.Get("package");
+  lua::Guard guard1 = lua_.Field("loaded");
+  lua::Guard guard2 = lua_.Field("metallic_crow");
+  lua::Guard guard3 = lua_.Field(call);
+  if(lua_.Check())
+  {
+    lua_.Call(0, 0);
+  }
 }
 
 void Script::Impl::Collect()
@@ -73,8 +76,7 @@ void Script::Impl::Resume()
   if(!begun_)
   {
     begun_ = true;
-    lua::Guard guard = lua_.Get("script_begin");
-    lua_.Call(0, 0);
+    Call("script_begin");
   }
 
   if(paused_)
@@ -135,10 +137,16 @@ void Script::Impl::ChoiceRight()
 
 void Script::Impl::Control(float x, float y)
 {
-  lua::Guard guard0 = lua_.Get("control");
-  lua::Guard guard1 = lua_.Push(x);
-  lua::Guard guard2 = lua_.Push(y);
-  lua_.Call(2, 0);
+  lua::Guard guard0 = lua_.Get("package");
+  lua::Guard guard1 = lua_.Field("loaded");
+  lua::Guard guard2 = lua_.Field("metallic_crow");
+  lua::Guard guard3 = lua_.Field("control");
+  if(lua_.Check())
+  {
+    lua::Guard guard4 = lua_.Push(x);
+    lua::Guard guard5 = lua_.Push(y);
+    lua_.Call(2, 0);
+  }
 }
 
 void Script::Impl::Add(event::Command const& command)

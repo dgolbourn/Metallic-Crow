@@ -4,8 +4,8 @@ namespace game
 {
 void Script::Impl::CollisionInit()
 {
-  lua_.Add(function::Bind(&Impl::CollisionBegin, shared_from_this()), "collision_begin", 0);
-  lua_.Add(function::Bind(&Impl::CollisionEnd, shared_from_this()), "collision_end", 0);
+  lua_.Add(function::Bind(&Impl::CollisionBegin, shared_from_this()), "collision_begin", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::CollisionEnd, shared_from_this()), "collision_end", 0, "metallic_crow");
 }
 
 void Script::Impl::CollisionBegin()

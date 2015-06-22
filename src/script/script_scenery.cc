@@ -4,9 +4,9 @@ namespace game
 {
 void Script::Impl::SceneryInit()
 {
-  lua_.Add(function::Bind(&Impl::SceneryLoad, shared_from_this()), "scenery_load", 0);
-  lua_.Add(function::Bind(&Impl::SceneryFree, shared_from_this()), "scenery_free", 0);
-  lua_.Add(function::Bind(&Impl::SceneryModulation, shared_from_this()), "scenery_modulation", 0);
+  lua_.Add(function::Bind(&Impl::SceneryLoad, shared_from_this()), "scenery_load", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::SceneryFree, shared_from_this()), "scenery_free", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::SceneryModulation, shared_from_this()), "scenery_modulation", 0, "metallic_crow");
 }
 
 void Script::Impl::SceneryLoad()

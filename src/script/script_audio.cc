@@ -4,14 +4,14 @@ namespace game
 {
 void Script::Impl::AudioInit()
 {
-  lua_.Add(function::Bind(&Impl::SoundLoad, shared_from_this()), "sound_load", 0);
-  lua_.Add(function::Bind(&Impl::SoundFree, shared_from_this()), "sound_free", 0);
-  lua_.Add(function::Bind(&Impl::SoundPlay, shared_from_this()), "sound_play", 0);
-  lua_.Add(function::Bind(&Impl::SoundEnd, shared_from_this()), "sound_end", 0);
-  lua_.Add(function::Bind(&Impl::MusicLoad, shared_from_this()), "music_load", 0);
-  lua_.Add(function::Bind(&Impl::MusicFree, shared_from_this()), "music_free", 0);
-  lua_.Add(function::Bind(&Impl::MusicPlay, shared_from_this()), "music_play", 0);
-  lua_.Add(function::Bind(&Impl::MusicEnd, shared_from_this()), "music_end", 0);
+  lua_.Add(function::Bind(&Impl::SoundLoad, shared_from_this()), "sound_load", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::SoundFree, shared_from_this()), "sound_free", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::SoundPlay, shared_from_this()), "sound_play", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::SoundEnd, shared_from_this()), "sound_end", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::MusicLoad, shared_from_this()), "music_load", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::MusicFree, shared_from_this()), "music_free", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::MusicPlay, shared_from_this()), "music_play", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::MusicEnd, shared_from_this()), "music_end", 0, "metallic_crow");
 }
 
 void Script::Impl::SoundLoad()

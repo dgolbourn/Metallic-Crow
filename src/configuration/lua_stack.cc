@@ -71,6 +71,23 @@ static void InitException(lua_State* state)
   lua_pop(state, 1);
 }
 
+static void PushToLibrary(lua_State* state, std::string const& function, std::string const& library)
+{
+  lua_getglobal(state, "package");
+  lua_getfield(state, -1, "loaded");
+  lua_getfield(state, -1, library.c_str());
+  if(!lua_istable(state, -1))
+  {
+    lua_pop(state, 1);
+    lua_newtable(state);
+    lua_pushvalue(state, -1);
+    lua_setfield(state, -3, library.c_str());
+  }
+  lua_pushvalue(state, -4);
+  lua_setfield(state, -2, function.c_str());
+  lua_pop(state, 4);
+}
+
 static lua_State* Init(boost::filesystem::path const& path)
 {
   lua_State* state = luaL_newstate();
@@ -312,13 +329,13 @@ static int Event(lua_State* state) noexcept
   return lua_error(state);
 }
 
-void StackImpl::Add(event::Command const& command, std::string const& name, int out)
+void StackImpl::Add(event::Command const& command, std::string const& name, int out, std::string const& library)
 {
   lua_pushlightuserdata(state_, (void*)this);
   lua_pushstring(state_, name.c_str());
   lua_pushinteger(state_, (lua_Integer)out);
   lua_pushcclosure(state_, Event, 3);
-  lua_setglobal(state_, name.c_str());
+  PushToLibrary(state_, name, library);
   if(!map_.emplace(name, command).second)
   {
     BOOST_THROW_EXCEPTION(Exception());
@@ -448,9 +465,9 @@ Guard Stack::Push(bool in)
   return Guard(impl_.get());
 }
 
-void Stack::Add(event::Command const& command, std::string const& name, int out)
+void Stack::Add(event::Command const& command, std::string const& name, int out, std::string const& library)
 {
-  impl_->Add(command, name, out);
+  impl_->Add(command, name, out, library);
 }
 
 void Stack::Collect(int size)
@@ -470,7 +487,7 @@ void Stack::Resume()
 
 bool Stack::Check()
 {
-  return !lua_isnil(impl_->state_, -1);
+  return !lua_isnoneornil(impl_->state_, -1);
 }
 
 Guard Stack::Field(int index)

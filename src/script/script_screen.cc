@@ -4,9 +4,9 @@ namespace game
 {
 void Script::Impl::ScreenInit()
 {
-  lua_.Add(function::Bind(&Impl::ScreenLoad, shared_from_this()), "screen_load", 0);
-  lua_.Add(function::Bind(&Impl::ScreenFree, shared_from_this()), "screen_free", 0);
-  lua_.Add(function::Bind(&Impl::ScreenModulation, shared_from_this()), "screen_modulation", 0);
+  lua_.Add(function::Bind(&Impl::ScreenLoad, shared_from_this()), "screen_load", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ScreenFree, shared_from_this()), "screen_free", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ScreenModulation, shared_from_this()), "screen_modulation", 0, "metallic_crow");
 }
 
 void Script::Impl::ScreenLoad()

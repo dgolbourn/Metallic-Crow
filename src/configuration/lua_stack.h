@@ -31,7 +31,7 @@ public:
   Guard Push(double in);
   Guard Push(std::string const& in);
   Guard Push(bool in);
-  void Add(event::Command const& command, std::string const& name, int out);
+  void Add(event::Command const& command, std::string const& name, int out, std::string const& library);
   void Collect(int size);
   void Pause();
   void Resume();

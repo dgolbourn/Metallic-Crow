@@ -50,14 +50,14 @@ void Script::Impl::ActorFree()
 {  
   StagePtr stage;
   {
-    lua::Guard guard = lua_.Get(-3);
+    lua::Guard guard = lua_.Get(-2);
     stage = StageGet();
   }
   if(stage)
   {
     std::string name;
     {
-      lua::Guard guard = lua_.Get(-2);
+      lua::Guard guard = lua_.Get(-1);
       lua_.Pop(name);
     }
     stage->actors_.erase(name);

@@ -169,6 +169,11 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
           }
 
           {
+            lua::Guard guard = lua.Field("period");
+            lua.Pop(frame.period_);
+          }
+
+          {
             lua::Guard guard = lua.Field("textures");
             for(int index = 1, end = lua.Size(); index <= end; ++index)
             {

@@ -4,7 +4,6 @@
 #include <vector>
 #include <list>
 #include "boost/functional/hash.hpp"
-
 #include "scene.h"
 namespace
 {

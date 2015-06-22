@@ -285,7 +285,7 @@ BodyImpl::BodyImpl(lua::Stack& lua, World& world)
 
   {
     lua::Guard guard = lua.Field("light");
-    if (lua.Check())
+    if(lua.Check())
     {
       light_ = Light(lua);
     }

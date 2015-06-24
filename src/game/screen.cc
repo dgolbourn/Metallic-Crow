@@ -8,12 +8,12 @@ class Screen::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
   Impl(lua::Stack& lua, display::Window& window, int& plane, boost::filesystem::path const& path);
-  void Init(Scene& scene, event::Queue& queue, int plane);
-  void Pause();
-  void Resume();
-  void Next();
-  void Render() const;
-  void Modulation(float r, float g, float b, float a);
+  auto Init(Scene& scene, event::Queue& queue, int plane) -> void;
+  auto Pause() -> void;
+  auto Resume() -> void;
+  auto Next() -> void;
+  auto Render() const -> void;
+  auto Modulation(float r, float g, float b, float a) -> void;
   
   display::Modulation modulation_;
   event::Timer timer_;
@@ -73,19 +73,19 @@ Screen::Impl::Impl(lua::Stack& lua, display::Window& window, int& plane, boost::
   timer_ = event::Timer(interval, -1);
 }
 
-void Screen::Impl::Init(Scene& scene, event::Queue& queue, int plane)
+auto Screen::Impl::Init(Scene& scene, event::Queue& queue, int plane) -> void
 {
   queue.Add(function::Bind(&event::Timer::operator(), timer_));
   timer_.Add(function::Bind(&Impl::Next, shared_from_this()));
   scene.Add(function::Bind(&Impl::Render, shared_from_this()), plane);
 }
 
-void Screen::Impl::Render() const
+auto Screen::Impl::Render() const -> void
 {
   texture_(display::BoundingBox(), render_box_, parallax_, true, angle_, modulation_);
 }
 
-void Screen::Impl::Next()
+auto Screen::Impl::Next() -> void
 {
   ++iterator_;
   if(iterator_ == animation_.end())
@@ -95,17 +95,17 @@ void Screen::Impl::Next()
   texture_ = *iterator_;
 }
 
-void Screen::Impl::Pause()
+auto Screen::Impl::Pause() -> void
 {
   timer_.Pause();
 }
 
-void Screen::Impl::Resume()
+auto Screen::Impl::Resume() -> void
 {
   timer_.Resume();
 }
 
-void Screen::Impl::Modulation(float r, float g, float b, float a)
+auto Screen::Impl::Modulation(float r, float g, float b, float a) -> void
 {
   modulation_.r(r);
   modulation_.g(g);
@@ -120,17 +120,17 @@ Screen::Screen(lua::Stack& lua, display::Window& window, Scene& scene, event::Qu
   impl_->Init(scene, queue, plane);
 }
 
-void Screen::Pause()
+auto Screen::Pause() -> void
 {
   impl_->Pause();
 }
 
-void Screen::Resume()
+auto Screen::Resume() -> void
 {
   impl_->Resume();
 }
 
-void Screen::Modulation(float r, float g, float b, float a)
+auto Screen::Modulation(float r, float g, float b, float a) -> void
 {
   impl_->Modulation(r, g, b, a);
 }

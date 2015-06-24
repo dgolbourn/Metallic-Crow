@@ -1,21 +1,21 @@
 #include "scene.h"
 #include <map>
-namespace game
-{
 namespace
 { 
 typedef std::multimap<int, event::Command> Layers;
 }
 
+namespace game
+{
 class Scene::Impl
 {
 public:
-  void Add(event::Command const& layer, int z);
-  void Render();
+  auto Add(event::Command const& layer, int z) -> void;
+  auto Render() -> void;
   Layers layers_;
 };
 
-void Scene::Impl::Render()
+auto Scene::Impl::Render() -> void
 {
   for(auto iter = layers_.begin(); iter != layers_.end();)
   {
@@ -30,17 +30,17 @@ void Scene::Impl::Render()
   }
 }
 
-void Scene::Impl::Add(event::Command const& layer, int z)
+auto Scene::Impl::Add(event::Command const& layer, int z) -> void
 {
   layers_.emplace(z, layer);
 }
 
-void Scene::Render()
+auto Scene::Render() -> void
 {
   impl_->Render();
 }
 
-void Scene::Add(event::Command const& layer, int z)
+auto Scene::Add(event::Command const& layer, int z) -> void
 {
   impl_->Add(layer, z);
 }

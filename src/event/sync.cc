@@ -1,28 +1,31 @@
 #include "sync.h"
 #include <chrono>
 #include <thread>
-namespace event
+namespace 
 {
 typedef std::chrono::high_resolution_clock Clock;
+}
 
-class SyncImpl
+namespace event
+{
+class Sync::Impl
 {
 public:
-  SyncImpl(double frame_rate);
-  void Synchronise();
+  Impl(double frame_rate);
+  auto Synchronise() -> void;
   Clock::duration interval_;
   Clock::time_point tick_;
 };
 
-SyncImpl::SyncImpl(double frame_rate)
+Sync::Impl::Impl(double frame_rate)
 {
-  static const double scale = double(Clock::period::den) / double(Clock::period::num);
+  static const double scale = static_cast<double>(Clock::period::den) / static_cast<double>(Clock::period::num);
   double interval = scale / frame_rate;
-  interval_ = Clock::duration(Clock::rep(interval));
+  interval_ = static_cast<Clock::duration>(static_cast<Clock::rep>(interval));
   tick_ = Clock::now();
 }
 
-void SyncImpl::Synchronise()
+auto Sync::Impl::Synchronise() -> void
 {
   tick_ += interval_;
   std::this_thread::sleep_until(tick_);
@@ -30,10 +33,10 @@ void SyncImpl::Synchronise()
 
 Sync::Sync(double frame_rate)
 {
-  impl_ = std::make_shared<SyncImpl>(frame_rate);
+  impl_ = std::make_shared<Impl>(frame_rate);
 }
 
-void Sync::operator()()
+auto Sync::operator()() -> void
 {
   impl_->Synchronise();
 }

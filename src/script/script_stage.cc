@@ -3,7 +3,7 @@
 #include <algorithm>
 namespace game
 {
-StagePtr Script::Impl::StageGet()
+auto Script::Impl::StageGet() -> StagePtr
 {
   StagePtr ptr;
   std::string name;
@@ -24,7 +24,7 @@ StagePtr Script::Impl::StageGet()
   return ptr;
 }
 
-void Script::Impl::StageInit()
+auto Script::Impl::StageInit() -> void
 {
   lua_.Add(function::Bind(&Impl::StageNominate, shared_from_this()), "stage_nominate", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::StageLoad, shared_from_this()), "stage_load", 0, "metallic_crow");
@@ -34,7 +34,7 @@ void Script::Impl::StageInit()
   lua_.Add(function::Bind(&Impl::StageResume, shared_from_this()), "stage_resume", 0, "metallic_crow");
 }
 
-void Script::Impl::StageNominate()
+auto Script::Impl::StageNominate() -> void
 {
   std::string name;
   {
@@ -67,7 +67,7 @@ void Script::Impl::StageNominate()
   }
 }
 
-void Script::Impl::StageLoad()
+auto Script::Impl::StageLoad() -> void
 {
   std::string name;
   {
@@ -118,7 +118,7 @@ void Script::Impl::StageLoad()
   stages_.emplace(name, stage);
 }
 
-void Script::Impl::StageFree()
+auto Script::Impl::StageFree() -> void
 {
   std::string name;
   {
@@ -128,7 +128,7 @@ void Script::Impl::StageFree()
   stages_.erase(name);
 }
 
-void Script::Impl::StageAmbient()
+auto Script::Impl::StageAmbient() -> void
 {
   StagePtr stage;
   {
@@ -159,7 +159,7 @@ void Script::Impl::StageAmbient()
   }
 }
 
-void Script::Impl::StagePause()
+auto Script::Impl::StagePause() -> void
 {
   StagePtr stage;
   {
@@ -172,7 +172,7 @@ void Script::Impl::StagePause()
   }
 }
 
-void Script::Impl::StageResume()
+auto Script::Impl::StageResume() -> void
 {
   StagePtr stage;
   {
@@ -185,12 +185,12 @@ void Script::Impl::StageResume()
   }
 }
 
-bool Script::Impl::Pause(StagePtr const& stage)
+auto Script::Impl::Pause(StagePtr const& stage) -> bool
 {
   return std::any_of(stage->paused_.begin(), stage->paused_.end(), [](bool paused){return paused;});
 }
 
-void Script::Impl::Pause(StagePtr const& stage, bool& paused)
+auto Script::Impl::Pause(StagePtr const& stage, bool& paused) -> void
 {
   bool current = Pause(stage);
   paused = true;
@@ -231,7 +231,7 @@ void Script::Impl::Pause(StagePtr const& stage, bool& paused)
   }
 }
 
-void Script::Impl::Resume(StagePtr const& stage, bool& paused)
+auto Script::Impl::Resume(StagePtr const& stage, bool& paused) -> void
 {
   bool current = Pause(stage);
   paused = false;

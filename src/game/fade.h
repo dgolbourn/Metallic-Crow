@@ -9,12 +9,12 @@ class Fade
 {
 public:
   Fade(event::Queue& queue, display::Window const& window);
-  void Down(float period);
-  void Up(float period);
-  void Render() const;
-  void Pause();
-  void Resume();
-  void Add(event::Command const& command);
+  auto Down(float period) -> void;
+  auto Up(float period) -> void;
+  auto Render() const -> void;
+  auto Pause() -> void;
+  auto Resume() -> void;
+  auto Add(event::Command const& command) -> void;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

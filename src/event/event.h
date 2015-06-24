@@ -12,14 +12,14 @@ public:
   Event(lua::Stack& lua);
   void operator()();
   typedef std::function<bool(float, float)> Command;
-  void Control(Command const& command);
-  void ChoiceUp(event::Command const& command);
-  void ChoiceDown(event::Command const& command);
-  void ChoiceLeft(event::Command const& command);
-  void ChoiceRight(event::Command const& command);
-  void Select(event::Command const& command);
-  void Back(event::Command const& command);
-  void Quit(event::Command const& command);
+  auto Control(Command const& command) -> void;
+  auto ChoiceUp(event::Command const& command) -> void;
+  auto ChoiceDown(event::Command const& command) -> void;
+  auto ChoiceLeft(event::Command const& command) -> void;
+  auto ChoiceRight(event::Command const& command) -> void;
+  auto Select(event::Command const& command) -> void;
+  auto Back(event::Command const& command) -> void;
+  auto Quit(event::Command const& command) -> void;
   explicit operator bool() const;
 private:
   class Impl;

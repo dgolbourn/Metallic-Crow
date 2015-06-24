@@ -9,12 +9,12 @@ class Fade::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
   Impl(event::Queue& queue, display::Window const& window);
-  void Render() const;
-  void Pause();
-  void Resume();
-  void Next();
-  void Fade(double period, float end);
-  void Add(event::Command const& command);
+  auto Render() const -> void;
+  auto Pause() -> void;
+  auto Resume() -> void;
+  auto Next() -> void;
+  auto Fade(double period, float end) -> void;
+  auto Add(event::Command const& command) -> void;
   display::Window window_;
   display::Modulation modulation_;
   event::Timer timer_;
@@ -31,7 +31,7 @@ Fade::Impl::Impl(event::Queue& queue, display::Window const& window) : window_(w
 {
 }
 
-void Fade::Impl::Fade(double period, float end)
+auto Fade::Impl::Fade(double period, float end) -> void
 {
   if(period > 0.)
   {
@@ -67,12 +67,12 @@ void Fade::Impl::Fade(double period, float end)
   }
 }
 
-void Fade::Impl::Render() const
+auto Fade::Impl::Render() const -> void
 {
   window_.Draw(display::BoundingBox(), modulation_);
 }
 
-void Fade::Impl::Pause()
+auto Fade::Impl::Pause() -> void
 {
   if(!paused_)
   {
@@ -84,7 +84,7 @@ void Fade::Impl::Pause()
   }
 }
 
-void Fade::Impl::Resume()
+auto Fade::Impl::Resume() -> void
 {
   if(paused_)
   {
@@ -96,7 +96,7 @@ void Fade::Impl::Resume()
   }
 }
 
-void Fade::Impl::Next()
+auto Fade::Impl::Next() -> void
 {
   if(up_)
   {
@@ -112,7 +112,7 @@ void Fade::Impl::Next()
   modulation_.a(current_);
 }
 
-void Fade::Impl::Add(event::Command const& command)
+auto Fade::Impl::Add(event::Command const& command) -> void
 {
   signal_.Add(command);
 }
@@ -121,32 +121,32 @@ Fade::Fade(event::Queue& queue, display::Window const& window) : impl_(std::make
 {
 }
 
-void Fade::Down(float period)
+auto Fade::Down(float period) -> void
 {
   impl_->Fade(period, 0.f);
 }
 
-void Fade::Up(float period)
+auto Fade::Up(float period) -> void
 {
   impl_->Fade(period, 1.f);
 }
 
-void Fade::Render() const
+auto Fade::Render() const -> void
 {
   impl_->Render();
 }
 
-void Fade::Pause()
+auto Fade::Pause() -> void
 {
   impl_->Pause();
 }
 
-void Fade::Resume()
+auto Fade::Resume() -> void
 {
   impl_->Resume();
 }
 
-void Fade::Add(event::Command const& command)
+auto Fade::Add(event::Command const& command) -> void
 {
   impl_->Add(command);
 }

@@ -2,13 +2,13 @@
 #include "bind.h"
 namespace game
 {
-void Script::Impl::CollisionInit()
+auto Script::Impl::CollisionInit() -> void
 {
   lua_.Add(function::Bind(&Impl::CollisionBegin, shared_from_this()), "collision_begin", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::CollisionEnd, shared_from_this()), "collision_end", 0, "metallic_crow");
 }
 
-void Script::Impl::CollisionBegin()
+auto Script::Impl::CollisionBegin() -> void
 {
   StagePtr stage;
   {
@@ -39,7 +39,7 @@ void Script::Impl::CollisionBegin()
   }
 }
 
-void Script::Impl::CollisionEnd()
+auto Script::Impl::CollisionEnd() -> void
 {
   StagePtr stage;
   {

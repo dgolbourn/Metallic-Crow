@@ -12,7 +12,7 @@ public:
   SDL_FRect rect_;
 };
 
-bool BoundingBox::operator<(BoundingBox const& other) const
+auto BoundingBox::operator<(BoundingBox const& other) const -> bool
 {
   return impl_.owner_before(other.impl_);
 }
@@ -22,42 +22,42 @@ BoundingBox::operator bool() const
   return bool(impl_);
 }
 
-void BoundingBox::x(float x)
+auto BoundingBox::x(float x) -> void
 {
   impl_->rect_.x = x;
 }
 
-void BoundingBox::y(float y)
+auto BoundingBox::y(float y) -> void
 {
   impl_->rect_.y = y;
 }
 
-void BoundingBox::w(float w)
+auto BoundingBox::w(float w) -> void
 {
   impl_->rect_.w = w;
 }
 
-void BoundingBox::h(float h)
+auto BoundingBox::h(float h) -> void
 {
   impl_->rect_.h = h;
 }
 
-float BoundingBox::x() const
+auto BoundingBox::x() const -> float
 {
   return impl_->rect_.x;
 }
 
-float BoundingBox::y() const
+auto BoundingBox::y() const -> float
 {
   return impl_->rect_.y;
 }
 
-float BoundingBox::w() const
+auto BoundingBox::w() const -> float
 {
   return impl_->rect_.w;
 }
 
-float BoundingBox::h() const
+auto BoundingBox::h() const -> float
 {
   return impl_->rect_.h;
 }

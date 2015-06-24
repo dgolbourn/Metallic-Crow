@@ -1,24 +1,23 @@
 #include "feature.h"
 #include <unordered_map>
 #include "boost/functional/hash.hpp"
-
-namespace game
-{
 namespace
 {
 typedef std::pair<std::string, int> Key;
 typedef std::unordered_map<Key, std::pair<display::Texture, display::Texture>, boost::hash<Key>> TextureMap;
 }
 
+namespace game
+{
 class Feature::Impl
 {
 public:
   Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path);
-  void Expression(std::string const& expression, int index);
-  void Expression(std::string const& expression);
-  void Expression(int index);
-  void Expression();
-  void Render(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, bool facing) const;
+  auto Expression(std::string const& expression, int index) -> void;
+  auto Expression(std::string const& expression) -> void;
+  auto Expression(int index) -> void;
+  auto Expression() -> void;
+  auto Render(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, bool facing) const -> void;
   TextureMap textures_;
   TextureMap::iterator current_;
   Key state_;
@@ -90,26 +89,26 @@ Feature::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem:
   current_ = textures_.find(state_);
 }
 
-void Feature::Impl::Expression(std::string const& expression, int index)
+auto Feature::Impl::Expression(std::string const& expression, int index) -> void
 {
   state_.first = expression;
   state_.second = index;
   Expression();
 }
 
-void Feature::Impl::Expression(std::string const& expression)
+auto Feature::Impl::Expression(std::string const& expression) -> void
 {
   state_.first = expression;
   Expression();
 }
 
-void Feature::Impl::Expression(int index)
+auto Feature::Impl::Expression(int index) -> void
 {
   state_.second = index;
   Expression();
 }
 
-void Feature::Impl::Expression()
+auto Feature::Impl::Expression() -> void
 {
   auto temp = textures_.find(state_);
   if(temp != textures_.end())
@@ -120,7 +119,7 @@ void Feature::Impl::Expression()
   state_.second = current_->first.second;
 }
 
-void Feature::Impl::Render(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, bool facing) const
+auto Feature::Impl::Render(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, bool facing) const -> void
 {
   if(current_ != textures_.end())
   {
@@ -139,22 +138,22 @@ Feature::Feature(lua::Stack& lua, display::Window& window, boost::filesystem::pa
 {
 }
 
-void Feature::Expression(std::string const& expression, int index)
+auto Feature::Expression(std::string const& expression, int index) -> void
 {
   impl_->Expression(expression, index);
 }
 
-void Feature::Expression(std::string const& expression)
+auto Feature::Expression(std::string const& expression) -> void
 {
   impl_->Expression(expression);
 }
 
-void Feature::Expression(int index)
+auto Feature::Expression(int index) -> void
 {
   impl_->Expression(index);
 }
 
-bool Feature::operator()(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, bool facing) const
+auto Feature::operator()(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, bool facing) const -> bool
 {
   bool valid = bool(impl_);
   if(valid)

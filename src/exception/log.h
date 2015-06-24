@@ -3,6 +3,6 @@
 #include <string>
 namespace exception
 {
-void Log(std::string const& detail) noexcept;
+auto Log(std::string const& detail) noexcept -> void;
 }
 #endif

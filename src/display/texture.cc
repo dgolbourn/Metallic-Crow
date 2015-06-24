@@ -3,6 +3,33 @@
 #include "window.h"
 #include "window_impl.h"
 #include "boost/filesystem.hpp"
+namespace 
+{
+auto Clip(display::BoundingBox const& current, display::BoundingBox const& clip, sdl::Texture const& texture) -> display::BoundingBox
+{
+  display::BoundingBox box;
+  if(clip)
+  {
+    if(current)
+    {
+      display::BoundingBox temp(clip, display::BoundingBox());
+      temp.x(temp.x() + current.x());
+      temp.y(temp.y() + current.y());
+      box = display::BoundingBox(current, temp);
+    }
+    else
+    {
+      box = display::BoundingBox(display::BoundingBox(0.f, 0.f, float(texture->w), float(texture->h)), clip);
+    }
+  }
+  else if(current)
+  {
+    box = display::BoundingBox(current, display::BoundingBox());
+  }
+  return box;
+}
+}
+
 namespace display
 {
 class Texture::Impl
@@ -12,8 +39,8 @@ public:
   Impl(std::string const& text, sdl::Font const& font, float width, Window& window);
   Impl(std::string const& text, sdl::Font const& font, Window& window);
   Impl(Impl const& texture, BoundingBox const& clip);
-  bool Render(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const;
-  bool Check() const;
+  auto Render(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const -> bool;
+  auto Check() const -> bool;
   display::Shape Shape() const;
   Window::WeakPtr window_;
   sdl::Texture texture_;
@@ -35,58 +62,31 @@ Texture::Impl::Impl(std::string const& text, sdl::Font const& font, Window& wind
   texture_ = window.impl_->Text(text, font);
 }
 
-namespace 
-{
-BoundingBox Clip(BoundingBox const& current, BoundingBox const& clip)
-{
-  BoundingBox box;
-  if(clip)
-  {
-    if(current)
-    {
-      BoundingBox temp(clip, BoundingBox());
-      temp.x(temp.x() + current.x());
-      temp.y(temp.y() + current.y());
-      box = BoundingBox(current, temp);
-    }
-    else
-    {
-      box = BoundingBox(clip, BoundingBox());
-    }
-  }
-  else if(current)
-  {
-    box = BoundingBox(current, BoundingBox());
-  }
-  return box;
-}
-}
-
 Texture::Impl::Impl(Impl const& texture, BoundingBox const& clip) : Impl(texture)
 {
-  clip_ = Clip(clip_, clip);
+  clip_ = Clip(clip_, clip, texture_);
 }
 
-bool Texture::Impl::Render(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const
+auto Texture::Impl::Render(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const -> bool
 {
   bool locked = false;
   if(auto window = window_.Lock())
   {
     if(texture_)
     {
-      window.impl_->Render(texture_, Clip(clip_, source), destination, parallax, tile, angle, modulation);
+      window.impl_->Render(texture_, Clip(clip_, source, texture_), destination, parallax, tile, angle, modulation);
     }
     locked = true;
   }
   return locked;
 }
 
-bool Texture::Impl::Check() const
+auto Texture::Impl::Check() const -> bool
 {
   return bool(window_.Lock());
 }
 
-Shape Texture::Impl::Shape() const
+auto Texture::Impl::Shape() const -> display::Shape
 {
   display::Shape shape;
   if(clip_)
@@ -104,7 +104,7 @@ Shape Texture::Impl::Shape() const
   return shape;
 }
 
-bool Texture::operator()(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const
+auto Texture::operator()(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const -> bool
 {
   return bool(impl_) && impl_->Render(source, destination, parallax, tile, angle, modulation);
 }
@@ -114,7 +114,7 @@ Texture::operator bool() const
   return bool(impl_) && impl_->Check();
 }
 
-Shape Texture::Shape() const
+auto Texture::Shape() const -> display::Shape
 {
   return impl_->Shape();
 }

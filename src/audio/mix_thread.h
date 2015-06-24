@@ -5,8 +5,8 @@ namespace mix
 class Mutex
 {
 public:
-  void lock() const;
-  void unlock() const noexcept;
+  auto lock() const -> void;
+  auto unlock() const noexcept -> void;
 };
 
 extern Mutex mutex;

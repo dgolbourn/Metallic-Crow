@@ -2,14 +2,14 @@
 #include "bind.h"
 namespace game
 {
-void Script::Impl::ScreenInit()
+auto Script::Impl::ScreenInit() -> void
 {
   lua_.Add(function::Bind(&Impl::ScreenLoad, shared_from_this()), "screen_load", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ScreenFree, shared_from_this()), "screen_free", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ScreenModulation, shared_from_this()), "screen_modulation", 0, "metallic_crow");
 }
 
-void Script::Impl::ScreenLoad()
+auto Script::Impl::ScreenLoad() -> void
 {
   StagePtr stage;
   {
@@ -29,7 +29,7 @@ void Script::Impl::ScreenLoad()
   }
 }
 
-void Script::Impl::ScreenFree()
+auto Script::Impl::ScreenFree() -> void
 {
   StagePtr stage;
   {
@@ -47,7 +47,7 @@ void Script::Impl::ScreenFree()
   }
 }
 
-void Script::Impl::ScreenModulation()
+auto Script::Impl::ScreenModulation() -> void
 {
   StagePtr stage;
   {

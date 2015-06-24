@@ -64,100 +64,100 @@ class Script::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
   Impl(display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume);
-  void Init(boost::filesystem::path const& file);
+  auto Init(boost::filesystem::path const& file) -> void;
   
-  void Pause();
-  void Resume();
-  void Render();
+  auto Pause() -> void;
+  auto Resume() -> void;
+  auto Render() -> void;
 
-  void ChoiceUp();
-  void ChoiceDown();
-  void ChoiceLeft();
-  void ChoiceRight();
-  void Control(float x, float y);
-  void Call(std::string const& call);
-  void View();
-  void Pause(StagePtr const& stage, bool& paused);
-  bool Pause(StagePtr const& stage);
-  void Resume(StagePtr const& stage, bool& paused);
-  void Add(event::Command const& command);
+  auto ChoiceUp() -> void;
+  auto ChoiceDown() -> void;
+  auto ChoiceLeft() -> void;
+  auto ChoiceRight() -> void;
+  auto Control(float x, float y) -> void;
+  auto Call(std::string const& call) -> void;
+  auto View() -> void;
+  auto Pause(StagePtr const& stage, bool& paused) -> void;
+  auto Pause(StagePtr const& stage) -> bool;
+  auto Resume(StagePtr const& stage, bool& paused) -> void;
+  auto Add(event::Command const& command) -> void;
   
-  void Collect();
+  auto Collect() -> void;
 
-  void ActorInit();
-  void ActorLoad();
-  void ActorFree();
-  void ActorBody();
-  void ActorEyes();
-  void ActorMouth();
-  void ActorPosition();
-  void ActorVelocity();
-  void ActorForce();
-  void ActorImpulse();
-  void ActorModulation();
-  void ActorDilation();
+  auto ActorInit() -> void;
+  auto ActorLoad() -> void;
+  auto ActorFree() -> void;
+  auto ActorBody() -> void;
+  auto ActorEyes() -> void;
+  auto ActorMouth() -> void;
+  auto ActorPosition() -> void;
+  auto ActorVelocity() -> void;
+  auto ActorForce() -> void;
+  auto ActorImpulse() -> void;
+  auto ActorModulation() -> void;
+  auto ActorDilation() -> void;
 
-  void SceneryInit();
-  void SceneryLoad();
-  void SceneryFree();
-  void SceneryModulation();
+  auto SceneryInit() -> void;
+  auto SceneryLoad() -> void;
+  auto SceneryFree() -> void;
+  auto SceneryModulation() -> void;
 
-  void ScreenInit();
-  void ScreenLoad();
-  void ScreenFree();
-  void ScreenModulation();
+  auto ScreenInit() -> void;
+  auto ScreenLoad() -> void;
+  auto ScreenFree() -> void;
+  auto ScreenModulation() -> void;
 
-  void StageInit();
-  void StageLoad();
-  void StageFree();
-  void StageAmbient();
-  void StageNominate();
-  void StagePause();
-  void StageResume();
-  StagePtr StageGet();
+  auto StageInit() -> void;
+  auto StageLoad() -> void;
+  auto StageFree() -> void;
+  auto StageAmbient() -> void;
+  auto StageNominate() -> void;
+  auto StagePause() -> void;
+  auto StageResume() -> void;
+  auto StageGet() -> StagePtr;
 
-  void ChoiceInit();
-  void ChoiceChoice();
-  void ChoiceUpModulation();
-  void ChoiceDownModulation();
-  void ChoiceLeftModulation();
-  void ChoiceRightModulation();
+  auto ChoiceInit() -> void;
+  auto ChoiceChoice() -> void;
+  auto ChoiceUpModulation() -> void;
+  auto ChoiceDownModulation() -> void;
+  auto ChoiceLeftModulation() -> void;
+  auto ChoiceRightModulation() -> void;
 
-  void SubtitleInit();
-  void SubtitleText();
-  void SubtitleModulation();
+  auto SubtitleInit() -> void;
+  auto SubtitleText() -> void;
+  auto SubtitleModulation() -> void;
 
-  void TimerInit();
-  void TimerLoad();
-  void TimerFree();
+  auto TimerInit() -> void;
+  auto TimerLoad() -> void;
+  auto TimerFree() -> void;
 
-  void ViewInit();
-  void ViewAddActor();
-  void ViewActor();
-  void ViewZoom();
+  auto ViewInit() -> void;
+  auto ViewAddActor() -> void;
+  auto ViewActor() -> void;
+  auto ViewZoom() -> void;
 
-  void CollisionInit();
-  void CollisionBegin();
-  void CollisionEnd();
+  auto CollisionInit() -> void;
+  auto CollisionBegin() -> void;
+  auto CollisionEnd() -> void;
 
-  void FadeInit();
-  void FadeUp();
-  void FadeDown();
-  void FadeEnd();
+  auto FadeInit() -> void;
+  auto FadeUp() -> void;
+  auto FadeDown() -> void;
+  auto FadeEnd() -> void;
 
-  void JointInit();
-  void JointLoad();
-  void JointFree();
+  auto JointInit() -> void;
+  auto JointLoad() -> void;
+  auto JointFree() -> void;
 
-  void AudioInit();
-  void SoundLoad();
-  void SoundFree();
-  void SoundPlay();
-  void SoundEnd();
-  void MusicLoad();
-  void MusicFree();
-  void MusicPlay();
-  void MusicEnd();
+  auto AudioInit() -> void;
+  auto SoundLoad() -> void;
+  auto SoundFree() -> void;
+  auto SoundPlay() -> void;
+  auto SoundEnd() -> void;
+  auto MusicLoad() -> void;
+  auto MusicFree() -> void;
+  auto MusicPlay() -> void;
+  auto MusicEnd() -> void;
 
   lua::Stack lua_;
   display::Window window_;

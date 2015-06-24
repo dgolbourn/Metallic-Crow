@@ -8,7 +8,7 @@ namespace
 typedef std::pair<boost::filesystem::path, int> FontKey;
 std::unordered_map<FontKey, std::weak_ptr<TTF_Font>, boost::hash<FontKey>> fonts;
 
-TTF_Font* Init(boost::filesystem::path const& file, int point)
+auto Init(boost::filesystem::path const& file, int point) -> TTF_Font*
 {
   TTF_Font* font = TTF_OpenFont(file.string().c_str(), point);
   if(!font)
@@ -18,7 +18,7 @@ TTF_Font* Init(boost::filesystem::path const& file, int point)
   return font;
 }
 
-sdl::Font::Impl::Font MakeFont(boost::filesystem::path const& file, int point)
+auto MakeFont(boost::filesystem::path const& file, int point) -> sdl::Font::Impl::Font
 {
   sdl::Font::Impl::Font font;
   auto fileiter = fonts.find(FontKey(file, point));
@@ -68,12 +68,12 @@ Font::Impl::Impl(lua::Stack& lua, boost::filesystem::path const& path)
   }
 }
 
-float Font::Impl::LineSpacing() const
+auto Font::Impl::LineSpacing() const -> float
 {
   return float(TTF_FontLineSkip(font_.get()));
 }
 
-float Font::LineSpacing() const
+auto Font::LineSpacing() const -> float
 {
   return impl_->LineSpacing();
 }

@@ -10,7 +10,7 @@ class Font::Impl
 {
 public:
   Impl(lua::Stack& lua, boost::filesystem::path const& path);
-  float LineSpacing() const;
+  auto LineSpacing() const -> float;
   ttf::Library ttf_;
   typedef std::shared_ptr<TTF_Font> Font;
   Font font_;

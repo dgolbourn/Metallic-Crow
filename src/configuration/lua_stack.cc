@@ -5,9 +5,9 @@
 #include "log.h"
 #include "lua_stack_impl.h"
 #include "lua_command.h"
-namespace lua
+namespace
 {
-static void Path(lua_State* state, boost::filesystem::path const& path)
+auto Path(lua_State* state, boost::filesystem::path const& path) -> void
 {
   std::stringstream stream;
   stream << (path / "?").string() << ";" << (path / "?.lua").string();
@@ -19,7 +19,7 @@ static void Path(lua_State* state, boost::filesystem::path const& path)
   lua_pop(state, 1);
 }
 
-static int WeakRegistry(lua_State* state)
+auto WeakRegistry(lua_State* state) -> int
 {
   lua_newtable(state);
   lua_newtable(state);
@@ -30,18 +30,18 @@ static int WeakRegistry(lua_State* state)
   return luaL_ref(state, LUA_REGISTRYINDEX);
 }
 
-static void PushException(lua_State* state) noexcept
+auto PushException(lua_State* state) noexcept -> void
 {
-  std::exception_ptr* ptr = (std::exception_ptr*)lua_newuserdata(state, sizeof(std::exception_ptr));
+  std::exception_ptr* ptr = static_cast<std::exception_ptr*>(lua_newuserdata(state, sizeof(std::exception_ptr)));
   luaL_getmetatable(state, "exception");
   lua_setmetatable(state, -2);
   ptr = new (ptr)std::exception_ptr;
   *ptr = std::current_exception();
 }
 
-static void PopException(lua_State* state)
+auto PopException(lua_State* state) -> void
 {
-  std::exception_ptr* ptr = (std::exception_ptr*)luaL_testudata(state, -1, "exception");
+  std::exception_ptr* ptr = static_cast<std::exception_ptr*>(luaL_testudata(state, -1, "exception"));
   if(ptr != nullptr)
   {
     std::exception_ptr exception = std::move(*ptr);
@@ -50,13 +50,13 @@ static void PopException(lua_State* state)
   }
 }
 
-static int FinaliseException(lua_State *state) 
+auto FinaliseException(lua_State *state) -> int
 {
-  ((std::exception_ptr*)lua_touserdata(state, 1))->~exception_ptr();
+  static_cast<std::exception_ptr*>(lua_touserdata(state, 1))->~exception_ptr();
   return 0;
 }
 
-static void InitException(lua_State* state)
+auto InitException(lua_State* state) -> void
 {
   luaL_newmetatable(state, "exception");
 
@@ -71,7 +71,7 @@ static void InitException(lua_State* state)
   lua_pop(state, 1);
 }
 
-static void PushToLibrary(lua_State* state, std::string const& function, std::string const& library)
+auto PushToLibrary(lua_State* state, std::string const& function, std::string const& library) -> void
 {
   lua_getglobal(state, "package");
   lua_getfield(state, -1, "loaded");
@@ -88,17 +88,17 @@ static void PushToLibrary(lua_State* state, std::string const& function, std::st
   lua_pop(state, 4);
 }
 
-static lua_State* Init(boost::filesystem::path const& path)
+auto Init(boost::filesystem::path const& path) -> lua_State* 
 {
   lua_State* state = luaL_newstate();
   if(state == nullptr)
   {
-    BOOST_THROW_EXCEPTION(Exception());
+    BOOST_THROW_EXCEPTION(lua::Exception());
   }
 
   if(lua_checkstack(state, 256) == 0)
   {
-    BOOST_THROW_EXCEPTION(Exception());
+    BOOST_THROW_EXCEPTION(lua::Exception());
   }
 
   luaL_openlibs(state);
@@ -110,6 +110,60 @@ static lua_State* Init(boost::filesystem::path const& path)
   return state;
 }
 
+auto Event(lua_State* state) noexcept -> int
+{
+  try
+  {
+    lua::StackImpl* ptr;
+    if(lua_islightuserdata(state, lua_upvalueindex(1)))
+    {
+      ptr = static_cast<lua::StackImpl*>(lua_touserdata(state, lua_upvalueindex(1)));
+    }
+    else
+    {
+      BOOST_THROW_EXCEPTION(lua::Exception());
+    }
+
+    std::string name;
+    if(lua_isstring(state, lua_upvalueindex(2)))
+    {
+      name = std::string(lua_tostring(state, lua_upvalueindex(2)));
+    }
+    else
+    {
+      BOOST_THROW_EXCEPTION(lua::Exception());
+    }
+
+    int out;
+    if(lua_isnumber(state, lua_upvalueindex(3)))
+    {
+      out = (int)lua_tointeger(state, lua_upvalueindex(3));
+    }
+    else
+    {
+      BOOST_THROW_EXCEPTION(lua::Exception());
+    }
+
+    auto iter = ptr->map_.find(name);
+    if(iter != ptr->map_.end())
+    {
+      if(!iter->second())
+      {
+        ptr->map_.erase(iter);
+      }
+    }
+    return out;
+  }
+  catch(...)
+  {
+    PushException(state);
+  }
+  return lua_error(state);
+}
+}
+
+namespace lua
+{
 StackImpl::StackImpl(boost::filesystem::path const& path) : state_(Init(path))
 {
   weak_registry_ = WeakRegistry(state_);
@@ -126,7 +180,7 @@ StackImpl::~StackImpl()
   }
 }
 
-void StackImpl::Load(boost::filesystem::path const& file)
+auto StackImpl::Load(boost::filesystem::path const& file) -> void
 {
   int ret = luaL_dofile(state_, file.string().c_str());
   if(ret)
@@ -149,14 +203,14 @@ void StackImpl::Load(boost::filesystem::path const& file)
   }
 }
 
-void StackImpl::Release()
+auto StackImpl::Release() -> void
 {
   Guard* guard = *stack_.begin();
   stack_.pop_front();
   guard->impl_ = nullptr;
 }
 
-void StackImpl::Call(int in, int out)
+auto StackImpl::Call(int in, int out) -> void
 {
   for(int i = 0; i <= in; ++i)
   {
@@ -185,7 +239,7 @@ void StackImpl::Call(int in, int out)
   }
 }
 
-void StackImpl::Pop(event::Command& out)
+auto StackImpl::Pop(event::Command& out) -> void
 {
   Release();
 
@@ -200,7 +254,7 @@ void StackImpl::Pop(event::Command& out)
   out = Command(shared_from_this());
 }
 
-void StackImpl::Pop(int& out)
+auto StackImpl::Pop(int& out) -> void
 {
   Release();
 
@@ -213,7 +267,7 @@ void StackImpl::Pop(int& out)
   }
 }
 
-void StackImpl::Pop(float& out)
+auto StackImpl::Pop(float& out) -> void
 {
   Release();
 
@@ -226,7 +280,7 @@ void StackImpl::Pop(float& out)
   }
 }
 
-void StackImpl::Pop(double& out)
+auto StackImpl::Pop(double& out) -> void
 {
   Release();
 
@@ -239,7 +293,7 @@ void StackImpl::Pop(double& out)
   }
 }
 
-void StackImpl::Pop(std::string& out)
+auto StackImpl::Pop(std::string& out) -> void
 {
   Release();
 
@@ -252,13 +306,13 @@ void StackImpl::Pop(std::string& out)
   lua_pop(state_, 1);
 }
 
-void StackImpl::Pop()
+auto StackImpl::Pop() -> void
 {
   Release();
   lua_pop(state_, 1);
 }
 
-void StackImpl::Pop(bool& out)
+auto StackImpl::Pop(bool& out) -> void
 {
   Release();
 
@@ -278,60 +332,9 @@ void StackImpl::Pop(bool& out)
   lua_pop(state_, 1);
 }
 
-static int Event(lua_State* state) noexcept
+auto StackImpl::Add(event::Command const& command, std::string const& name, int out, std::string const& library) -> void
 {
-  try
-  {
-    StackImpl* ptr;
-    if(lua_islightuserdata(state, lua_upvalueindex(1)))
-    {
-      ptr = (StackImpl*)lua_touserdata(state, lua_upvalueindex(1));
-    }
-    else
-    {
-      BOOST_THROW_EXCEPTION(Exception());
-    }
-
-    std::string name;
-    if(lua_isstring(state, lua_upvalueindex(2)))
-    {
-      name = std::string(lua_tostring(state, lua_upvalueindex(2)));
-    }
-    else
-    {
-      BOOST_THROW_EXCEPTION(Exception());
-    }
-
-    int out;
-    if(lua_isnumber(state, lua_upvalueindex(3)))
-    {
-      out = (int)lua_tointeger(state, lua_upvalueindex(3));
-    }
-    else
-    {
-      BOOST_THROW_EXCEPTION(Exception());
-    }
-
-    auto iter = ptr->map_.find(name);
-    if(iter != ptr->map_.end())
-    {
-      if(!iter->second())
-      {
-        ptr->map_.erase(iter);
-      }
-    }
-    return out;
-  }
-  catch(...)
-  {
-    PushException(state);
-  }
-  return lua_error(state);
-}
-
-void StackImpl::Add(event::Command const& command, std::string const& name, int out, std::string const& library)
-{
-  lua_pushlightuserdata(state_, (void*)this);
+  lua_pushlightuserdata(state_, static_cast<void*>(this));
   lua_pushstring(state_, name.c_str());
   lua_pushinteger(state_, (lua_Integer)out);
   lua_pushcclosure(state_, Event, 3);
@@ -342,7 +345,7 @@ void StackImpl::Add(event::Command const& command, std::string const& name, int 
   }
 }
 
-void StackImpl::Collect(int size)
+auto StackImpl::Collect(int size) -> void
 {
   if(size >= 0)
   {
@@ -354,22 +357,22 @@ void StackImpl::Collect(int size)
   }
 }
 
-void StackImpl::Pause()
+auto StackImpl::Pause() -> void
 {
   lua_gc(state_, LUA_GCSTOP, 0);
 }
 
-void StackImpl::Resume()
+auto StackImpl::Resume() -> void
 {
   lua_gc(state_, LUA_GCRESTART, 0);
 }
 
-void Stack::Load(boost::filesystem::path const& file)
+auto Stack::Load(boost::filesystem::path const& file) -> void
 {
   impl_->Load(file);
 }
 
-std::vector<Guard> Stack::Call(int in, int out)
+auto Stack::Call(int in, int out) -> std::vector<Guard> 
 {
   impl_->Call(in, out);
 
@@ -382,121 +385,121 @@ std::vector<Guard> Stack::Call(int in, int out)
   return guard;
 }
 
-void Stack::Pop(int& out)
+auto Stack::Pop(int& out) -> void
 {
   impl_->Pop(out);
 }
 
-void Stack::Pop(float& out)
+auto Stack::Pop(float& out) -> void
 {
   impl_->Pop(out);
 }
 
-void Stack::Pop(double& out)
+auto Stack::Pop(double& out) -> void
 {
   impl_->Pop(out);
 }
 
-void Stack::Pop(std::string& out)
+auto Stack::Pop(std::string& out) -> void
 {
   impl_->Pop(out);
 }
 
-void Stack::Pop(bool& out)
+auto Stack::Pop(bool& out) -> void
 {
   impl_->Pop(out);
 }
 
-void Stack::Pop(event::Command& out)
+auto Stack::Pop(event::Command& out) -> void
 {
   impl_->Pop(out);
 }
 
-void Stack::Pop()
+auto Stack::Pop() -> void
 {
   impl_->Pop();
 }
 
-Guard Stack::Get(std::string const& global)
+auto Stack::Get(std::string const& global) -> Guard 
 {
   lua_getglobal(impl_->state_, global.c_str());
   return Guard(impl_.get());
 }
 
-Guard Stack::Get(int index)
+auto Stack::Get(int index) -> Guard
 {
   lua_pushvalue(impl_->state_, index);
   return Guard(impl_.get());
 }
 
-Guard Stack::Field(std::string const& field)
+auto Stack::Field(std::string const& field) -> Guard
 {
   lua_getfield(impl_->state_, -1, field.c_str());
   return Guard(impl_.get());
 }
 
-Guard Stack::Push(int in)
+auto Stack::Push(int in) -> Guard
 {
   lua_pushinteger(impl_->state_, in);
   return Guard(impl_.get());
 }
 
-Guard Stack::Push(float in)
+auto Stack::Push(float in) -> Guard
 {
   lua_pushnumber(impl_->state_, lua_Number(in));
   return Guard(impl_.get());
 }
 
-Guard Stack::Push(double in)
+auto Stack::Push(double in) -> Guard 
 {
   lua_pushnumber(impl_->state_, lua_Number(in));
   return Guard(impl_.get());
 }
 
-Guard Stack::Push(std::string const& in)
+auto Stack::Push(std::string const& in) -> Guard
 {
   lua_pushstring(impl_->state_, in.c_str());
   return Guard(impl_.get());
 }
 
-Guard Stack::Push(bool in)
+auto Stack::Push(bool in) -> Guard
 {
   lua_pushboolean(impl_->state_, int(in));
   return Guard(impl_.get());
 }
 
-void Stack::Add(event::Command const& command, std::string const& name, int out, std::string const& library)
+auto Stack::Add(event::Command const& command, std::string const& name, int out, std::string const& library) -> void
 {
   impl_->Add(command, name, out, library);
 }
 
-void Stack::Collect(int size)
+auto Stack::Collect(int size) -> void
 {
   impl_->Collect(size);
 }
 
-void Stack::Pause()
+auto Stack::Pause() -> void
 {
   impl_->Pause();
 }
 
-void Stack::Resume()
+auto Stack::Resume() -> void
 {
   impl_->Resume();
 }
 
-bool Stack::Check()
+auto Stack::Check() -> bool
 {
   return !lua_isnoneornil(impl_->state_, -1);
 }
 
-Guard Stack::Field(int index)
+auto Stack::Field(int index) -> Guard
 {
   lua_rawgeti(impl_->state_, -1, index);
   return Guard(impl_.get());
 }
 
-int Stack::Size()
+auto Stack::Size() -> int
 {
   return lua_rawlen(impl_->state_, -1);
 }

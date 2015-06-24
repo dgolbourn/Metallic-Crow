@@ -29,7 +29,7 @@ Texture::operator SDL_Texture*() const
   return impl_.get();
 }
 
-SDL_Texture* Texture::operator->() const
+auto Texture::operator->() const -> SDL_Texture*
 {
   return impl_.get();
 }

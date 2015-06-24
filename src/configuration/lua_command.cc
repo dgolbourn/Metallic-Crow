@@ -1,20 +1,20 @@
 #include "lua_command.h"
-#include "lua_stack_impl.h"
 #include "log.h"
 #include "lua_exception.h"
-namespace lua
-{
+#include "lua_stack_impl.h"
 namespace
 {
-typedef std::weak_ptr<StackImpl> WeakPtr;
+typedef std::weak_ptr<lua::StackImpl> WeakPtr;
 }
 
+namespace lua
+{
 class Command::Impl
 {
 public:
   Impl(StackPtr const& stack);
   ~Impl();
-  bool Notify();
+  auto Notify() -> bool;
   int reference_;
   WeakPtr stack_;
 };
@@ -37,7 +37,7 @@ Command::Impl::~Impl()
   }
 }
 
-bool Command::Impl::Notify()
+auto Command::Impl::Notify() -> bool
 {
   bool valid = false;
   if(StackPtr stack = stack_.lock())
@@ -70,7 +70,7 @@ Command::Command(StackPtr const& stack) : impl_(std::make_shared<Impl>(stack))
 {
 }
 
-bool Command::operator()()
+auto Command::operator()() -> bool
 {
   return impl_->Notify();
 }

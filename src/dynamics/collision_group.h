@@ -13,9 +13,9 @@ class Group
 public:
   Group() = default;
   Group(lua::Stack& lua, Collision const& collision);
-  void Begin(std::string const& group_a, std::string const& group_b, event::Command const& command);
-  void End(std::string const& group_a, std::string const& group_b, event::Command const& command);
-  void Add(std::string const& group, dynamics::Body const& body);
+  auto Begin(std::string const& group_a, std::string const& group_b, event::Command const& command) -> void;
+  auto End(std::string const& group_a, std::string const& group_b, event::Command const& command) -> void;
+  auto Add(std::string const& group, dynamics::Body const& body) -> void;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

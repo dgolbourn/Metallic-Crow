@@ -2,14 +2,14 @@
 #include "bind.h"
 namespace game
 {
-void Script::Impl::FadeInit()
+auto Script::Impl::FadeInit() -> void
 {
   lua_.Add(function::Bind(&Impl::FadeUp, shared_from_this()), "fade_up", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::FadeDown, shared_from_this()), "fade_down", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::FadeEnd, shared_from_this()), "fade_end", 0, "metallic_crow");
 }
 
-void Script::Impl::FadeUp()
+auto Script::Impl::FadeUp() -> void
 {
   float period;
   {
@@ -19,7 +19,7 @@ void Script::Impl::FadeUp()
   fade_.Up(period);
 }
 
-void Script::Impl::FadeDown()
+auto Script::Impl::FadeDown() -> void
 {
   float period;
   {
@@ -29,7 +29,7 @@ void Script::Impl::FadeDown()
   fade_.Down(period);
 }
 
-void Script::Impl::FadeEnd()
+auto Script::Impl::FadeEnd() -> void
 {
   event::Command command;
   {

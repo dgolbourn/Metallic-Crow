@@ -1,7 +1,7 @@
 #include "animation.h"
 namespace display
 {
-Animation MakeAnimation(lua::Stack& lua, Window& window, boost::filesystem::path const& path)
+auto MakeAnimation(lua::Stack& lua, Window& window, boost::filesystem::path const& path) -> Animation
 {
   Animation animation;
   for(int index = 1, end = lua.Size(); index <= end; ++index)

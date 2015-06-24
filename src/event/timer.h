@@ -10,12 +10,12 @@ class Timer
 public:
   Timer() = default;
   Timer(double interval, int loops);
-  void Reset(double interval, int loops);
-  void Pause();
-  void Resume();
-  void Add(Command const& command);
-  void End(Command const& command);
-  void operator()();
+  auto Reset(double interval, int loops) -> void;
+  auto Pause() -> void;
+  auto Resume() -> void;
+  auto Add(Command const& command) -> void;
+  auto End(Command const& command) -> void;
+  auto operator()() -> void;
   explicit operator bool() const;
 private:
   class Impl;

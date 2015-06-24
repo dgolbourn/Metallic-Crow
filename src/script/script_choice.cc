@@ -2,7 +2,7 @@
 #include "bind.h"
 namespace game
 {
-void Script::Impl::ChoiceInit()
+auto Script::Impl::ChoiceInit() -> void
 {
   lua_.Add(function::Bind(&Impl::ChoiceChoice, shared_from_this()), "choice", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ChoiceUpModulation, shared_from_this()), "choice_up_modulation", 0, "metallic_crow");
@@ -11,7 +11,7 @@ void Script::Impl::ChoiceInit()
   lua_.Add(function::Bind(&Impl::ChoiceRightModulation, shared_from_this()), "choice_right_modulation", 0, "metallic_crow");
 }
 
-void Script::Impl::ChoiceChoice()
+auto Script::Impl::ChoiceChoice() -> void
 {
   StagePtr stage;
   {
@@ -49,7 +49,7 @@ void Script::Impl::ChoiceChoice()
   }
 }
 
-void Script::Impl::ChoiceUpModulation()
+auto Script::Impl::ChoiceUpModulation() -> void
 {
   StagePtr stage;
   {
@@ -82,7 +82,7 @@ void Script::Impl::ChoiceUpModulation()
   }
 }
 
-void Script::Impl::ChoiceDownModulation()
+auto Script::Impl::ChoiceDownModulation() -> void
 {
   StagePtr stage;
   {
@@ -115,7 +115,7 @@ void Script::Impl::ChoiceDownModulation()
   }
 }
 
-void Script::Impl::ChoiceLeftModulation()
+auto Script::Impl::ChoiceLeftModulation() -> void
 {
   StagePtr stage;
   {
@@ -148,7 +148,7 @@ void Script::Impl::ChoiceLeftModulation()
   }
 }
 
-void Script::Impl::ChoiceRightModulation()
+auto Script::Impl::ChoiceRightModulation() -> void
 {
   StagePtr stage;
   {

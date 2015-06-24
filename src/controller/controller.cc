@@ -6,12 +6,9 @@
 #include "signal.h"
 #include <vector>
 #include "saves.h"
-
 #include <sstream>
 #include <algorithm>
 #include "sound.h"
-namespace game
-{
 namespace
 {
 enum class State : int
@@ -26,7 +23,7 @@ enum class State : int
 typedef std::vector<std::string> Strings;
 typedef std::vector<boost::filesystem::path> Paths;
 
-void Chapters(lua::Stack& lua, Strings& names, Paths& files, boost::filesystem::path const& path)
+auto Chapters(lua::Stack& lua, Strings& names, Paths& files, boost::filesystem::path const& path) -> void
 {
   for(int index = 1, end = lua.Size(); index <= end; ++index)
   {
@@ -49,7 +46,7 @@ void Chapters(lua::Stack& lua, Strings& names, Paths& files, boost::filesystem::
   }
 }
 
-void ChapterOptions(Menu& menu, int progress, Strings const& chapters)
+auto ChapterOptions(game::Menu& menu, int progress, Strings const& chapters) -> void
 {
   Strings options;
   int max = int(chapters.size()) - 1;
@@ -68,7 +65,7 @@ void ChapterOptions(Menu& menu, int progress, Strings const& chapters)
   menu(options);
 }
 
-void LoadOptions(Menu& menu, Saves& saves, Strings const& chapters)
+auto LoadOptions(game::Menu& menu, game::Saves& saves, Strings const& chapters) -> void
 {
   Strings options;
   for(int i = 0; i < saves.Size(); ++i)
@@ -106,30 +103,31 @@ void LoadOptions(Menu& menu, Saves& saves, Strings const& chapters)
 }
 }
 
+namespace game
+{
 class Controller::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
   Impl(lua::Stack& lua, event::Queue& queue, boost::filesystem::path const& path);
-  void Init();
-  void Control(float x, float y);
-  void ChoiceUp();
-  void ChoiceDown();
-  void ChoiceLeft();
-  void ChoiceRight();
-  void Select();
-  void Back();
-  void Render();
-  void Add(event::Command const& command);
-
-  void PauseContinue();
-  void PauseMainMenu();
-  void StartPlay();
-  void StartChooseChapter();
-  void StartLoad();
-  void StartQuit();
-  void Load(int slot);
-  void Chapter(int chapter);
-  void ChapterEnd();
+  auto Init() -> void;
+  auto Control(float x, float y) -> void;
+  auto ChoiceUp() -> void;
+  auto ChoiceDown() -> void;
+  auto ChoiceLeft() -> void;
+  auto ChoiceRight() -> void;
+  auto Select() -> void;
+  auto Back() -> void;
+  auto Render() -> void;
+  auto Add(event::Command const& command) -> void;
+  auto PauseContinue() -> void;
+  auto PauseMainMenu() -> void;
+  auto StartPlay() -> void;
+  auto StartChooseChapter() -> void;
+  auto StartLoad() -> void;
+  auto StartQuit() -> void;
+  auto Load(int slot) -> void;
+  auto Chapter(int chapter) -> void;
+  auto ChapterEnd() -> void;
 
   event::Queue queue_;
   display::Window window_;
@@ -155,7 +153,7 @@ public:
   int sign_;
 };
 
-void Controller::Impl::Load(int slot)
+auto Controller::Impl::Load(int slot) -> void
 {
   saves_.Stop();
   slot_ = slot;
@@ -164,7 +162,7 @@ void Controller::Impl::Load(int slot)
   state_ = State::Start;
 }
 
-void Controller::Impl::Chapter(int chapter)
+auto Controller::Impl::Chapter(int chapter) -> void
 {
   saves_.Stop();
   chapter_ = chapter;
@@ -261,7 +259,7 @@ Controller::Impl::Impl(lua::Stack& lua, event::Queue& queue, boost::filesystem::
   back_.Resume();
 }
 
-void Controller::Impl::Init()
+auto Controller::Impl::Init() -> void
 {
   queue_.Add(function::Bind(&Impl::Render, shared_from_this()));
 
@@ -286,7 +284,7 @@ void Controller::Impl::Init()
   start_script_.Resume();
 }
 
-void Controller::Impl::ChapterEnd()
+auto Controller::Impl::ChapterEnd() -> void
 {
   saves_.Current(slot_, saves_.Current(slot_) + 1);
   chapter_ = saves_.Current(slot_);
@@ -305,14 +303,14 @@ void Controller::Impl::ChapterEnd()
   }
 }
 
-void Controller::Impl::PauseContinue()
+auto Controller::Impl::PauseContinue() -> void
 {
   state_ = State::Story;
   pause_script_.Pause();
   story_script_.Resume();
 }
 
-void Controller::Impl::PauseMainMenu()
+auto Controller::Impl::PauseMainMenu() -> void
 {
   saves_.Stop();
   state_ = State::Start;
@@ -320,13 +318,13 @@ void Controller::Impl::PauseMainMenu()
   start_script_.Resume();
 }
 
-void Controller::Impl::StartPlay()
+auto Controller::Impl::StartPlay() -> void
 {
   state_ = State::Story;
   start_script_.Pause();
   saves_.Current(slot_, chapter_);
   chapter_ = saves_.Current(slot_);
-  if(chapter_ >= int(chapter_files_.size()))
+  if(chapter_ >= static_cast<int>(chapter_files_.size()))
   {
     saves_.Current(slot_, 0);
     chapter_ = saves_.Current(slot_);
@@ -338,27 +336,27 @@ void Controller::Impl::StartPlay()
   story_script_.Resume();
 }
 
-void Controller::Impl::StartChooseChapter()
+auto Controller::Impl::StartChooseChapter() -> void
 {
   state_ = State::Chapter;
 }
 
-void Controller::Impl::StartLoad()
+auto Controller::Impl::StartLoad() -> void
 {
   state_ = State::Load;
 }
 
-void Controller::Impl::StartQuit()
+auto Controller::Impl::StartQuit() -> void
 {
   signal_();
 }
 
-void Controller::Impl::Add(event::Command const& command)
+auto Controller::Impl::Add(event::Command const& command) -> void
 {
   signal_.Add(command);
 }
 
-void Controller::Impl::Control(float x, float y)
+auto Controller::Impl::Control(float x, float y) -> void
 {
   int sign = int(0.f < y) - int(y < 0.f);
   bool up = (sign_ <= 0) && (sign > 0);
@@ -431,7 +429,7 @@ void Controller::Impl::Control(float x, float y)
   }
 }
 
-void Controller::Impl::ChoiceUp()
+auto Controller::Impl::ChoiceUp() -> void
 {
   switch(state_)
   {
@@ -447,7 +445,7 @@ void Controller::Impl::ChoiceUp()
   }
 }
 
-void Controller::Impl::ChoiceDown()
+auto Controller::Impl::ChoiceDown() -> void
 {
   switch(state_)
   {
@@ -475,7 +473,7 @@ void Controller::Impl::ChoiceDown()
   }
 }
 
-void Controller::Impl::ChoiceLeft()
+auto Controller::Impl::ChoiceLeft() -> void
 {
   switch(state_)
   {
@@ -491,7 +489,7 @@ void Controller::Impl::ChoiceLeft()
   }
 }
 
-void Controller::Impl::ChoiceRight()
+auto Controller::Impl::ChoiceRight() -> void
 {
   switch(state_)
   {
@@ -515,7 +513,7 @@ void Controller::Impl::ChoiceRight()
   }
 }
 
-void Controller::Impl::Select()
+auto Controller::Impl::Select() -> void
 {
   switch(state_)
   {
@@ -546,7 +544,7 @@ void Controller::Impl::Select()
   }
 }
 
-void Controller::Impl::Back()
+auto Controller::Impl::Back() -> void
 {
   switch(state_)
   {
@@ -574,7 +572,7 @@ void Controller::Impl::Back()
   }
 }
 
-void Controller::Impl::Render()
+auto Controller::Impl::Render() -> void
 {
   switch(state_)
   {
@@ -617,42 +615,42 @@ Controller::Controller(lua::Stack& lua, event::Queue& queue, boost::filesystem::
   impl_->Init();
 }
 
-void Controller::Control(float x, float y)
+auto Controller::Control(float x, float y) -> void
 {
   impl_->Control(x, y);
 }
 
-void Controller::ChoiceUp()
+auto Controller::ChoiceUp() -> void
 {
   impl_->ChoiceUp();
 }
 
-void Controller::ChoiceDown()
+auto Controller::ChoiceDown() -> void
 {
   impl_->ChoiceDown();
 }
 
-void Controller::ChoiceLeft()
+auto Controller::ChoiceLeft() -> void
 {
   impl_->ChoiceLeft();
 }
 
-void Controller::ChoiceRight()
+auto Controller::ChoiceRight() -> void
 {
   impl_->ChoiceRight();
 }
 
-void Controller::Select()
+auto Controller::Select() -> void
 {
   impl_->Select();
 }
 
-void Controller::Back()
+auto Controller::Back() -> void
 {
   impl_->Back();
 }
 
-void Controller::Add(event::Command const& command)
+auto Controller::Add(event::Command const& command) -> void
 {
   impl_->Add(command);
 }

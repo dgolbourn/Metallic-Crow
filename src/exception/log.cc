@@ -3,7 +3,7 @@
 #include "boost/exception/diagnostic_information.hpp"
 namespace exception
 {
-void Log(std::string const& detail) noexcept
+auto Log(std::string const& detail) noexcept -> void
 {
   try
   {

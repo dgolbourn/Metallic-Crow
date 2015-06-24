@@ -1,13 +1,11 @@
 #include "collision.h"
 #include <map>
 #include "signal.h"
-namespace collision
-{
 namespace
 {
 typedef std::map<dynamics::Body::WeakPtr, std::map<dynamics::Body::WeakPtr, std::pair<event::Signal, event::Signal>>> CollisionMap;
 
-void Remove(CollisionMap& collisions, dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b)
+auto Remove(CollisionMap& collisions, dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b) -> void
 {
   auto iter_a = collisions.find(a);
   if(iter_a != collisions.end())
@@ -25,21 +23,20 @@ void Remove(CollisionMap& collisions, dynamics::Body::WeakPtr const& a, dynamics
 }
 }
 
+namespace collision
+{
 class Collision::Impl
 {
 public:
   Impl(event::Queue& queue);
-
-  void Begin(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c);
-  void End(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c);
-  bool Check(dynamics::Body const& a, dynamics::Body const& b) const;
-  void Begin(dynamics::Body const& a, dynamics::Body const& b);
-  void End(dynamics::Body const& a, dynamics::Body const& b);
-
-  bool Link(dynamics::Body const& a, dynamics::Body const& b);
-  void Unlink(dynamics::Body::WeakPtr const& a);
-  void Unlink(dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b);
-
+  auto Begin(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c) -> void;
+  auto End(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c) -> void;
+  auto Check(dynamics::Body const& a, dynamics::Body const& b) const -> bool;
+  auto Begin(dynamics::Body const& a, dynamics::Body const& b) -> void;
+  auto End(dynamics::Body const& a, dynamics::Body const& b) -> void;
+  auto Link(dynamics::Body const& a, dynamics::Body const& b) -> bool;
+  auto Unlink(dynamics::Body::WeakPtr const& a) -> void;
+  auto Unlink(dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b) -> void;
   CollisionMap collisions_;
   event::Queue queue_;
 };
@@ -48,7 +45,7 @@ Collision::Impl::Impl(event::Queue& queue) : queue_(queue)
 {
 }
 
-void Collision::Impl::Unlink(dynamics::Body::WeakPtr const& body_a)
+auto Collision::Impl::Unlink(dynamics::Body::WeakPtr const& body_a) -> void
 {
   auto iter_a = collisions_.find(body_a);
   if(iter_a != collisions_.end())
@@ -76,13 +73,13 @@ void Collision::Impl::Unlink(dynamics::Body::WeakPtr const& body_a)
   }
 }
 
-void Collision::Impl::Unlink(dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b)
+auto Collision::Impl::Unlink(dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b) -> void
 {
   Remove(collisions_, a, b);
   Remove(collisions_, b, a);
 }
 
-void Collision::Impl::Begin(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c)
+auto Collision::Impl::Begin(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c) -> void
 {
   auto iter_a = collisions_.find(a);
   if(iter_a != collisions_.end())
@@ -95,7 +92,7 @@ void Collision::Impl::Begin(dynamics::Body const& a, dynamics::Body const& b, ev
   }
 }
 
-void Collision::Impl::End(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c)
+auto Collision::Impl::End(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c) -> void
 {
   auto iter_a = collisions_.find(a);
   if(iter_a != collisions_.end())
@@ -108,7 +105,7 @@ void Collision::Impl::End(dynamics::Body const& a, dynamics::Body const& b, even
   }
 }
 
-bool Collision::Impl::Check(dynamics::Body const& a, dynamics::Body const& b) const
+auto Collision::Impl::Check(dynamics::Body const& a, dynamics::Body const& b) const -> bool
 {
   bool collision = false;
   auto iter_a = collisions_.find(a);
@@ -123,7 +120,7 @@ bool Collision::Impl::Check(dynamics::Body const& a, dynamics::Body const& b) co
   return collision;
 }
 
-void Collision::Impl::Begin(dynamics::Body const& a, dynamics::Body const& b)
+auto Collision::Impl::Begin(dynamics::Body const& a, dynamics::Body const& b) -> void
 {
   auto iter_a = collisions_.find(a);
   if(iter_a != collisions_.end())
@@ -136,7 +133,7 @@ void Collision::Impl::Begin(dynamics::Body const& a, dynamics::Body const& b)
   }
 }
 
-void Collision::Impl::End(dynamics::Body const& a, dynamics::Body const& b)
+auto Collision::Impl::End(dynamics::Body const& a, dynamics::Body const& b) -> void
 {
   auto iter_a = collisions_.find(a);
   if(iter_a != collisions_.end())
@@ -149,7 +146,7 @@ void Collision::Impl::End(dynamics::Body const& a, dynamics::Body const& b)
   }
 }
 
-bool Collision::Impl::Link(dynamics::Body const& a, dynamics::Body const& b)
+auto Collision::Impl::Link(dynamics::Body const& a, dynamics::Body const& b) -> bool
 {
   bool link = false;
   if((a < b) || (b < a))
@@ -164,42 +161,42 @@ Collision::Collision(event::Queue& queue) : impl_(std::make_shared<Impl>(queue))
 {
 }
 
-void Collision::Begin(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c)
+auto Collision::Begin(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c) -> void
 {
   impl_->Begin(a, b, c);
 }
 
-void Collision::End(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c)
+auto Collision::End(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c) -> void
 {
   impl_->End(a, b, c);
 }
 
-void Collision::Link(dynamics::Body const& a, dynamics::Body const& b)
+auto Collision::Link(dynamics::Body const& a, dynamics::Body const& b) -> void
 {
   impl_->Link(a, b);
 }
 
-bool Collision::Check(dynamics::Body const& a, dynamics::Body const& b) const
+auto Collision::Check(dynamics::Body const& a, dynamics::Body const& b) const -> bool
 {
   return impl_->Check(a, b);
 }
 
-void Collision::Begin(dynamics::Body const& a, dynamics::Body const& b)
+auto Collision::Begin(dynamics::Body const& a, dynamics::Body const& b) -> void
 {
   impl_->Begin(a, b);
 }
 
-void Collision::End(dynamics::Body const& a, dynamics::Body const& b)
+auto Collision::End(dynamics::Body const& a, dynamics::Body const& b) -> void
 {
   impl_->End(a, b);
 }
 
-void Collision::Unlink(dynamics::Body::WeakPtr const& a)
+auto Collision::Unlink(dynamics::Body::WeakPtr const& a) -> void
 {
   impl_->Unlink(a);
 }
 
-void Collision::Unlink(dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b)
+auto Collision::Unlink(dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b) -> void
 {
   impl_->Unlink(a, b);
 }

@@ -9,7 +9,7 @@ namespace
 {
 int reference_count;
 
-void MixQuit()
+auto MixQuit() -> void
 {
   while(Mix_Init(0))
   {

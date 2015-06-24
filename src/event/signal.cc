@@ -9,11 +9,11 @@ class Signal::Impl final : public std::enable_shared_from_this<Signal::Impl>
 {
 public:
   Signal::Impl();
-  void Notify();
-  void Queue(Queue& queue);
-  void Add(Command const& comand);
-  bool Empty() const;
-  void Clear();
+  auto Notify() -> void;
+  auto Queue(Queue& queue) -> void;
+  auto Add(Command const& comand) -> void;
+  auto Empty() const -> bool;
+  auto Clear() -> void;
   CommandList commands_;
   bool active_;
   bool clear_;
@@ -23,7 +23,7 @@ Signal::Impl::Impl() : active_(false), clear_(false)
 {
 }
 
-void Signal::Impl::Notify()
+auto Signal::Impl::Notify() -> void
 {
   if(!active_)
   {
@@ -49,23 +49,23 @@ void Signal::Impl::Notify()
   }
 }
 
-void Signal::Impl::Queue(event::Queue& queue)
+auto Signal::Impl::Queue(event::Queue& queue) -> void
 {
   auto command = function::Bind(&Signal::Impl::Notify, shared_from_this());
   queue.Add([=](){command(); return false;});
 }
 
-void Signal::Impl::Add(Command const& comand)
+auto Signal::Impl::Add(Command const& comand) -> void
 {
   commands_.push_back(comand);
 }
 
-bool Signal::Impl::Empty() const
+auto Signal::Impl::Empty() const -> bool
 {
   return commands_.empty();
 }
 
-void Signal::Impl::Clear()
+auto Signal::Impl::Clear() -> void
 {
   if(active_)
   {
@@ -77,17 +77,17 @@ void Signal::Impl::Clear()
   }
 }
 
-void Signal::operator()(Queue& queue)
+auto Signal::operator()(Queue& queue) -> void
 {
   impl_->Queue(queue);
 }
 
-void Signal::operator()()
+auto Signal::operator()() -> void
 {
   impl_->Notify();
 }
 
-void Signal::Add(Command const& comand)
+auto Signal::Add(Command const& comand) -> void
 {
   impl_->Add(comand);
 }
@@ -101,7 +101,7 @@ Signal::operator bool() const
   return !impl_->Empty();
 }
 
-void Signal::Clear()
+auto Signal::Clear() -> void
 {
   impl_->Clear();
 }

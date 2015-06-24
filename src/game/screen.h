@@ -12,9 +12,9 @@ class Screen
 public:
   Screen() = default;
   Screen(lua::Stack& lua, display::Window& window, Scene& scene, event::Queue& queue, boost::filesystem::path const& path);
-  void Pause();
-  void Resume();
-  void Modulation(float r, float g, float b, float a);
+  auto Pause() -> void;
+  auto Resume() -> void;
+  auto Modulation(float r, float g, float b, float a) -> void;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

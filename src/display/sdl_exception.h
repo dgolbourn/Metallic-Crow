@@ -4,7 +4,7 @@
 #include <string>
 namespace sdl
 {
-std::string Error();
+auto Error() -> std::string;
 
 class Exception : virtual public exception::Exception
 {

@@ -5,8 +5,6 @@
 #include "img_exception.h"
 #include "sdl_exception.h"
 #include "font_impl.h"
-namespace sdl
-{
 namespace
 {
 class Style
@@ -82,7 +80,7 @@ public:
 
   void Seek(int x, int y)
   {
-    pixel_ = (Uint32*)((Uint8*)surface_->pixels + y * surface_->pitch + x * surface_->format->BytesPerPixel);
+    pixel_ = reinterpret_cast<Uint32*>(static_cast<Uint8*>(surface_->pixels) + y * surface_->pitch + x * surface_->format->BytesPerPixel);
   }
 
   void Get(Uint8* r, Uint8* g, Uint8* b, Uint8* a)
@@ -140,6 +138,8 @@ SurfacePtr AddOutline(SDL_Surface* surface, SDL_Colour const* outline)
 }
 }
 
+namespace sdl
+{
 Surface::Surface(std::string const& text, Font const& font, Uint32 length)
 {
   static const SDL_Colour colour = {UINT8_MAX, UINT8_MAX, UINT8_MAX, SDL_ALPHA_OPAQUE};

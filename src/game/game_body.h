@@ -15,16 +15,16 @@ class Body
 public:
   Body() = default;
   Body(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes, Feature const& mouth);
-  double Expression(std::string const& expression, bool left_facing);
-  double Expression(std::string const& expression);
-  double Expression(bool left_facing);
-  double Next();
-  double Period() const;
-  void Position(Position const& position);
-  game::Position Position() const;
-  void Modulation(float r, float g, float b, float a);
-  display::Modulation Modulation() const;
-  void Render();
+  auto Expression(std::string const& expression, bool left_facing) -> double;
+  auto Expression(std::string const& expression) -> double;
+  auto Expression(bool left_facing) -> double;
+  auto Next() -> double;
+  auto Period() const -> double;
+  auto Position(Position const& position) -> void;
+  auto Position() const -> game::Position;
+  auto Modulation(float r, float g, float b, float a) -> void;
+  auto Modulation() const -> display::Modulation;
+  auto Render() -> void;
   explicit operator bool() const;
 private:
   class Impl;

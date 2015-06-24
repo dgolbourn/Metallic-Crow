@@ -8,9 +8,10 @@ class Sync
 public:
   Sync() = default;
   Sync(double frame_rate);
-  void operator()();
+  auto operator()() -> void;
 private:
-  std::shared_ptr<class SyncImpl> impl_;
+  class Impl;
+  std::shared_ptr<Impl> impl_;
 };
 }
 #endif

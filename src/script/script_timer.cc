@@ -2,13 +2,13 @@
 #include "bind.h"
 namespace game
 {
-void Script::Impl::TimerInit()
+auto Script::Impl::TimerInit() -> void
 {
   lua_.Add(function::Bind(&Impl::TimerLoad, shared_from_this()), "timer_load", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::TimerFree, shared_from_this()), "timer_free", 0, "metallic_crow");
 }
 
-void Script::Impl::TimerLoad()
+auto Script::Impl::TimerLoad() -> void
 {
   StagePtr stage;
   {
@@ -52,7 +52,7 @@ void Script::Impl::TimerLoad()
   }
 }
 
-void Script::Impl::TimerFree()
+auto Script::Impl::TimerFree() -> void
 {
   StagePtr stage;
   {

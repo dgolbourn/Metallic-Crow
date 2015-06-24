@@ -25,14 +25,14 @@ class Menu::Impl
 {
 public:
   Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path);
-  void Add(int index, event::Command const& command);
-  void Previous();
-  void Next();
-  void Seek(int index);
-  void Select();
-  void Render() const;
-  void SetUp();
-  void Choice(Options const& options);
+  auto Add(int index, event::Command const& command) -> void;
+  auto Previous() -> void;
+  auto Next() -> void;
+  auto Seek(int index) -> void;
+  auto Select() -> void;
+  auto Render() const -> void;
+  auto SetUp() -> void;
+  auto Choice(Options const& options) -> void;
 
   Texture background_;
   Textures idle_text_;
@@ -96,7 +96,7 @@ Menu::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
   }
 }
 
-void Menu::Impl::Choice(Options const& options)
+auto Menu::Impl::Choice(Options const& options) -> void
 {
   selection_ = 0;
   selections_ = int(options.size());
@@ -154,7 +154,7 @@ void Menu::Impl::Choice(Options const& options)
   SetUp();
 }
 
-void Menu::Impl::SetUp()
+auto Menu::Impl::SetUp() -> void
 {
   textures_ = idle_text_;
   if(selections_ > 0)
@@ -165,12 +165,12 @@ void Menu::Impl::SetUp()
   textures_.push_front(background_);
 }
 
-void Menu::Impl::Add(int index, event::Command const& command)
+auto Menu::Impl::Add(int index, event::Command const& command) -> void
 {
   signals_[index].Add(command);
 }
 
-void Menu::Impl::Previous()
+auto Menu::Impl::Previous() -> void
 {
   if(selection_ > 0)
   {
@@ -179,7 +179,7 @@ void Menu::Impl::Previous()
   }
 }
 
-void Menu::Impl::Next()
+auto Menu::Impl::Next() -> void
 {
   if(selection_ < (selections_ - 1))
   { 
@@ -188,7 +188,7 @@ void Menu::Impl::Next()
   }
 }
 
-void Menu::Impl::Seek(int index)
+auto Menu::Impl::Seek(int index) -> void
 {
   if((index != selection_) && (index >= 0) && (index < selections_))
   {
@@ -197,7 +197,7 @@ void Menu::Impl::Seek(int index)
   }
 }
 
-void Menu::Impl::Select()
+auto Menu::Impl::Select() -> void
 {
   if(selections_ > 0)
   {
@@ -205,7 +205,7 @@ void Menu::Impl::Select()
   }
 }
 
-void Menu::Impl::Render() const
+auto Menu::Impl::Render() const -> void
 {
   for(auto& texture : textures_)
   {
@@ -213,37 +213,37 @@ void Menu::Impl::Render() const
   }
 }
 
-void Menu::Add(int index, event::Command const& command)
+auto Menu::Add(int index, event::Command const& command) -> void
 {
   impl_->Add(index, command);
 }
 
-void Menu::Previous()
+auto Menu::Previous() -> void
 {
   impl_->Previous();
 }
 
-void Menu::Next()
+auto Menu::Next() -> void
 {
   impl_->Next();
 }
 
-void Menu::operator[](int index)
+auto Menu::operator[](int index) -> void
 {
   impl_->Seek(index);
 }
 
-void Menu::Select()
+auto Menu::Select() -> void
 {
   impl_->Select();
 }
 
-void Menu::Render() const
+auto Menu::Render() const -> void
 {
   impl_->Render();
 }
 
-void Menu::operator()(Options const& options)
+auto Menu::operator()(Options const& options) -> void
 {
   impl_->Choice(options);
 }

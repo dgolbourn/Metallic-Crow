@@ -15,7 +15,7 @@ private:
   NodeSet set_;
   NodeCoordinates coords_;
   
-  void Fill()
+  auto Fill() -> void
   {
     if(set_.insert(coords_).second)
     {

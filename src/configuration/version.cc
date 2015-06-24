@@ -10,7 +10,7 @@
 #include <sstream>
 namespace config
 {
-std::string Version()
+auto Version() -> std::string
 {
   static const int major = 0;
   static const int minor = 2;

@@ -10,9 +10,10 @@ class Painter
 public:
   Painter() = default;
   Painter(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, SDL_FRect const* original, double angle, SDL_Colour const* modulation);
-  bool operator()(algorithm::NodeCoordinates const& coords);
+  auto operator()(algorithm::NodeCoordinates const& coords) -> bool;
 private:
-  std::shared_ptr<class PainterImpl> impl_;
+  class Impl;
+  std::shared_ptr<Impl> impl_;
 };
 }
 #endif

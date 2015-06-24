@@ -2,14 +2,14 @@
 #include "bind.h"
 namespace game
 {
-void Script::Impl::SceneryInit()
+auto Script::Impl::SceneryInit() -> void
 {
   lua_.Add(function::Bind(&Impl::SceneryLoad, shared_from_this()), "scenery_load", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::SceneryFree, shared_from_this()), "scenery_free", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::SceneryModulation, shared_from_this()), "scenery_modulation", 0, "metallic_crow");
 }
 
-void Script::Impl::SceneryLoad()
+auto Script::Impl::SceneryLoad() -> void
 {
   StagePtr stage;
   {
@@ -29,7 +29,7 @@ void Script::Impl::SceneryLoad()
   }
 }
 
-void Script::Impl::SceneryFree()
+auto Script::Impl::SceneryFree() -> void
 {
   StagePtr stage;
   {
@@ -47,7 +47,7 @@ void Script::Impl::SceneryFree()
   }
 }
 
-void Script::Impl::SceneryModulation()
+auto Script::Impl::SceneryModulation() -> void
 {
   StagePtr stage;
   {

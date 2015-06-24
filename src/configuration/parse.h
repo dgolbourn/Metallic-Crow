@@ -12,6 +12,6 @@ struct Args
 };
 typedef boost::optional<Args> OptionalArgs;
 
-OptionalArgs Parse(int argc, char* argv[]);
+auto Parse(int argc, char* argv[]) -> OptionalArgs;
 }
 #endif

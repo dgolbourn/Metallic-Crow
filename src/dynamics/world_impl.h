@@ -19,21 +19,21 @@ class WorldImpl final : public b2DestructionListener, public b2ContactFilter, pu
 {
 public:
   WorldImpl(lua::Stack& lua, collision::Collision& collision);
-  void Init(event::Queue& queue);
-  void Update();
-  void Pause();
-  void Resume();
-  void BeginContact(b2Contact* contact) override;
-  void EndContact(b2Contact* contact) override;
-  bool ShouldCollide(b2Fixture* fixtureA, b2Fixture* fixtureB) override;
-  void Begin(event::Command const& command);
-  void End(event::Command const& command);
-  void Light();
-  void Ambient(float r, float g, float b);
-  void SayGoodbye(b2Joint* joint) override;
-  void SayGoodbye(b2Fixture* fixture) override;
-  float32 Metres(double pixels) const;
-  float Pixels(float32 metres) const;
+  auto Init(event::Queue& queue) -> void;
+  auto Update() -> void;
+  auto Pause() -> void;
+  auto Resume() -> void;
+  auto BeginContact(b2Contact* contact) -> void override;
+  auto EndContact(b2Contact* contact) -> void override;
+  auto ShouldCollide(b2Fixture* fixtureA, b2Fixture* fixtureB) -> bool override;
+  auto Begin(event::Command const& command) -> void;
+  auto End(event::Command const& command) -> void;
+  auto Light() -> void;
+  auto Ambient(float r, float g, float b) -> void;
+  auto SayGoodbye(b2Joint* joint) -> void override;
+  auto SayGoodbye(b2Fixture* fixture) -> void override;
+  auto Metres(double pixels) const -> float32;
+  auto Pixels(float32 metres) const -> float;
   float32 f_;
   float32 dt_;
   collision::Collision collision_;

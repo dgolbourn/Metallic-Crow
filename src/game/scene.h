@@ -8,8 +8,8 @@ class Scene
 {
 public:
   Scene();
-  void Add(event::Command const& layer, int plane);
-  void Render();
+  auto Add(event::Command const& layer, int plane) -> void;
+  auto Render() -> void;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

@@ -6,8 +6,6 @@
 #include "sdl_exception.h"
 #include "log.h"
 #include "colour.h"
-namespace display
-{
 namespace
 {
 class Modulator
@@ -81,7 +79,9 @@ public:
 };
 }
 
-void WindowImpl::Destroy() noexcept
+namespace display
+{
+auto WindowImpl::Destroy() noexcept -> void
 {
   if(renderer_)
   {
@@ -179,7 +179,7 @@ WindowImpl::~WindowImpl()
   Destroy();
 }
 
-sdl::Texture WindowImpl::Load(boost::filesystem::path const& file)
+auto WindowImpl::Load(boost::filesystem::path const& file) -> sdl::Texture
 {
   sdl::Texture texture;
   auto fileiter = textures_.find(file);
@@ -200,17 +200,17 @@ sdl::Texture WindowImpl::Load(boost::filesystem::path const& file)
   return texture;
 }
 
-sdl::Texture WindowImpl::Text(std::string const& text, sdl::Font const& font, float length)
+auto WindowImpl::Text(std::string const& text, sdl::Font const& font, float length) -> sdl::Texture
 {
   return sdl::Texture(renderer_, (SDL_Surface*)sdl::Surface(text, font, Uint32(length)));
 }
 
-sdl::Texture WindowImpl::Text(std::string const& text, sdl::Font const& font)
+auto WindowImpl::Text(std::string const& text, sdl::Font const& font) -> sdl::Texture
 {
   return sdl::Texture(renderer_, (SDL_Surface*)sdl::Surface(text, font));
 }
 
-void WindowImpl::Draw(BoundingBox const& box, Modulation const& modulation) const
+auto WindowImpl::Draw(BoundingBox const& box, Modulation const& modulation) const -> void
 {
   SDL_Colour fill = {0, 0, 0, SDL_ALPHA_OPAQUE};
   if(modulation)
@@ -239,7 +239,7 @@ void WindowImpl::Draw(BoundingBox const& box, Modulation const& modulation) cons
   }
 }
 
-void WindowImpl::Clear() const
+auto WindowImpl::Clear() const -> void
 {
   if(SDL_RenderClear(renderer_))
   {
@@ -247,29 +247,29 @@ void WindowImpl::Clear() const
   }
 }
 
-void WindowImpl::Show() const
+auto WindowImpl::Show() const -> void
 {
   SDL_RenderPresent(renderer_);
 }
 
-void WindowImpl::LoadCache(boost::filesystem::path const& file)
+auto WindowImpl::LoadCache(boost::filesystem::path const& file) -> void
 {
   cache_.emplace(file, Load(file));
 }
 
-void WindowImpl::Free(boost::filesystem::path const& file)
+auto WindowImpl::Free(boost::filesystem::path const& file) -> void
 {
   cache_.erase(file);
 }
 
-void WindowImpl::View(float x, float y, float zoom)
+auto WindowImpl::View(float x, float y, float zoom) -> void
 {
   view_.x = x;
   view_.y = y;
   zoom_ = zoom;
 }
 
-void WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const
+auto WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const -> void
 {
   SDL_Rect const* source_ptr = nullptr;
   SDL_Rect source_copy;
@@ -328,32 +328,32 @@ Window::Window(lua::Stack& lua) : impl_(std::make_shared<WindowImpl>(lua))
 {
 }
 
-void Window::Clear() const
+auto Window::Clear() const -> void
 {
-  return impl_->Clear();
+  impl_->Clear();
 }
 
-void Window::Show() const
+auto Window::Show() const -> void
 {
-  return impl_->Show();
+  impl_->Show();
 }
 
-void Window::Draw(BoundingBox const& box, Modulation const& modulation) const
+auto Window::Draw(BoundingBox const& box, Modulation const& modulation) const -> void
 {
   impl_->Draw(box, modulation);
 }
 
-void Window::Load(boost::filesystem::path const& file)
+auto Window::Load(boost::filesystem::path const& file) -> void
 {
   impl_->LoadCache(file);
 }
 
-void Window::Free(boost::filesystem::path const& file)
+auto Window::Free(boost::filesystem::path const& file) -> void
 {
   impl_->Free(file);
 }
 
-void Window::View(float x, float y, float zoom)
+auto Window::View(float x, float y, float zoom) -> void
 {
   impl_->View(x, y, zoom);
 }

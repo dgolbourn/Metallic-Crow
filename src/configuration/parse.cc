@@ -6,7 +6,7 @@
 #include "version.h"
 namespace config
 {
-OptionalArgs Parse(int argc, char* argv[])
+auto Parse(int argc, char* argv[]) -> OptionalArgs
 {
   boost::program_options::options_description general("General options");
   general.add_options()

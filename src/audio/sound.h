@@ -11,13 +11,13 @@ public:
   Sound() = default;
   Sound(lua::Stack& lua, boost::filesystem::path const& path);
   Sound(boost::filesystem::path const& file, float volume, bool repeat);
-  void Pause();
-  void Resume();
-  void End();
-  bool operator()(float volume);
+  auto Pause() -> void;
+  auto Resume() -> void;
+  auto End() -> void;
+  auto operator()(float volume) -> bool;
   explicit operator bool() const;
-  static void Free(boost::filesystem::path const& file);
-  static void Load(boost::filesystem::path const& file);
+  static auto Free(boost::filesystem::path const& file) -> void;
+  static auto Load(boost::filesystem::path const& file) -> void;
   class Impl;
 private:
   std::shared_ptr<Impl> impl_;

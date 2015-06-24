@@ -2,14 +2,14 @@
 #include "bind.h"
 namespace game
 {
-void Script::Impl::ViewInit()
+auto Script::Impl::ViewInit() -> void
 {
   lua_.Add(function::Bind(&Impl::ViewAddActor, shared_from_this()), "view_add", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ViewActor, shared_from_this()), "view", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ViewZoom, shared_from_this()), "view_zoom", 0, "metallic_crow");
 }
 
-void Script::Impl::ViewAddActor()
+auto Script::Impl::ViewAddActor() -> void
 {
   StagePtr stage;
   {
@@ -31,7 +31,7 @@ void Script::Impl::ViewAddActor()
   }
 }
 
-void Script::Impl::ViewActor()
+auto Script::Impl::ViewActor() -> void
 {
   StagePtr stage;
   {
@@ -55,7 +55,7 @@ void Script::Impl::ViewActor()
   }
 }
 
-void Script::Impl::ViewZoom()
+auto Script::Impl::ViewZoom() -> void
 {
   StagePtr stage;
   {
@@ -69,7 +69,7 @@ void Script::Impl::ViewZoom()
   }
 }
 
-void Script::Impl::View()
+auto Script::Impl::View() -> void
 {
   game::Position view(0.f, 0.f);
   int count = 0;

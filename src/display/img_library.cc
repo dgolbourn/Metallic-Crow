@@ -4,7 +4,7 @@
 #include <climits>
 namespace
 {
-int reference_count;
+int reference_count = 0;
 }
 
 namespace img

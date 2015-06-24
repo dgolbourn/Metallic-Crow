@@ -14,12 +14,12 @@ public:
   World() = default;
   World(lua::Stack& lua, collision::Collision& collision, event::Queue& queue);
   explicit operator bool() const;
-  void Begin(event::Command const& command);
-  void End(event::Command const& command);
-  void Pause();
-  void Resume();
-  void Ambient(float r, float g, float b);
-  bool operator==(World const& other) const;
+  auto Begin(event::Command const& command) -> void;
+  auto End(event::Command const& command) -> void;
+  auto Pause() -> void;
+  auto Resume() -> void;
+  auto Ambient(float r, float g, float b) -> void;
+  auto operator==(World const& other) const -> bool;
   typedef memory::WeakPtr<World, class WorldImpl> WeakPtr;
 private:
   std::shared_ptr<class WorldImpl> impl_;

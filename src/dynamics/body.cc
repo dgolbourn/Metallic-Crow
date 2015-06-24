@@ -3,12 +3,12 @@
 #include <vector>
 #include "exception.h"
 #include "log.h"
-namespace dynamics
+namespace 
 {
 typedef std::unique_ptr<b2Shape> Shape;
 typedef std::pair<Shape, float32> ShapePair;
 
-static ShapePair Box(WorldImpl const& world, lua::Stack& lua)
+auto Box(dynamics::WorldImpl const& world, lua::Stack& lua) -> ShapePair
 {
   double x;
   {
@@ -39,14 +39,14 @@ static ShapePair Box(WorldImpl const& world, lua::Stack& lua)
 
   ShapePair shape;
   shape.first = Shape(new b2PolygonShape);
-  b2PolygonShape& box = *(b2PolygonShape*)shape.first.get();
+  b2PolygonShape& box = *dynamic_cast<b2PolygonShape*>(shape.first.get());
   box.SetAsBox(.5f * width, .5f * height, b2Vec2(world.Metres(x), world.Metres(y)), 0.f);
 
   shape.second = width * height;
   return shape;
 }
 
-static ShapePair Circle(WorldImpl const& world, lua::Stack& lua)
+auto Circle(dynamics::WorldImpl const& world, lua::Stack& lua) -> ShapePair
 {
   double x;
   {
@@ -68,7 +68,7 @@ static ShapePair Circle(WorldImpl const& world, lua::Stack& lua)
 
   ShapePair shape;
   shape.first = Shape(new b2CircleShape);
-  b2CircleShape& circle = *(b2CircleShape*)shape.first.get();
+  b2CircleShape& circle = *dynamic_cast<b2CircleShape*>(shape.first.get());
   circle.m_p.Set(world.Metres(x), world.Metres(y));
   circle.m_radius = world.Metres(radius);
 
@@ -76,7 +76,7 @@ static ShapePair Circle(WorldImpl const& world, lua::Stack& lua)
   return shape;
 }
 
-static ShapePair Chain(WorldImpl const& world, lua::Stack& lua)
+auto Chain(dynamics::WorldImpl const& world, lua::Stack& lua) -> ShapePair
 {
   std::vector<b2Vec2> vertices;
   for(int index = 1, end = lua.Size(); index <= end; ++index)
@@ -100,7 +100,7 @@ static ShapePair Chain(WorldImpl const& world, lua::Stack& lua)
 
   ShapePair shape;
   shape.first = Shape(new b2ChainShape);
-  b2ChainShape& chain = *(b2ChainShape*)shape.first.get();
+  b2ChainShape& chain = *dynamic_cast<b2ChainShape*>(shape.first.get());
 
   if(vertices.front() == vertices.back())
   {
@@ -115,7 +115,7 @@ static ShapePair Chain(WorldImpl const& world, lua::Stack& lua)
   return shape;
 }
 
-static b2BodyDef BodyDefinition(WorldImpl const& world, lua::Stack& lua, float32 damping, float32 x, float32 y)
+auto BodyDefinition(dynamics::WorldImpl const& world, lua::Stack& lua, float32 damping, float32 x, float32 y) -> b2BodyDef
 {
   b2BodyDef body_def;
  
@@ -151,7 +151,7 @@ static b2BodyDef BodyDefinition(WorldImpl const& world, lua::Stack& lua, float32
   return body_def;
 }
 
-static b2FixtureDef FixtureDefinition(float32 area, float32 mass, float32 friction, float32 restitution)
+auto FixtureDefinition(float32 area, float32 mass, float32 friction, float32 restitution) -> b2FixtureDef
 {
   b2FixtureDef fixture;
   float32 density = 0.f;
@@ -174,7 +174,10 @@ static b2FixtureDef FixtureDefinition(float32 area, float32 mass, float32 fricti
   }
   return fixture;
 }
+}
 
+namespace dynamics
+{
 BodyImpl::BodyImpl(lua::Stack& lua, World& world)
 {
   float32 area = 0.f;
@@ -292,7 +295,7 @@ BodyImpl::BodyImpl(lua::Stack& lua, World& world)
   }
 }
 
-Body BodyImpl::MakeBody(b2Body* body_ptr)
+auto BodyImpl::MakeBody(b2Body* body_ptr) -> Body
 {
   Body body;
   if(body_ptr)
@@ -306,43 +309,43 @@ Body BodyImpl::MakeBody(b2Body* body_ptr)
   return body;
 }
 
-game::Position BodyImpl::Position() const
+auto BodyImpl::Position() const -> game::Position 
 {
   auto world = world_.Lock().impl_;
   return game::Position(world->Pixels(position_.x), world->Pixels(position_.y));
 }
 
-void BodyImpl::Position(float x, float y)
+auto BodyImpl::Position(float x, float y) -> void
 {
   auto world = world_.Lock().impl_;
   body_->SetTransform(b2Vec2(world->Metres(x), world->Metres(y)), 0.f);
 }
 
-game::Position BodyImpl::Velocity() const
+auto BodyImpl::Velocity() const -> game::Position
 {
   auto world = world_.Lock().impl_;
   return game::Position(world->Pixels(velocity_.x), world->Pixels(velocity_.y));
 }
 
-void BodyImpl::Velocity(float x, float y)
+auto BodyImpl::Velocity(float x, float y) -> void
 {
   auto world = world_.Lock().impl_;
   body_->SetLinearVelocity(b2Vec2(world->Metres(x), world->Metres(y)));
 }
 
-void BodyImpl::Force(float x, float y)
+auto BodyImpl::Force(float x, float y) -> void
 {
   auto world = world_.Lock().impl_;
   body_->ApplyForceToCenter(b2Vec2(world->Metres(x), world->Metres(y)), true);
 }
 
-void BodyImpl::Impulse(float x, float y)
+auto BodyImpl::Impulse(float x, float y) -> void
 {
   auto world = world_.Lock().impl_;
   body_->ApplyLinearImpulse(b2Vec2(world->Metres(x), world->Metres(y)), body_->GetWorldCenter(), true);
 }
 
-void BodyImpl::Begin()
+auto BodyImpl::Begin() -> void
 {
   if(body_->GetType() != b2_staticBody)
   {
@@ -351,7 +354,7 @@ void BodyImpl::Begin()
   }
 }
 
-void BodyImpl::End(float32 dt)
+auto BodyImpl::End(float32 dt) -> void
 {
   if(body_->GetType() != b2_staticBody)
   {
@@ -364,7 +367,7 @@ void BodyImpl::End(float32 dt)
   }
 }
 
-void BodyImpl::Update(float32 ds)
+auto BodyImpl::Update(float32 ds) -> void
 {
   if(body_->GetType() != b2_staticBody)
   {
@@ -373,7 +376,7 @@ void BodyImpl::Update(float32 ds)
   }
 }
 
-display::Modulation BodyImpl::Modulation() const
+auto BodyImpl::Modulation() const -> display::Modulation
 {
   return display::Modulation(light_.illumination.x, light_.illumination.y, light_.illumination.z, 1.f);
 }
@@ -394,7 +397,7 @@ BodyImpl::~BodyImpl()
   }
 }
 
-bool Body::operator<(Body const& other) const
+auto Body::operator<(Body const& other) const -> bool
 {
   return impl_.owner_before(other.impl_);
 }
@@ -404,37 +407,37 @@ Body::operator bool() const
   return bool(impl_) && bool(impl_->world_.Lock());
 }
 
-game::Position Body::Position() const
+auto Body::Position() const -> game::Position
 {
   return impl_->Position();
 }
 
-void Body::Position(float x, float y)
+auto Body::Position(float x, float y) -> void
 {
   impl_->Position(x, y);
 }
 
-game::Position Body::Velocity() const
+auto Body::Velocity() const -> game::Position
 {
   return impl_->Velocity();
 }
 
-void Body::Velocity(float x, float y)
+auto Body::Velocity(float x, float y) -> void
 {
   impl_->Velocity(x, y);
 }
 
-void Body::Force(float x, float y)
+auto Body::Force(float x, float y) -> void
 {
   impl_->Force(x, y);
 }
 
-void Body::Impulse(float x, float y)
+auto Body::Impulse(float x, float y) -> void
 {
   impl_->Impulse(x, y);
 }
 
-display::Modulation Body::Modulation() const
+auto Body::Modulation() const -> display::Modulation
 {
   return impl_->Modulation();
 }

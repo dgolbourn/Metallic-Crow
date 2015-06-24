@@ -10,7 +10,7 @@ class Font
 public:
   Font() = default;
   Font(lua::Stack& lua, boost::filesystem::path const& path);
-  float LineSpacing() const;
+  auto LineSpacing() const -> float;
   class Impl;
 private:
   std::shared_ptr<Impl> impl_;

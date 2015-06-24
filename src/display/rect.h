@@ -3,7 +3,7 @@
 #include "SDL_sysrender.h"
 namespace sdl
 {
-bool Intersection(SDL_FRect const* a, SDL_FRect const* b);
-bool Intersection(SDL_FRect const* a, SDL_FRect const* b, SDL_FRect* ret);
+auto Intersection(SDL_FRect const* a, SDL_FRect const* b) -> bool;
+auto Intersection(SDL_FRect const* a, SDL_FRect const* b, SDL_FRect* ret) -> bool;
 }
 #endif

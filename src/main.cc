@@ -7,14 +7,14 @@
 namespace
 {
 bool run = true;
-bool Quit()
+auto Quit() -> bool
 {
   run = false;
   return false;
 }
 }
 
-int main(int argc, char* argv[])
+auto main(int argc, char* argv[]) -> int
 {
   int ret = EXIT_FAILURE;
   try

@@ -6,203 +6,7 @@
 namespace
 {
 auto interval = std::bind(std::uniform_real_distribution<double>(2., 20.), std::default_random_engine());
-}
 
-namespace game
-{
-void Actor::Impl::Pause()
-{
-  if(animation_)
-  {
-    animation_.Pause();
-  }
-  if(blink_)
-  {
-    blink_.Pause();
-  }
-}
-
-void Actor::Impl::Resume()
-{
-  if(animation_)
-  {
-    animation_.Resume();
-  }
-  if(blink_)
-  {
-    blink_.Resume();
-  }
-}
-
-void Actor::Impl::Modulation(float r, float g, float b, float a)
-{
-  modulation_.r(r);
-  modulation_.g(g);
-  modulation_.b(b);
-  modulation_.a(a);
-
-  if(game_body_)
-  {
-    if(dynamics_body_)
-    {
-      display::Modulation modulation = dynamics_body_.Modulation();
-      game_body_.Modulation(modulation.r() * r, modulation.g() * g, modulation.b() * b, modulation.a() * a);
-    }
-    else
-    {
-      game_body_.Modulation(r, g, b, a);
-    }
-  }
-}
-
-void Actor::Impl::Begin()
-{
-  dynamics_body_.Force(force_.first, force_.second);
-}
-
-void Actor::Impl::End()
-{
-  game::Position position(dynamics_body_.Position());
-  position.first += position_.first;
-  position.second += position_.second;
-  game_body_.Position(position);
-
-  display::Modulation modulation(dynamics_body_.Modulation());
-  game_body_.Modulation(modulation.r() * modulation_.r(), modulation.g() * modulation_.g(), modulation.b() * modulation_.b(), modulation.a() * modulation_.a());
-}
-
-void Actor::Impl::Render()
-{
-  game_body_.Render();
-}
-
-void Actor::Impl::Position(game::Position const& position)
-{
-  if(dynamics_body_)
-  {
-    dynamics_body_.Position(position.first, position.second);
-  }
-  if(game_body_)
-  {
-    game::Position temp = position;
-    if(dynamics_body_)
-    {
-      temp.first += position_.first;
-      temp.second += position_.second;
-    }
-    game_body_.Position(temp);
-  }
-}
-
-game::Position Actor::Impl::Position()
-{
-  game::Position position;
-  if(dynamics_body_)
-  {
-    position = dynamics_body_.Position();
-  }
-  else if(game_body_)
-  {
-    position = game_body_.Position();
-  }
-  return position;
-}
-
-void Actor::Impl::Velocity(game::Position const& velocity)
-{
-  if(dynamics_body_)
-  {
-    dynamics_body_.Velocity(velocity.first, velocity.second);
-  }
-}
-
-game::Position Actor::Impl::Velocity() const
-{
-  game::Position velocity;
-  if(dynamics_body_)
-  {
-    velocity = dynamics_body_.Velocity();
-  }
-  return velocity;
-}
-
-void Actor::Impl::Force(game::Position const& force)
-{
-  force_ = force;
-}
-
-void Actor::Impl::Impulse(game::Position const& impulse)
-{
-  if(dynamics_body_)
-  {
-    dynamics_body_.Impulse(impulse.first, impulse.second);
-  }
-}
-
-void Actor::Impl::Body(std::string const& expression, bool left_facing)
-{
-  if(game_body_)
-  {
-    animation_.Reset(dilation_ * game_body_.Expression(expression, left_facing), -1);
-  }
-}
-
-void Actor::Impl::Body(std::string const& expression)
-{
-  if(game_body_)
-  {
-    animation_.Reset(dilation_ * game_body_.Expression(expression), -1);
-  }
-}
-
-void Actor::Impl::Body(bool left_facing)
-{
-  if(game_body_)
-  {
-    animation_.Reset(dilation_ * game_body_.Expression(left_facing), -1);
-  }
-}
-
-void Actor::Impl::Eyes(std::string const& expression)
-{
-  if(eyes_)
-  {
-    eyes_.Expression(expression);
-  }
-}
-
-void Actor::Impl::Mouth(std::string const& expression)
-{
-  if(mouth_)
-  {
-    mouth_.Expression(expression);
-  }
-}
-
-void Actor::Impl::Mouth(int open)
-{
-  if(mouth_)
-  {
-    mouth_.Expression(open);
-  }
-}
-
-void Actor::Impl::Blink()
-{
-  double t = .2;
-  if(!open_)
-  {
-    t = interval();
-  }
-
-  blink_.Reset(t, -1);
-
-  open_ ^= true;
-  eyes_.Expression(open_);
-}
-
-namespace
-{
 dynamics::Body MakeBody(lua::Stack& lua, dynamics::World& world, collision::Group& collision)
 {
   dynamics::Body body;
@@ -224,6 +28,199 @@ dynamics::Body MakeBody(lua::Stack& lua, dynamics::World& world, collision::Grou
   }
   return body;
 }
+}
+
+namespace game
+{
+auto Actor::Impl::Pause() -> void
+{
+  if(animation_)
+  {
+    animation_.Pause();
+  }
+  if(blink_)
+  {
+    blink_.Pause();
+  }
+}
+
+auto Actor::Impl::Resume() -> void
+{
+  if(animation_)
+  {
+    animation_.Resume();
+  }
+  if(blink_)
+  {
+    blink_.Resume();
+  }
+}
+
+auto Actor::Impl::Modulation(float r, float g, float b, float a) -> void
+{
+  modulation_.r(r);
+  modulation_.g(g);
+  modulation_.b(b);
+  modulation_.a(a);
+
+  if(game_body_)
+  {
+    if(dynamics_body_)
+    {
+      display::Modulation modulation = dynamics_body_.Modulation();
+      game_body_.Modulation(modulation.r() * r, modulation.g() * g, modulation.b() * b, modulation.a() * a);
+    }
+    else
+    {
+      game_body_.Modulation(r, g, b, a);
+    }
+  }
+}
+
+auto Actor::Impl::Begin() -> void
+{
+  dynamics_body_.Force(force_.first, force_.second);
+}
+
+auto Actor::Impl::End() -> void
+{
+  game::Position position(dynamics_body_.Position());
+  position.first += position_.first;
+  position.second += position_.second;
+  game_body_.Position(position);
+
+  display::Modulation modulation(dynamics_body_.Modulation());
+  game_body_.Modulation(modulation.r() * modulation_.r(), modulation.g() * modulation_.g(), modulation.b() * modulation_.b(), modulation.a() * modulation_.a());
+}
+
+auto Actor::Impl::Render() -> void
+{
+  game_body_.Render();
+}
+
+auto Actor::Impl::Position(game::Position const& position) -> void
+{
+  if(dynamics_body_)
+  {
+    dynamics_body_.Position(position.first, position.second);
+  }
+  if(game_body_)
+  {
+    game::Position temp = position;
+    if(dynamics_body_)
+    {
+      temp.first += position_.first;
+      temp.second += position_.second;
+    }
+    game_body_.Position(temp);
+  }
+}
+
+auto Actor::Impl::Position() -> game::Position
+{
+  game::Position position;
+  if(dynamics_body_)
+  {
+    position = dynamics_body_.Position();
+  }
+  else if(game_body_)
+  {
+    position = game_body_.Position();
+  }
+  return position;
+}
+
+auto Actor::Impl::Velocity(game::Position const& velocity) -> void
+{
+  if(dynamics_body_)
+  {
+    dynamics_body_.Velocity(velocity.first, velocity.second);
+  }
+}
+
+auto Actor::Impl::Velocity() const -> game::Position
+{
+  game::Position velocity;
+  if(dynamics_body_)
+  {
+    velocity = dynamics_body_.Velocity();
+  }
+  return velocity;
+}
+
+auto Actor::Impl::Force(game::Position const& force) -> void
+{
+  force_ = force;
+}
+
+auto Actor::Impl::Impulse(game::Position const& impulse) -> void
+{
+  if(dynamics_body_)
+  {
+    dynamics_body_.Impulse(impulse.first, impulse.second);
+  }
+}
+
+auto Actor::Impl::Body(std::string const& expression, bool left_facing) -> void
+{
+  if(game_body_)
+  {
+    animation_.Reset(dilation_ * game_body_.Expression(expression, left_facing), -1);
+  }
+}
+
+auto Actor::Impl::Body(std::string const& expression) -> void
+{
+  if(game_body_)
+  {
+    animation_.Reset(dilation_ * game_body_.Expression(expression), -1);
+  }
+}
+
+auto Actor::Impl::Body(bool left_facing) -> void
+{
+  if(game_body_)
+  {
+    animation_.Reset(dilation_ * game_body_.Expression(left_facing), -1);
+  }
+}
+
+auto Actor::Impl::Eyes(std::string const& expression) -> void
+{
+  if(eyes_)
+  {
+    eyes_.Expression(expression);
+  }
+}
+
+auto Actor::Impl::Mouth(std::string const& expression) -> void
+{
+  if(mouth_)
+  {
+    mouth_.Expression(expression);
+  }
+}
+
+auto Actor::Impl::Mouth(int open) -> void
+{
+  if(mouth_)
+  {
+    mouth_.Expression(open);
+  }
+}
+
+auto Actor::Impl::Blink() -> void
+{
+  double t = .2;
+  if(!open_)
+  {
+    t = interval();
+  }
+
+  blink_.Reset(t, -1);
+
+  open_ ^= true;
+  eyes_.Expression(open_);
 }
 
 Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, int& plane, boost::filesystem::path const& path) : force_(0.f, 0.f), open_(true)
@@ -297,7 +294,7 @@ Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue,
   }
 }
 
-void Actor::Impl::Init(Scene& scene, dynamics::World& world, int plane)
+auto Actor::Impl::Init(Scene& scene, dynamics::World& world, int plane) -> void
 {
   if(dynamics_body_)
   {
@@ -321,102 +318,102 @@ void Actor::Impl::Init(Scene& scene, dynamics::World& world, int plane)
   }
 }
 
-void Actor::Impl::Next()
+auto Actor::Impl::Next() -> void
 {
   animation_.Reset(dilation_ * game_body_.Next(), -1);
 }
 
-double Actor::Impl::Dilation() const
+auto Actor::Impl::Dilation() const -> double
 {
   return dilation_;
 }
 
-void Actor::Impl::Dilation(double dilation)
+auto Actor::Impl::Dilation(double dilation) -> void
 {
   dilation_ = dilation;
 }
 
-void Actor::Position(game::Position const& position)
+auto Actor::Position(game::Position const& position) -> void
 {
   impl_->Position(position);
 }
 
-game::Position Actor::Position() const
+auto Actor::Position() const -> game::Position
 {
   return impl_->Position();
 }
 
-void Actor::Velocity(game::Position const& velocity)
+auto Actor::Velocity(game::Position const& velocity) -> void
 {
   impl_->Velocity(velocity);
 }
 
-game::Position Actor::Velocity() const
+auto Actor::Velocity() const -> game::Position
 {
   return impl_->Velocity();
 }
 
-void Actor::Force(game::Position const& force)
+auto Actor::Force(game::Position const& force) -> void
 {
   impl_->Force(force);
 }
 
-void Actor::Impulse(game::Position const& impulse)
+auto Actor::Impulse(game::Position const& impulse) -> void
 {
   impl_->Impulse(impulse);
 }
 
-void Actor::Modulation(float r, float g, float b, float a)
+auto Actor::Modulation(float r, float g, float b, float a) -> void
 {
   impl_->Modulation(r, g, b, a);
 }
 
-void Actor::Pause()
+auto Actor::Pause() -> void
 {
   impl_->Pause();
 }
 
-void Actor::Resume()
+auto Actor::Resume() -> void
 {
   impl_->Resume();
 }
 
-void Actor::Body(std::string const& expression, bool left_facing)
+auto Actor::Body(std::string const& expression, bool left_facing) -> void
 {
   impl_->Body(expression, left_facing);
 }
 
-void Actor::Body(std::string const& expression)
+auto Actor::Body(std::string const& expression) -> void
 {
   impl_->Body(expression);
 }
 
-void Actor::Body(bool left_facing)
+auto Actor::Body(bool left_facing) -> void
 {
   impl_->Body(left_facing);
 }
 
-void Actor::Eyes(std::string const& expression)
+auto Actor::Eyes(std::string const& expression) -> void
 {
   impl_->Eyes(expression);
 }
 
-void Actor::Mouth(std::string const& expression)
+auto Actor::Mouth(std::string const& expression) -> void
 {
   impl_->Mouth(expression);
 }
 
-void Actor::Mouth(int open)
+auto Actor::Mouth(int open) -> void
 {
   impl_->Mouth(open);
 }
 
-double Actor::Dilation() const
+auto Actor::Dilation() const -> double
 {
   return impl_->Dilation();
 }
 
-void Actor::Dilation(double dilation)
+auto Actor::Dilation(double dilation) -> void
 {
   impl_->Dilation(dilation);
 }

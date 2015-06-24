@@ -14,12 +14,12 @@ class Window
 public:
   Window() = default;
   Window(lua::Stack& lua);
-  void Load(boost::filesystem::path const& file);
-  void Free(boost::filesystem::path const& file);
-  void Clear() const;
-  void Show() const;
-  void View(float x, float y, float zoom);
-  void Draw(BoundingBox const& box, Modulation const& modulation) const;
+  auto Load(boost::filesystem::path const& file) -> void;
+  auto Free(boost::filesystem::path const& file) -> void;
+  auto Clear() const -> void;
+  auto Show() const -> void;
+  auto View(float x, float y, float zoom) -> void;
+  auto Draw(BoundingBox const& box, Modulation const& modulation) const -> void;
   typedef memory::WeakPtr<Window, class WindowImpl> WeakPtr;
   explicit operator bool() const;
 private:

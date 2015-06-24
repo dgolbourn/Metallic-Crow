@@ -12,7 +12,7 @@ class Scenery
 public:
   Scenery() = default;
   Scenery(lua::Stack& lua, event::Queue& queue, display::Window& window, Scene& scene, boost::filesystem::path const& path);
-  void Modulation(float r, float g, float b, float a);
+  auto Modulation(float r, float g, float b, float a) -> void;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

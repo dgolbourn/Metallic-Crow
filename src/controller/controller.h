@@ -13,14 +13,14 @@ class Controller
 public:
   Controller() = default;
   Controller(lua::Stack& lua, event::Queue& queue, boost::filesystem::path const& path);
-  void Control(float x, float y);
-  void ChoiceUp();
-  void ChoiceDown();
-  void ChoiceLeft();
-  void ChoiceRight();
-  void Select();
-  void Back();
-  void Add(event::Command const& command);
+  auto Control(float x, float y) -> void;
+  auto ChoiceUp() -> void;
+  auto ChoiceDown() -> void;
+  auto ChoiceLeft() -> void;
+  auto ChoiceRight() -> void;
+  auto Select() -> void;
+  auto Back() -> void;
+  auto Add(event::Command const& command) -> void;
   explicit operator bool() const;
 private:
   class Impl;

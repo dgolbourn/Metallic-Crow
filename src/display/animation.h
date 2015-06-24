@@ -7,6 +7,6 @@
 namespace display
 {
 typedef std::vector<Texture> Animation;
-Animation MakeAnimation(lua::Stack& lua, Window& window, boost::filesystem::path const& path);
+auto MakeAnimation(lua::Stack& lua, Window& window, boost::filesystem::path const& path) -> Animation;
 }
 #endif

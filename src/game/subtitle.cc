@@ -5,10 +5,9 @@ class Subtitle::Impl
 {
 public:
   Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path);
-  void Subtitle(std::string const& text);
-  void Modulation(float r, float g, float b, float a);
-  void Render() const;
-
+  auto Subtitle(std::string const& text) -> void;
+  auto Modulation(float r, float g, float b, float a) -> void;
+  auto Render() const -> void;
   sdl::Font font_;
   display::Modulation modulation_;
   display::BoundingBox clip_;
@@ -30,12 +29,12 @@ Subtitle::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem
   }
 }
 
-void Subtitle::Impl::Render() const
+auto Subtitle::Impl::Render() const -> void
 {
   text_(display::BoundingBox(), render_box_, 0.f, false, 0., modulation_);
 }
 
-void Subtitle::Impl::Subtitle(std::string const& text)
+auto Subtitle::Impl::Subtitle(std::string const& text) -> void
 {
   text_ = display::Texture(display::Texture(text, font_, clip_.w(), window_), display::BoundingBox(0.f, 0.f, clip_.w(), clip_.h()));
 
@@ -43,22 +42,22 @@ void Subtitle::Impl::Subtitle(std::string const& text)
   render_box_ = display::BoundingBox(clip_.x() + .5f * (clip_.w() - shape.first), clip_.y() + .5f * (clip_.h() - shape.second), shape.first, shape.second);
 }
 
-void Subtitle::Impl::Modulation(float r, float g, float b, float a)
+auto Subtitle::Impl::Modulation(float r, float g, float b, float a) -> void
 {
   modulation_ = display::Modulation(r, g, b, a);
 }
 
-void Subtitle::Render() const
+auto Subtitle::Render() const -> void
 {
   impl_->Render();
 }
 
-void Subtitle::operator()(std::string const& text)
+auto Subtitle::operator()(std::string const& text) -> void
 {
   impl_->Subtitle(text);
 }
 
-void Subtitle::Modulation(float r, float g, float b, float a)
+auto Subtitle::Modulation(float r, float g, float b, float a) -> void
 {
   impl_->Modulation(r, g, b, a);
 }

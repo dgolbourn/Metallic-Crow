@@ -9,7 +9,7 @@ class Command
 {
 public:
   Command(StackPtr const& stack);
-  bool operator()();
+  auto operator()() -> bool;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

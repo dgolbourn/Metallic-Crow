@@ -12,16 +12,16 @@ public:
   BoundingBox(float x, float y, float w, float h);
   BoundingBox(lua::Stack& lua);
   BoundingBox(BoundingBox const& first, BoundingBox const& second);
-  bool operator<(BoundingBox const& other) const;
+  auto operator<(BoundingBox const& other) const -> bool;
   explicit operator bool() const;
-  void x(float x);
-  void y(float y);
-  void w(float w);
-  void h(float h);
-  float x() const;
-  float y() const;
-  float w() const;
-  float h() const;
+  auto x(float x) -> void;
+  auto y(float y) -> void;
+  auto w(float w) -> void;
+  auto h(float h) -> void;
+  auto x() const -> float;
+  auto y() const -> float;
+  auto w() const -> float;
+  auto h() const -> float;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

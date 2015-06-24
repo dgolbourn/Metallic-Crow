@@ -1,11 +1,9 @@
 #include "rect.h"
 #include <utility>
 #include <algorithm>
-namespace sdl
-{
 namespace
 {
-bool Intersection(float l0, float w0, float l1, float w1, float* l_out, float* w_out)
+auto Intersects(float l0, float w0, float l1, float w1, float* l_out, float* w_out) -> bool
 {
   float r0 = l0 + w0;
   if(l0 > r0)
@@ -49,13 +47,15 @@ bool Intersection(float l0, float w0, float l1, float w1, float* l_out, float* w
 }
 }
 
-bool Intersection(SDL_FRect const* a, SDL_FRect const* b)
+namespace sdl
 {
-  return Intersection(a->x, a->w, b->x, b->w, nullptr, nullptr) && Intersection(a->y, a->h, b->y, b->h, nullptr, nullptr);
+auto Intersection(SDL_FRect const* a, SDL_FRect const* b) -> bool
+{
+  return Intersects(a->x, a->w, b->x, b->w, nullptr, nullptr) && Intersects(a->y, a->h, b->y, b->h, nullptr, nullptr);
 }
 
-bool Intersection(SDL_FRect const* a, SDL_FRect const* b, SDL_FRect* ret)
+auto Intersection(SDL_FRect const* a, SDL_FRect const* b, SDL_FRect* ret) -> bool
 {
-  return Intersection(a->x, a->w, b->x, b->w, &ret->x, &ret->w) && Intersection(a->y, a->h, b->y, b->h, &ret->y, &ret->h);
+  return Intersects(a->x, a->w, b->x, b->w, &ret->x, &ret->w) && Intersects(a->y, a->h, b->y, b->h, &ret->y, &ret->h);
 }
 }

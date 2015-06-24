@@ -14,14 +14,14 @@ public:
   Body() = default;
   Body(lua::Stack& lua, class World& world);
   explicit operator bool() const;
-  bool operator<(Body const& other) const;
-  game::Position Position() const;
-  void Position(float x, float y);
-  game::Position Velocity() const;
-  void Velocity(float x, float y);
-  void Force(float x, float y);
-  void Impulse(float x, float y);
-  display::Modulation Modulation() const;
+  auto operator<(Body const& other) const -> bool;
+  auto Position() const -> game::Position;
+  auto Position(float x, float y) -> void;
+  auto Velocity() const -> game::Position;
+  auto Velocity(float x, float y) -> void;
+  auto Force(float x, float y) -> void;
+  auto Impulse(float x, float y) -> void;
+  auto Modulation() const -> display::Modulation;
   typedef memory::WeakPtr<Body, class BodyImpl> WeakPtr;
 private:
   std::shared_ptr<class BodyImpl> impl_;

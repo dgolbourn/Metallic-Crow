@@ -7,30 +7,29 @@
 #include "box_search.h"
 #include "body_impl_iterator.h"
 #include "body_impl_pair.h"
-
-static void operator*=(b2Vec3& a, b2Vec3 const& b)
+namespace
+{
+auto operator*=(b2Vec3& a, b2Vec3 const& b) -> void
 {
   a.x *= b.x;
   a.y *= b.y;
   a.z *= b.z;
 }
 
-namespace dynamics
-{
-typedef std::map<BodyImplPair, b2Vec3> AttenuationMap;
+typedef std::map<dynamics::BodyImplPair, b2Vec3> AttenuationMap;
 
 struct LightPoint
 {
-  BodyImpl* source;
+  dynamics::BodyImpl* source;
   b2Vec3 emission;
   int hops;
 };
 
 typedef std::queue<LightPoint> LightQueue;
 
-static const float32 min_illumination = .01f;
+const float32 min_illumination = .01f;
 
-static b2AABB LightBox(b2Vec3 const& emission, BodyImpl const& body)
+auto LightBox(b2Vec3 const& emission, dynamics::BodyImpl const& body) -> b2AABB
 {
   float32 max_emission = std::max({emission.x, emission.y, emission.z});
   float32 max_distance = b2Sqrt(max_emission / min_illumination);
@@ -44,30 +43,30 @@ static b2AABB LightBox(b2Vec3 const& emission, BodyImpl const& body)
   return box;
 }
 
-static float32 Distance2(b2Vec2 const& body_a, b2Vec2 const& body_b)
+auto Distance2(b2Vec2 const& body_a, b2Vec2 const& body_b) -> float32
 {
   b2Vec2 distance = body_a;
   distance -= body_b;
   return distance.LengthSquared();
 }
 
-static b2Vec3 Attenuation(b2Vec2 const& body_a, b2Vec2 const& body_b)
+auto Attenuation(b2Vec2 const& body_a, b2Vec2 const& body_b) -> b2Vec3
 {
   float32 temp = 1.f / (1.f + Distance2(body_a, body_b));
   return b2Vec3(temp, temp, temp);
 }
 
-static b2Vec3 Attenuation(BodyImpl& source, BodyImpl& target, AttenuationMap& map, b2World const& world)
+auto Attenuation(dynamics::BodyImpl& source, dynamics::BodyImpl& target, AttenuationMap& map, b2World const& world) -> b2Vec3 
 {
   b2Vec3 attenuation;
-  BodyImplPair pair = Make(&source, &target);
+  dynamics::BodyImplPair pair = Make(&source, &target);
   auto iter = map.find(pair);
   if(iter == map.end())
   {
     b2Vec2 const& source_pos = source.body_->GetPosition();
     b2Vec2 const& target_pos = target.body_->GetPosition();
     attenuation = Attenuation(source_pos, target_pos);
-    for(BodyImpl* obstacle : RaySearch(source_pos, target_pos, world))
+    for(dynamics::BodyImpl* obstacle : dynamics::RaySearch(source_pos, target_pos, world))
     {
       if(obstacle->light_.transmit && (obstacle != &target))
       {
@@ -83,9 +82,12 @@ static b2Vec3 Attenuation(BodyImpl& source, BodyImpl& target, AttenuationMap& ma
   return attenuation;
 }
 
-static const int max_hops = 3;
+const int max_hops = 3;
+}
 
-void WorldImpl::Light()
+namespace dynamics
+{
+auto WorldImpl::Light() -> void
 { 
   AttenuationMap attenuations;
   LightQueue sources;
@@ -232,7 +234,8 @@ Light::Light(lua::Stack& lua) : emit(false), transmit(false), diffuse(false), il
 
   {
     lua::Guard guard = lua.Field("intrinsic");
-    if(illuminate = lua.Check())
+    illuminate = lua.Check();
+    if(illuminate)
     {
       float32 x;
       {
@@ -259,7 +262,8 @@ Light::Light(lua::Stack& lua) : emit(false), transmit(false), diffuse(false), il
   if(illuminate)
   {
     lua::Guard guard = lua.Field("absorb");
-    if(illuminate = lua.Check())
+    illuminate = lua.Check();
+    if(illuminate)
     {
       float32 x;
       {

@@ -1,19 +1,19 @@
 #include "script_impl.h"
 #include "bind.h"
 #include "exception.h"
-namespace game
-{
-Script::Impl::Impl(display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume) : window_(window), queue_(queue), paused_(true), fade_(queue, window), begun_(false), path_(path), lua_(path), volume_(volume)
-{
-}
-
 namespace
 {
 int step_size = 1;
 double step_time = 0.1;
 }
 
-void Script::Impl::Init(boost::filesystem::path const& file)
+namespace game
+{
+Script::Impl::Impl(display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume) : window_(window), queue_(queue), paused_(true), fade_(queue, window), begun_(false), path_(path), lua_(path), volume_(volume)
+{
+}
+
+auto Script::Impl::Init(boost::filesystem::path const& file) -> void
 {
   collect_ = event::Timer(step_time, -1);
   collect_.Add(function::Bind(&Impl::Collect, shared_from_this()));
@@ -32,13 +32,13 @@ void Script::Impl::Init(boost::filesystem::path const& file)
   JointInit();
   AudioInit();
 
-  typedef void (event::Signal::*Notify)();
+  typedef void(event::Signal::*Notify)();
   lua_.Add(function::Bind((Notify)&event::Signal::operator(), signal_), "script_end", 0, "metallic_crow");
 
   lua_.Load(file);
 }
 
-void Script::Impl::Call(std::string const& call)
+auto Script::Impl::Call(std::string const& call) -> void
 {
   lua::Guard guard0 = lua_.Get("package");
   lua::Guard guard1 = lua_.Field("loaded");
@@ -50,12 +50,12 @@ void Script::Impl::Call(std::string const& call)
   }
 }
 
-void Script::Impl::Collect()
+auto Script::Impl::Collect() -> void
 {
   lua_.Collect(step_size);
 }
 
-void Script::Impl::Pause()
+auto Script::Impl::Pause() -> void
 {
   if(!paused_)
   {
@@ -69,7 +69,7 @@ void Script::Impl::Pause()
   }
 }
 
-void Script::Impl::Resume()
+auto Script::Impl::Resume() -> void
 {
   std::shared_ptr<Impl> guard = shared_from_this(); 
 
@@ -91,7 +91,7 @@ void Script::Impl::Resume()
   }
 }
 
-void Script::Impl::Render()
+auto Script::Impl::Render() -> void
 {
   if(stage_.second)
   {
@@ -103,7 +103,7 @@ void Script::Impl::Render()
   fade_.Render();
 }
 
-void Script::Impl::ChoiceUp()
+auto Script::Impl::ChoiceUp() -> void
 {
   if(stage_.second)
   {
@@ -111,7 +111,7 @@ void Script::Impl::ChoiceUp()
   }
 }
 
-void Script::Impl::ChoiceDown()
+auto Script::Impl::ChoiceDown() -> void
 {
   if(stage_.second)
   {
@@ -119,7 +119,7 @@ void Script::Impl::ChoiceDown()
   }
 }
 
-void Script::Impl::ChoiceLeft()
+auto Script::Impl::ChoiceLeft() -> void
 {
   if(stage_.second)
   {
@@ -127,7 +127,7 @@ void Script::Impl::ChoiceLeft()
   }
 }
 
-void Script::Impl::ChoiceRight()
+auto Script::Impl::ChoiceRight() -> void
 {
   if(stage_.second)
   {
@@ -135,7 +135,7 @@ void Script::Impl::ChoiceRight()
   }
 }
 
-void Script::Impl::Control(float x, float y)
+auto Script::Impl::Control(float x, float y) -> void
 {
   lua::Guard guard0 = lua_.Get("package");
   lua::Guard guard1 = lua_.Field("loaded");
@@ -149,52 +149,52 @@ void Script::Impl::Control(float x, float y)
   }
 }
 
-void Script::Impl::Add(event::Command const& command)
+auto Script::Impl::Add(event::Command const& command) -> void
 {
   signal_.Add(command);
 }
 
-void Script::Pause()
+auto Script::Pause() -> void
 {
   impl_->Pause();
 }
 
-void Script::Resume()
+auto Script::Resume() -> void
 {
   impl_->Resume();
 }
 
-void Script::Render()
+auto Script::Render() -> void
 {
   impl_->Render();
 }
 
-void Script::ChoiceUp()
+auto Script::ChoiceUp() -> void
 {
   impl_->ChoiceUp();
 }
 
-void Script::ChoiceDown()
+auto Script::ChoiceDown() -> void
 {
   impl_->ChoiceDown();
 }
 
-void Script::ChoiceLeft()
+auto Script::ChoiceLeft() -> void
 {
   impl_->ChoiceLeft();
 }
 
-void Script::ChoiceRight()
+auto Script::ChoiceRight() -> void
 {
   impl_->ChoiceRight();
 }
 
-void Script::Control(float x, float y)
+auto Script::Control(float x, float y) -> void
 {
   impl_->Control(x, y);
 }
 
-void Script::Add(event::Command const& command)
+auto Script::Add(event::Command const& command) -> void
 {
   impl_->Add(command);
 }

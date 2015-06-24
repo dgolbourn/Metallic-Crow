@@ -4,8 +4,6 @@
 #include "exception.h"
 #include "animation.h"
 #include "timer.h"
-namespace game
-{
 namespace
 {
 struct Animation
@@ -29,21 +27,23 @@ Animation::Animation(display::Animation const& animation, display::BoundingBox c
 typedef std::vector<Animation> Animations;
 }
 
+namespace game
+{
 class Scenery::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
   Impl(lua::Stack& lua, display::Window& window, int& plane, boost::filesystem::path const& path);
-  void Init(Scene& scene, event::Queue&, int plane);
-  void Render() const;
-  void Next();
-  void Modulation(float r, float g, float b, float a);
+  auto Init(Scene& scene, event::Queue&, int plane) -> void;
+  auto Render() const -> void;
+  auto Next() -> void;
+  auto Modulation(float r, float g, float b, float a) -> void;
   event::Timer timer_;
   Animations animations_;
   float parallax_;
   display::Modulation modulation_;
 };
 
-void Scenery::Impl::Render() const
+auto Scenery::Impl::Render() const -> void
 {
   for(auto& animation : animations_)
   {
@@ -51,7 +51,7 @@ void Scenery::Impl::Render() const
   }
 }
 
-void Scenery::Impl::Next()
+auto Scenery::Impl::Next() -> void
 {
   for(auto& animation : animations_)
   {
@@ -64,7 +64,7 @@ void Scenery::Impl::Next()
   }
 }
 
-void Scenery::Impl::Modulation(float r, float g, float b, float a)
+auto Scenery::Impl::Modulation(float r, float g, float b, float a) -> void
 {
   modulation_ = display::Modulation(r, g, b, a);
 }
@@ -85,7 +85,6 @@ Scenery::Impl::Impl(lua::Stack& lua, display::Window& window, int& plane, boost:
     lua::Guard guard = lua.Field("modulation");
     modulation_ = display::Modulation(lua);
   }
- 
   
   {
     lua::Guard guard = lua.Field("animations");
@@ -124,7 +123,7 @@ Scenery::Impl::Impl(lua::Stack& lua, display::Window& window, int& plane, boost:
   timer_ = event::Timer(interval, -1);
 }
 
-void Scenery::Impl::Init(Scene& scene, event::Queue& queue, int plane)
+auto Scenery::Impl::Init(Scene& scene, event::Queue& queue, int plane) -> void
 {
   queue.Add(function::Bind(&event::Timer::operator(), timer_));
   timer_.Add(function::Bind(&Impl::Next, shared_from_this()));
@@ -138,7 +137,7 @@ Scenery::Scenery(lua::Stack& lua, event::Queue& queue, display::Window& window, 
   impl_->Init(scene, queue, plane);
 }
 
-void Scenery::Modulation(float r, float g, float b, float a)
+auto Scenery::Modulation(float r, float g, float b, float a) -> void
 {
   impl_->Modulation(r, g, b, a);
 }

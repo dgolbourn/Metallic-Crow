@@ -3,20 +3,20 @@
 #include <set>
 #include "signal.h"
 #include "bind.h"
-namespace collision
-{
 namespace
 {
 typedef std::map<std::string, std::set<dynamics::Body::WeakPtr>> Members;
 typedef std::map<std::string, std::map<std::string, std::pair<event::Signal, event::Signal>>> Collisions;
 }
 
+namespace collision
+{
 class Group::Impl
 {
 public:
   Impl(lua::Stack& lua, Collision const& collision);
-  void Add(std::string const& group_a, std::string const& group_b, event::Command const& command, bool begin);
-  void Add(std::string const& group_a, dynamics::Body const& body_a);
+  auto Add(std::string const& group_a, std::string const& group_b, event::Command const& command, bool begin) -> void;
+  auto Add(std::string const& group_a, dynamics::Body const& body_a) -> void;
   Members members_;
   Collisions collisions_;
   Collision collision_;
@@ -46,7 +46,7 @@ Group::Impl::Impl(lua::Stack& lua, Collision const& collision) : collision_(coll
   }
 }
 
-void Group::Impl::Add(std::string const& group_a, std::string const& group_b, event::Command const& command, bool begin)
+auto Group::Impl::Add(std::string const& group_a, std::string const& group_b, event::Command const& command, bool begin) -> void
 {
   auto iter_a = collisions_.find(group_a);
   if(iter_a != collisions_.end())
@@ -66,7 +66,7 @@ void Group::Impl::Add(std::string const& group_a, std::string const& group_b, ev
   }
 }
 
-void Group::Impl::Add(std::string const& group_a, dynamics::Body const& body_a)
+auto Group::Impl::Add(std::string const& group_a, dynamics::Body const& body_a) -> void
 {
   auto members_iter = members_.find(group_a);
   if(members_iter != members_.end())
@@ -104,17 +104,17 @@ void Group::Impl::Add(std::string const& group_a, dynamics::Body const& body_a)
   }
 }
 
-void Group::Begin(std::string const& group_a, std::string const& group_b, event::Command const& command)
+auto Group::Begin(std::string const& group_a, std::string const& group_b, event::Command const& command) -> void
 {
   impl_->Add(group_a, group_b, command, true);
 }
 
-void Group::End(std::string const& group_a, std::string const& group_b, event::Command const& command)
+auto Group::End(std::string const& group_a, std::string const& group_b, event::Command const& command) -> void
 {
   impl_->Add(group_a, group_b, command, false);
 }
 
-void Group::Add(std::string const& group_a, dynamics::Body const& body_a)
+auto Group::Add(std::string const& group_a, dynamics::Body const& body_a) -> void
 {
   impl_->Add(group_a, body_a);
 }

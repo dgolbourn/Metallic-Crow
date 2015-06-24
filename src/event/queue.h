@@ -8,10 +8,11 @@ class Queue
 {
 public:
   Queue();
-  void Add(Command const& command);
-  void operator()();
+  auto Add(Command const& command) -> void;
+  auto operator()() -> void;
 private:
-  std::shared_ptr<class QueueImpl> impl_;
+  class Impl;
+  std::shared_ptr<Impl> impl_;
 };
 }
 #endif

@@ -2,7 +2,7 @@
 #include "SDL_image.h"
 namespace img
 {
-std::string Error()
+auto Error() -> std::string
 {
   return IMG_GetError();
 }

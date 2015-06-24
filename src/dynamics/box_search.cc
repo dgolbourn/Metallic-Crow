@@ -6,7 +6,7 @@ BoxSearch::BoxSearch(b2AABB const& box, b2World const& world)
   world.QueryAABB(this, box);
 }
 
-bool BoxSearch::ReportFixture(b2Fixture* fixture)
+auto BoxSearch::ReportFixture(b2Fixture* fixture) -> bool
 {
   if(b2Body* body = fixture->GetBody())
   {
@@ -18,12 +18,12 @@ bool BoxSearch::ReportFixture(b2Fixture* fixture)
   return true;
 }
 
-BoxSearch::Iterator BoxSearch::begin()
+auto BoxSearch::begin() -> BoxSearch::Iterator
 {
   return impl_.begin();
 }
   
-BoxSearch::Iterator BoxSearch::end()
+auto BoxSearch::end() -> BoxSearch::Iterator
 {
   return impl_.end();
 }

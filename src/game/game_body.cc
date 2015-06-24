@@ -30,17 +30,17 @@ class Body::Impl
 {
 public:
   Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes, Feature const& mouth);
-  double Expression(std::string const& expression, bool left_facing);
-  double Expression(std::string const& expression);
-  double Expression(bool left_facing);
-  double Expression();
-  double Next();
-  double Period() const;
-  void Position(game::Position const& position);
-  game::Position Position() const;
-  void Modulation(float r, float g, float b, float a);
-  display::Modulation Modulation() const;
-  void Render();
+  auto Expression(std::string const& expression, bool left_facing) -> double;
+  auto Expression(std::string const& expression) -> double;
+  auto Expression(bool left_facing) -> double;
+  auto Expression() -> double;
+  auto Next() -> double;
+  auto Period() const -> double;
+  auto Position(game::Position const& position) -> void;
+  auto Position() const -> game::Position;
+  auto Modulation(float r, float g, float b, float a) -> void;
+  auto Modulation() const -> display::Modulation;
+  auto Render() -> void;
  
   Frames::Map expressions_;
   Frames::Map::iterator current_frames_;
@@ -266,26 +266,26 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
   }
 }
 
-double Body::Impl::Expression(std::string const& expression, bool left_facing)
+auto Body::Impl::Expression(std::string const& expression, bool left_facing) -> double
 {
   state_.first = expression;
   state_.second = left_facing;
   return Expression();
 }
 
-double Body::Impl::Expression(std::string const& expression)
+auto Body::Impl::Expression(std::string const& expression) -> double
 {
   state_.first = expression;
   return Expression();
 }
 
-double Body::Impl::Expression(bool left_facing)
+auto Body::Impl::Expression(bool left_facing) -> double
 {
   state_.second = left_facing;
   return Expression();
 }
 
-double Body::Impl::Expression()
+auto Body::Impl::Expression() -> double
 {
   auto next = expressions_.find(state_);
   if(next != expressions_.end())
@@ -313,7 +313,7 @@ double Body::Impl::Expression()
   return current_frame_->period_;
 }
 
-double Body::Impl::Next()
+auto Body::Impl::Next() -> double
 {
   ++current_frame_;
   if(current_frame_ == current_frames_->second.frames_.end())
@@ -339,17 +339,17 @@ double Body::Impl::Next()
   return current_frame_->period_;
 }
 
-double Body::Impl::Period() const
+auto Body::Impl::Period() const -> double
 {
   return current_frame_->period_;
 }
 
-void Body::Impl::Render()
+auto Body::Impl::Render() -> void
 {
   current_frame_->scene_.Render();
 }
 
-void Body::Impl::Position(game::Position const& position)
+auto Body::Impl::Position(game::Position const& position) -> void
 {
   position_ = position;
   for(auto& box : current_frame_->boxes_)
@@ -359,12 +359,12 @@ void Body::Impl::Position(game::Position const& position)
   }
 }
 
-game::Position Body::Impl::Position() const
+auto Body::Impl::Position() const -> game::Position
 {
   return position_;
 }
 
-void Body::Impl::Modulation(float r, float g, float b, float a)
+auto Body::Impl::Modulation(float r, float g, float b, float a) -> void
 {
   modulation_.r(r);
   modulation_.g(g);
@@ -372,7 +372,7 @@ void Body::Impl::Modulation(float r, float g, float b, float a)
   modulation_.a(a);
 }
 
-display::Modulation Body::Impl::Modulation() const
+auto Body::Impl::Modulation() const -> display::Modulation
 {
   return display::Modulation(modulation_.r(), modulation_.g(), modulation_.b(), modulation_.a());
 }
@@ -381,56 +381,55 @@ Body::Body(lua::Stack& lua, display::Window& window, boost::filesystem::path con
 {
 }
 
-double Body::Expression(std::string const& expression, bool left_facing)
+auto Body::Expression(std::string const& expression, bool left_facing) -> double
 {
   return impl_->Expression(expression, left_facing);
 }
 
-double Body::Expression(bool left_facing)
+auto Body::Expression(bool left_facing) -> double
 {
   return impl_->Expression(left_facing);
 }
 
-double Body::Expression(std::string const& expression)
+auto Body::Expression(std::string const& expression) -> double
 {
   return impl_->Expression(expression);
 }
 
-double Body::Next()
+auto Body::Next() -> double
 {
   return impl_->Next();
 }
 
-void Body::Render()
+auto Body::Render() -> void
 {
   impl_->Render();
 }
 
-void Body::Position(game::Position const& position)
+auto Body::Position(game::Position const& position) -> void
 {
   impl_->Position(position);
 }
 
-game::Position Body::Position() const
+auto Body::Position() const -> game::Position
 {
   return impl_->Position();
 }
 
-void Body::Modulation(float r, float g, float b, float a)
+auto Body::Modulation(float r, float g, float b, float a) -> void
 {
   impl_->Modulation(r, g, b, a);
 }
 
-display::Modulation Body::Modulation() const
+auto Body::Modulation() const -> display::Modulation
 {
   return impl_->Modulation();
 }
 
-double Body::Period() const
+auto Body::Period() const -> double
 {
   return impl_->Period();
 }
-
 
 Body::operator bool() const
 {

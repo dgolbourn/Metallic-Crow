@@ -11,10 +11,10 @@ class Feature
 public:
   Feature() = default;
   Feature(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path);
-  void Expression(std::string const& expression, int index);
-  void Expression(std::string const& expression);
-  void Expression(int index);
-  bool operator()(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, bool facing) const;
+  auto Expression(std::string const& expression, int index) -> void;
+  auto Expression(std::string const& expression) -> void;
+  auto Expression(int index) -> void;
+  auto operator()(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, bool facing) const -> bool;
   explicit operator bool() const;
 private:
   class Impl;

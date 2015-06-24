@@ -9,7 +9,7 @@ BodyImpl::Iterator::Iterator(BodyImpl* impl) : impl_(impl)
 {
 }
 
-void BodyImpl::Iterator::increment()
+auto BodyImpl::Iterator::increment() -> void
 {
   if(impl_)
   {
@@ -19,7 +19,7 @@ void BodyImpl::Iterator::increment()
       body = body->GetNext();
       if(body)
       {
-        impl_ = (BodyImpl*)body->GetUserData();
+        impl_ = static_cast<BodyImpl*>(body->GetUserData());
       }
       else
       {
@@ -29,18 +29,18 @@ void BodyImpl::Iterator::increment()
   }
 }
 
-bool BodyImpl::Iterator::equal(Iterator const& other) const
+auto BodyImpl::Iterator::equal(Iterator const& other) const -> bool
 {
   return impl_ == other.impl_;
 }
 
-BodyImpl& BodyImpl::Iterator::dereference() const
+auto BodyImpl::Iterator::dereference() const -> BodyImpl&
 { 
   return *impl_; 
 }
 }
 
-dynamics::BodyImpl::Iterator begin(b2World const& world)
+auto begin(b2World const& world) -> dynamics::BodyImpl::Iterator
 {
   dynamics::BodyImpl* impl = nullptr;
   if(b2Body const* body = world.GetBodyList())
@@ -50,7 +50,7 @@ dynamics::BodyImpl::Iterator begin(b2World const& world)
   return dynamics::BodyImpl::Iterator(impl);
 }
 
-dynamics::BodyImpl::Iterator end(b2World const&)
+auto end(b2World const&) -> dynamics::BodyImpl::Iterator
 {
   return dynamics::BodyImpl::Iterator();
 }

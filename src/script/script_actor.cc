@@ -2,7 +2,7 @@
 #include "bind.h"
 namespace game
 {
-void Script::Impl::ActorInit()
+auto Script::Impl::ActorInit() -> void
 {
   lua_.Add(function::Bind(&Impl::ActorLoad, shared_from_this()), "actor_load", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ActorFree, shared_from_this()), "actor_free", 0, "metallic_crow");
@@ -17,7 +17,7 @@ void Script::Impl::ActorInit()
   lua_.Add(function::Bind(&Impl::ActorDilation, shared_from_this()), "actor_dilation", 0, "metallic_crow");
 }
 
-void Script::Impl::ActorLoad()
+auto Script::Impl::ActorLoad() -> void
 {
   StagePtr stage;
   {
@@ -46,7 +46,7 @@ void Script::Impl::ActorLoad()
   }
 }
 
-void Script::Impl::ActorFree()
+auto Script::Impl::ActorFree() -> void
 {  
   StagePtr stage;
   {
@@ -64,7 +64,7 @@ void Script::Impl::ActorFree()
   }
 }
 
-void Script::Impl::ActorBody()
+auto Script::Impl::ActorBody() -> void
 {
   StagePtr stage;
   {
@@ -113,7 +113,7 @@ void Script::Impl::ActorBody()
   }
 }
 
-void Script::Impl::ActorEyes()
+auto Script::Impl::ActorEyes() -> void
 {
   StagePtr stage;
   {
@@ -141,7 +141,7 @@ void Script::Impl::ActorEyes()
   }
 }
 
-void Script::Impl::ActorMouth()
+auto Script::Impl::ActorMouth() -> void
 {
   StagePtr stage;
   {
@@ -169,7 +169,7 @@ void Script::Impl::ActorMouth()
   }
 }
 
-void Script::Impl::ActorPosition()
+auto Script::Impl::ActorPosition() -> void
 {
   StagePtr stage;
   {
@@ -202,7 +202,7 @@ void Script::Impl::ActorPosition()
   }
 }
 
-void Script::Impl::ActorVelocity()
+auto Script::Impl::ActorVelocity() -> void
 {
   StagePtr stage;
   {
@@ -235,7 +235,7 @@ void Script::Impl::ActorVelocity()
   }
 }
 
-void Script::Impl::ActorForce()
+auto Script::Impl::ActorForce() -> void
 {
   StagePtr stage;
   {
@@ -268,7 +268,7 @@ void Script::Impl::ActorForce()
   }
 }
 
-void Script::Impl::ActorImpulse()
+auto Script::Impl::ActorImpulse() -> void
 {
   StagePtr stage;
   {
@@ -301,7 +301,7 @@ void Script::Impl::ActorImpulse()
   }
 }
 
-void Script::Impl::ActorModulation()
+auto Script::Impl::ActorModulation() -> void
 {
   StagePtr stage;
   {
@@ -344,7 +344,7 @@ void Script::Impl::ActorModulation()
   }
 }
 
-void Script::Impl::ActorDilation()
+auto Script::Impl::ActorDilation() -> void
 {
   StagePtr stage;
   {

@@ -13,14 +13,14 @@ class Menu
 public:
   Menu() = default;
   Menu(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path);
-  void Add(int index, event::Command const& command);
-  void Previous();
-  void Next();
-  void Select();
-  void Render() const;
+  auto Add(int index, event::Command const& command) -> void;
+  auto Previous() -> void;
+  auto Next() -> void;
+  auto Select() -> void;
+  auto Render() const -> void;
   typedef std::vector<std::string> Options;
-  void operator()(Options const& options);
-  void operator[](int index);
+  auto operator()(Options const& options) -> void;
+  auto operator[](int index) -> void;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

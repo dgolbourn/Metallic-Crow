@@ -59,7 +59,7 @@ public:
   }
 };
 
-float Transform(float x, float new_origin, float width, float zoom, float parallax)
+auto Transform(float x, float new_origin, float width, float zoom, float parallax) -> float
 {
   float w = .5f * width;
   x -= parallax * new_origin;
@@ -72,7 +72,7 @@ float Transform(float x, float new_origin, float width, float zoom, float parall
 
 namespace sdl
 {
-void Render(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, SDL_FRect const* original, double angle, SDL_Colour const* modulation)
+auto Render(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, SDL_FRect const* original, double angle, SDL_Colour const* modulation) -> void
 {
   SDL_FPoint centre;
   centre.x = .5f * original->w - original->x + destination->x;
@@ -91,7 +91,7 @@ void Render(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source
   }
 }
 
-void Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source_ptr, SDL_FRect const* destination_ptr, SDL_FPoint view, float zoom, float parallax, bool tile, double angle, SDL_Colour const* modulation, float scale)
+auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source_ptr, SDL_FRect const* destination_ptr, SDL_FPoint view, float zoom, float parallax, bool tile, double angle, SDL_Colour const* modulation, float scale) -> void
 {
   bool render = true;
   SDL_Rect source = {0, 0, texture->w, texture->h};

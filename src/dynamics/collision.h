@@ -11,14 +11,14 @@ class Collision
 public:
   Collision() = default;
   Collision(event::Queue& queue);
-  void Begin(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c);
-  void End(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c);
-  void Link(dynamics::Body const& a, dynamics::Body const& b);
-  bool Check(dynamics::Body const& a, dynamics::Body const& b) const;
-  void Begin(dynamics::Body const& a, dynamics::Body const& b);
-  void End(dynamics::Body const& a, dynamics::Body const& b);
-  void Unlink(dynamics::Body::WeakPtr const& a);
-  void Unlink(dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b);
+  auto Begin(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c) -> void;
+  auto End(dynamics::Body const& a, dynamics::Body const& b, event::Command const& c) -> void;
+  auto Link(dynamics::Body const& a, dynamics::Body const& b) -> void;
+  auto Check(dynamics::Body const& a, dynamics::Body const& b) const -> bool;
+  auto Begin(dynamics::Body const& a, dynamics::Body const& b) -> void;
+  auto End(dynamics::Body const& a, dynamics::Body const& b) -> void;
+  auto Unlink(dynamics::Body::WeakPtr const& a) -> void;
+  auto Unlink(dynamics::Body::WeakPtr const& a, dynamics::Body::WeakPtr const& b) -> void;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

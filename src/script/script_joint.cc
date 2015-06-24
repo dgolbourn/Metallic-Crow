@@ -2,13 +2,13 @@
 #include "bind.h"
 namespace game
 {
-void Script::Impl::JointInit()
+auto Script::Impl::JointInit() -> void
 {
   lua_.Add(function::Bind(&Impl::JointLoad, shared_from_this()), "joint_load", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::JointFree, shared_from_this()), "joint_free", 0, "metallic_crow");
 }
 
-void Script::Impl::JointLoad()
+auto Script::Impl::JointLoad() -> void
 {
   StagePtr stage;
   {
@@ -45,7 +45,7 @@ void Script::Impl::JointLoad()
   }
 }
 
-void Script::Impl::JointFree()
+auto Script::Impl::JointFree() -> void
 {
   StagePtr stage;
   {

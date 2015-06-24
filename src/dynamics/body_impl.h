@@ -17,17 +17,16 @@ class BodyImpl final : public std::enable_shared_from_this<BodyImpl>
 public:
   BodyImpl(lua::Stack& lua, World& world);
   ~BodyImpl();
-  game::Position Position() const;
-  void Position(float x, float y);
-  game::Position Velocity() const;
-  void Velocity(float x, float y);
-  void Force(float x, float y);
-  void Impulse(float x, float y);
-  void Begin();
-  void End(float32 dt);
-  void Update(float32 ds);
-  display::Modulation Modulation() const;
-
+  auto Position() const -> game::Position;
+  auto Position(float x, float y) -> void;
+  auto Velocity() const -> game::Position;
+  auto Velocity(float x, float y) -> void;
+  auto Force(float x, float y) -> void;
+  auto Impulse(float x, float y) -> void;
+  auto Begin() -> void;
+  auto End(float32 dt) -> void;
+  auto Update(float32 ds) -> void;
+  auto Modulation() const -> display::Modulation;
   static Body MakeBody(b2Body* body);
   World::WeakPtr world_;
   b2Body* body_;

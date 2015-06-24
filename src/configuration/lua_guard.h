@@ -1,3 +1,5 @@
+#ifndef LUA_GUARD_H_
+#define LUA_GUARD_H_
 #include<memory>
 namespace lua
 {
@@ -17,3 +19,4 @@ public:
   ~Guard();
 };
 }
+#endif

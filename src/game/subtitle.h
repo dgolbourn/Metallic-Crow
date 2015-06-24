@@ -11,9 +11,9 @@ class Subtitle
 public:
   Subtitle() = default;
   Subtitle(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path);
-  void operator()(std::string const& text);
-  void Modulation(float r, float g, float b, float a);
-  void Render() const;
+  auto operator()(std::string const& text) -> void;
+  auto Modulation(float r, float g, float b, float a) -> void;
+  auto Render() const -> void;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;

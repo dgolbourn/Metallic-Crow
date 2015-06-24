@@ -1,11 +1,13 @@
 #include "ttf_library.h"
 #include "SDL_ttf.h"
 #include "ttf_exception.h"
+namespace
+{
+int reference_count = 0;
+}
 
 namespace ttf
 {
-static int reference_count;
-
 Library::Library()
 {
   if(!TTF_WasInit() && TTF_Init()==-1) 

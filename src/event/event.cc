@@ -33,6 +33,14 @@ struct ControllerTemp
 };
 
 typedef std::map<Sint32, ControllerTemp> ControllerTempMap;
+
+auto GetScanCodeField(lua::Stack& lua, std::string const& field) -> SDL_Scancode 
+{
+  int temp;
+  lua::Guard guard = lua.Field(field);
+  lua.Pop(temp);
+  return SDL_Scancode(temp);
+}
 }
 
 namespace event
@@ -42,16 +50,16 @@ class Event::Impl
 public:
   Impl(lua::Stack& lua);
   ~Impl();
-  void Check();
-  void Control(Command const& command);
-  void ChoiceUp(event::Command const& command);
-  void ChoiceDown(event::Command const& command);
-  void ChoiceLeft(event::Command const& command);
-  void ChoiceRight(event::Command const& command);
-  void Select(event::Command const& command);
-  void Back(event::Command const& command);
-  void Quit(event::Command const& command);
-  void Destroy() noexcept;
+  auto Check() ->void;
+  auto Control(Command const& command) -> void;
+  auto ChoiceUp(event::Command const& command) -> void;
+  auto ChoiceDown(event::Command const& command) -> void;
+  auto ChoiceLeft(event::Command const& command) -> void;
+  auto ChoiceRight(event::Command const& command) -> void;
+  auto Select(event::Command const& command) -> void;
+  auto Back(event::Command const& command) -> void;
+  auto Quit(event::Command const& command) -> void;
+  auto Destroy() noexcept -> void;
   sdl::Library sdl_;
   Commands report_;
   Signal choice_up_;
@@ -86,7 +94,7 @@ public:
   bool key_state_right_;
 };
 
-void Event::Impl::Destroy() noexcept
+auto Event::Impl::Destroy() noexcept -> void
 {
   try
   {
@@ -106,55 +114,44 @@ Event::Impl::~Impl()
   Destroy();
 }
 
-void Event::Impl::Control(Command const& command)
+auto Event::Impl::Control(Command const& command) -> void
 {
   report_.push_back(command);
 }
 
-void Event::Impl::ChoiceUp(event::Command const& command)
+auto Event::Impl::ChoiceUp(event::Command const& command) -> void
 {
   choice_up_.Add(command);
 }
 
-void Event::Impl::ChoiceDown(event::Command const& command)
+auto Event::Impl::ChoiceDown(event::Command const& command) -> void
 {
   choice_down_.Add(command);
 }
 
-void Event::Impl::ChoiceLeft(event::Command const& command)
+auto Event::Impl::ChoiceLeft(event::Command const& command) -> void
 {
   choice_left_.Add(command);
 }
 
-void Event::Impl::ChoiceRight(event::Command const& command)
+auto Event::Impl::ChoiceRight(event::Command const& command) -> void
 {
   choice_right_.Add(command);
 }
 
-void Event::Impl::Select(event::Command const& command)
+auto Event::Impl::Select(event::Command const& command) -> void
 {
   select_.Add(command);
 }
 
-void Event::Impl::Back(event::Command const& command)
+auto Event::Impl::Back(event::Command const& command) -> void
 {
   back_.Add(command);
 }
 
-void Event::Impl::Quit(event::Command const& command)
+auto Event::Impl::Quit(event::Command const& command) -> void
 {
   quit_.Add(command);
-}
-
-namespace
-{
-SDL_Scancode GetScanCodeField(lua::Stack& lua, std::string const& field)
-{
-  int temp;
-  lua::Guard guard = lua.Field(field);
-  lua.Pop(temp);
-  return SDL_Scancode(temp);
-}
 }
 
 Event::Impl::Impl(lua::Stack& lua) : sdl_(SDL_INIT_EVENTS | SDL_INIT_GAMECONTROLLER), x_report_(0.f), y_report_(0.f), x_key_(0.f), y_key_(0.f), key_state_up_(false), key_state_down_(false), key_state_left_(false), key_state_right_(false)
@@ -221,7 +218,7 @@ Event::Impl::Impl(lua::Stack& lua) : sdl_(SDL_INIT_EVENTS | SDL_INIT_GAMECONTROL
   }
 }
 
-void Event::Impl::Check()
+auto Event::Impl::Check() -> void
 {
   ControllerTempMap controllers;
   bool key = false;
@@ -568,47 +565,47 @@ Event::Event(lua::Stack& lua) : impl_(std::make_shared<Impl>(lua))
 {
 }
 
-void Event::operator()()
+auto Event::operator()() -> void
 {
   impl_->Check();
 }
 
-void Event::Control(Command const& command)
+auto Event::Control(Command const& command) -> void
 {
   impl_->Control(command);
 }
 
-void Event::ChoiceUp(event::Command const& command)
+auto Event::ChoiceUp(event::Command const& command) -> void
 {
   impl_->ChoiceUp(command);
 }
 
-void Event::ChoiceDown(event::Command const& command)
+auto Event::ChoiceDown(event::Command const& command) -> void
 {
   impl_->ChoiceDown(command);
 }
 
-void Event::ChoiceLeft(event::Command const& command)
+auto Event::ChoiceLeft(event::Command const& command) -> void
 {
   impl_->ChoiceLeft(command);
 }
 
-void Event::ChoiceRight(event::Command const& command)
+auto Event::ChoiceRight(event::Command const& command) -> void
 {
   impl_->ChoiceRight(command);
 }
 
-void Event::Select(event::Command const& command)
+auto Event::Select(event::Command const& command) -> void
 {
   impl_->Select(command);
 }
 
-void Event::Back(event::Command const& command)
+auto Event::Back(event::Command const& command) -> void
 {
   impl_->Back(command);
 }
 
-void Event::Quit(event::Command const& command)
+auto Event::Quit(event::Command const& command) -> void
 {
   impl_->Quit(command);
 }

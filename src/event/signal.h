@@ -10,10 +10,10 @@ class Signal
 {
 public:
   Signal();
-  void operator()();
-  void operator()(Queue& queue);
-  void Add(Command const& command);
-  void Clear();
+  auto operator()() -> void;
+  auto operator()(Queue& queue) -> void;
+  auto Add(Command const& command) -> void;
+  auto Clear() -> void;
   explicit operator bool() const;
 private:
   class Impl;

@@ -13,15 +13,15 @@ class Script
 public:
   Script() = default;
   Script(boost::filesystem::path const& file, display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume);
-  void Pause();
-  void Resume();
-  void Render();
-  void ChoiceUp();
-  void ChoiceDown();
-  void ChoiceLeft();
-  void ChoiceRight();
-  void Control(float x, float y);
-  void Add(event::Command const& command);
+  auto Pause() -> void;
+  auto Resume() -> void;
+  auto Render() -> void;
+  auto ChoiceUp() -> void;
+  auto ChoiceDown() -> void;
+  auto ChoiceLeft() -> void;
+  auto ChoiceRight() -> void;
+  auto Control(float x, float y) -> void;
+  auto Add(event::Command const& command) -> void;
   explicit operator bool() const;
 private:
   class Impl;

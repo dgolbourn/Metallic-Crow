@@ -3,6 +3,6 @@
 #include "SDL_stdinc.h"
 namespace sdl
 {
-Uint8 Colour(float colour);
+auto Colour(float colour) -> Uint8;
 }
 #endif

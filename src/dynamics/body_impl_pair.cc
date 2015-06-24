@@ -1,7 +1,7 @@
 #include "body_impl_pair.h"
 namespace dynamics
 {
-BodyImplPair Make(BodyImpl* body_a, BodyImpl* body_b)
+auto Make(BodyImpl* body_a, BodyImpl* body_b) -> BodyImplPair
 {
   BodyImplPair ret;
   if(body_a < body_b)

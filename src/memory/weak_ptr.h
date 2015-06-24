@@ -13,14 +13,14 @@ public:
   {
   }
 
-  T Lock() const
+  auto Lock() const -> T
   {
     T object;
     object.impl_ = impl_.lock();
     return object;
   }
 
-  bool operator<(WeakPtr const& other) const
+  auto operator<(WeakPtr const& other) const -> bool
   {
     return impl_.owner_before(other.impl_);
   }

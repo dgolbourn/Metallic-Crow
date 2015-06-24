@@ -3,27 +3,13 @@
 #include "body_impl.h"
 #include "bind.h"
 #include "body_impl_iterator.h"
-namespace dynamics
+namespace
 {
-void WorldImpl::SayGoodbye(b2Joint* joint)
+bool ToggleContact(b2Contact* contact, dynamics::BodyImplCount& contacts, bool begin)
 {
-  joint->SetUserData(nullptr);
-}
-
-void WorldImpl::SayGoodbye(b2Fixture*)
-{
-}
-
-bool WorldImpl::ShouldCollide(b2Fixture* fixtureA, b2Fixture* fixtureB)
-{
-  return collision_.Check(BodyImpl::MakeBody(fixtureA->GetBody()), BodyImpl::MakeBody(fixtureB->GetBody()));
-}
-
-static bool ToggleContact(b2Contact* contact, BodyImplCount& contacts, bool begin)
-{
-  BodyImpl* body_a = (BodyImpl*)contact->GetFixtureA()->GetBody()->GetUserData();
-  BodyImpl* body_b = (BodyImpl*)contact->GetFixtureB()->GetBody()->GetUserData();
-  BodyImplPair pair = Make(body_a, body_b);
+  dynamics::BodyImpl* body_a = static_cast<dynamics::BodyImpl*>(contact->GetFixtureA()->GetBody()->GetUserData());
+  dynamics::BodyImpl* body_b = static_cast<dynamics::BodyImpl*>(contact->GetFixtureB()->GetBody()->GetUserData());
+  dynamics::BodyImplPair pair = dynamics::Make(body_a, body_b);
   bool trigger = false;
   auto iter = contacts.find(pair);
   if(begin)
@@ -56,8 +42,25 @@ static bool ToggleContact(b2Contact* contact, BodyImplCount& contacts, bool begi
   }
   return trigger;
 }
+}
 
-void WorldImpl::BeginContact(b2Contact* contact)
+namespace dynamics
+{
+auto WorldImpl::SayGoodbye(b2Joint* joint) -> void
+{
+  joint->SetUserData(nullptr);
+}
+
+auto WorldImpl::SayGoodbye(b2Fixture*) -> void
+{
+}
+
+auto WorldImpl::ShouldCollide(b2Fixture* fixtureA, b2Fixture* fixtureB) -> bool
+{
+  return collision_.Check(BodyImpl::MakeBody(fixtureA->GetBody()), BodyImpl::MakeBody(fixtureB->GetBody()));
+}
+
+auto WorldImpl::BeginContact(b2Contact* contact) -> void
 {
   if(ToggleContact(contact, contact_, true))
   {
@@ -65,7 +68,7 @@ void WorldImpl::BeginContact(b2Contact* contact)
   }
 }
 
-void WorldImpl::EndContact(b2Contact* contact)
+auto WorldImpl::EndContact(b2Contact* contact) -> void
 {
   if(ToggleContact(contact, contact_, false))
   {
@@ -73,7 +76,7 @@ void WorldImpl::EndContact(b2Contact* contact)
   }
 }
 
-void WorldImpl::Update()
+auto WorldImpl::Update() -> void
 {
   if(!paused_)
   {
@@ -107,8 +110,8 @@ void WorldImpl::Update()
       Light();
     }
 
-    static const float32 scale = float32(Clock::period::num) / float32(Clock::period::den);
-    float32 ds = (float32)elapsed.count() * scale / dt_;
+    static const float32 scale = static_cast<float32>(Clock::period::num) / static_cast<float32>(Clock::period::den);
+    float32 ds = static_cast<float32>(elapsed.count()) * scale / dt_;
 
     for(auto& body : world_)
     {
@@ -119,12 +122,12 @@ void WorldImpl::Update()
   }
 }
 
-void WorldImpl::Begin(event::Command const& command)
+auto WorldImpl::Begin(event::Command const& command) -> void
 {
   begin_.Add(command);
 }
 
-void WorldImpl::End(event::Command const& command)
+auto WorldImpl::End(event::Command const& command) -> void
 {
   end_.Add(command);
 }
@@ -193,12 +196,12 @@ WorldImpl::WorldImpl(lua::Stack& lua, collision::Collision& collision) : world_(
   world_.SetDestructionListener(this);
 }
 
-void WorldImpl::Init(event::Queue& queue)
+auto WorldImpl::Init(event::Queue& queue) -> void
 {
   queue.Add(function::Bind(&WorldImpl::Update, shared_from_this()));
 }
 
-void WorldImpl::Pause()
+auto WorldImpl::Pause() -> void
 {
   if(!paused_)
   {
@@ -207,7 +210,7 @@ void WorldImpl::Pause()
   }
 }
 
-void WorldImpl::Resume()
+auto WorldImpl::Resume() -> void
 {
   if(paused_)
   {
@@ -216,19 +219,19 @@ void WorldImpl::Resume()
   }
 }
 
-void WorldImpl::Ambient(float r, float g, float b)
+auto WorldImpl::Ambient(float r, float g, float b) -> void
 {
-  ambient_.Set(float32(r), float32(g), float32(b));
+  ambient_.Set(static_cast<float32>(r), static_cast<float32>(g), static_cast<float32>(b));
 }
 
-float32 WorldImpl::Metres(double pixels) const
+auto WorldImpl::Metres(double pixels) const -> float32
 {
-  return float32(pixels) / scale_;
+  return static_cast<float32>(pixels) / scale_;
 }
 
-float WorldImpl::Pixels(float32 metres) const
+auto WorldImpl::Pixels(float32 metres) const -> float
 {
-  return float(metres * scale_);
+  return static_cast<float>(metres * scale_);
 }
 
 World::World(lua::Stack& lua, collision::Collision& collision, event::Queue& queue) : impl_(std::make_shared<WorldImpl>(lua, collision))
@@ -236,12 +239,12 @@ World::World(lua::Stack& lua, collision::Collision& collision, event::Queue& que
   impl_->Init(queue);
 }
 
-void World::Begin(event::Command const& command)
+auto World::Begin(event::Command const& command) -> void
 {
   impl_->Begin(command);
 }
 
-void World::End(event::Command const& command)
+auto World::End(event::Command const& command) -> void
 {
   impl_->End(command);
 }
@@ -251,22 +254,22 @@ World::operator bool() const
   return bool(impl_);
 }
 
-void World::Pause()
+auto World::Pause() -> void
 {
   impl_->Pause();
 }
 
-void World::Resume()
+auto World::Resume() -> void
 {
   impl_->Resume();
 }
 
-void World::Ambient(float r, float g, float b)
+auto World::Ambient(float r, float g, float b) -> void
 {
   impl_->Ambient(r, g, b);
 }
 
-bool World::operator==(World const& other) const
+auto World::operator==(World const& other) const -> bool
 {
   return impl_ == other.impl_;
 }

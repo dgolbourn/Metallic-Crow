@@ -5,7 +5,7 @@
 #include <mutex>
 namespace calendar
 {
-std::string Now()
+auto Now() -> std::string
 {
   static std::mutex mutex;
   std::lock_guard<std::mutex> lock(mutex);

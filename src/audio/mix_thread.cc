@@ -2,12 +2,12 @@
 #include "SDL_mixer.h"
 namespace mix
 {
-void Mutex::lock() const
+auto Mutex::lock() const -> void
 {
   SDL_LockAudio();
 }
 
-void Mutex::unlock() const noexcept
+auto Mutex::unlock() const noexcept -> void
 {
   SDL_UnlockAudio();
 }

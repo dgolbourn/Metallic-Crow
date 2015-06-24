@@ -16,42 +16,42 @@ Modulation::Impl::Impl(float r, float g, float b, float a) : r_(r), g_(g), b_(b)
 {
 };
 
-void Modulation::r(float r)
+auto Modulation::r(float r) -> void
 {
   impl_->r_ = r;
 }
 
-void Modulation::g(float g)
+auto Modulation::g(float g) -> void
 {
   impl_->g_ = g;
 }
 
-void Modulation::b(float b)
+auto Modulation::b(float b) -> void
 {
   impl_->b_ = b;
 }
 
-void Modulation::a(float a)
+auto Modulation::a(float a) -> void
 {
   impl_->a_ = a;
 }
 
-float Modulation::r() const
+auto Modulation::r() const -> float
 {
   return impl_->r_;
 }
 
-float Modulation::g() const
+auto Modulation::g() const -> float
 {
   return impl_->g_;
 }
 
-float Modulation::b() const
+auto Modulation::b() const -> float
 {
   return impl_->b_;
 }
 
-float Modulation::a() const
+auto Modulation::a() const -> float
 {
   return impl_->a_;
 }

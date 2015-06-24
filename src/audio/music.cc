@@ -21,10 +21,10 @@ class Music::Impl
 public:
   Impl(boost::filesystem::path const& file, float volume, bool repeat);
   ~Impl();
-  void Play(float volume);
-  void Pause();
-  void Resume();
-  void End();
+  auto Play(float volume) -> void;
+  auto Pause() -> void;
+  auto Resume() -> void;
+  auto End() -> void;
   mix::Library mix_;
   Stream stream_;
   float play_volume_;
@@ -40,7 +40,7 @@ namespace
 {
 audio::Music::Impl* music;
 
-void MusicFinished() noexcept
+auto MusicFinished() noexcept -> void
 {
   try
   {
@@ -65,7 +65,7 @@ void MusicFinished() noexcept
   }
 }
 
-void InitHookMusic()
+auto InitHookMusic() -> void
 {
   static bool initialised;
   if(!initialised)
@@ -75,7 +75,7 @@ void InitHookMusic()
   }
 }
 
-Mix_Music* Init(boost::filesystem::path const& file)
+auto Init(boost::filesystem::path const& file) -> Mix_Music*
 {
   Mix_Music* music = Mix_LoadMUS(file.string().c_str());
   if(!music)
@@ -89,7 +89,7 @@ std::unordered_map<boost::filesystem::path, Stream, boost::hash<boost::filesyste
 
 std::unordered_map<boost::filesystem::path, WeakStream, boost::hash<boost::filesystem::path>> streams;
 
-Stream MakeStream(boost::filesystem::path const& file)
+auto MakeStream(boost::filesystem::path const& file) -> Stream
 {
   Stream stream;
   auto fileiter = streams.find(file);
@@ -108,17 +108,17 @@ Stream MakeStream(boost::filesystem::path const& file)
 
 namespace audio
 {
-void Music::Load(boost::filesystem::path const& file)
+auto Music::Load(boost::filesystem::path const& file) -> void
 {
   cache.emplace(file, MakeStream(file));
 }
 
-void Music::Free(boost::filesystem::path const& file)
+auto Music::Free(boost::filesystem::path const& file) -> void
 {
   cache.erase(file.string());
 }
 
-void Music::Impl::Pause()
+auto Music::Impl::Pause() -> void
 {
   std::lock_guard<mix::Mutex> lock(mix::mutex);
   paused_ = true;
@@ -128,7 +128,7 @@ void Music::Impl::Pause()
   }
 }
 
-void Music::Impl::Resume()
+auto Music::Impl::Resume() -> void
 {
   std::lock_guard<mix::Mutex> lock(mix::mutex);
   paused_ = false;
@@ -138,13 +138,13 @@ void Music::Impl::Resume()
   }
 }
 
-void Music::Impl::End()
+auto Music::Impl::End() -> void
 {
   std::lock_guard<mix::Mutex> lock(mix::mutex);
   end_ = true;
 }
 
-void Music::Impl::Play(float volume)
+auto Music::Impl::Play(float volume) -> void
 {
   std::lock_guard<mix::Mutex> lock(mix::mutex);
   play_volume_ = volume;
@@ -161,7 +161,7 @@ void Music::Impl::Play(float volume)
     }
     music = this;
   }
-  Mix_VolumeMusic(int(play_volume_ * volume_ * MIX_MAX_VOLUME));
+  Mix_VolumeMusic(static_cast<int>(play_volume_ * volume_ * MIX_MAX_VOLUME));
   end_ = false;
 }
 
@@ -209,7 +209,7 @@ Music::Music(lua::Stack& lua, boost::filesystem::path const& path)
   impl_ = std::make_shared<Impl>(path / file, volume, repeat);
 }
 
-bool Music::operator()(float volume)
+auto Music::operator()(float volume) -> bool
 {
   bool valid = bool(impl_);
   if(valid)
@@ -239,17 +239,17 @@ Music::operator bool() const
   return valid;
 }
 
-void Music::Pause()
+auto Music::Pause() -> void
 {
   impl_->Pause();
 }
 
-void Music::Resume()
+auto Music::Resume() -> void
 {
   impl_->Resume();
 }
 
-void Music::End()
+auto Music::End() -> void
 {
   impl_->End();
 }

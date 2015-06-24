@@ -2,7 +2,7 @@
 #include "SDL_mixer.h"
 namespace mix
 {
-std::string Error()
+auto Error() -> std::string
 {
   return Mix_GetError();
 }

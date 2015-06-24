@@ -6,8 +6,6 @@
 #include "signal.h"
 #include "timer.h"
 #include <array>
-namespace game
-{
 namespace
 {
 typedef std::array<display::Animation, 5> Animations;
@@ -21,26 +19,23 @@ typedef std::array<game::Position, 4> Vectors;
 typedef std::array<display::Modulation, 4> Modulations;
 }
 
+namespace game
+{
 class Choice::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
   Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path);
-  
-  void Render() const;
-  void Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right, double timer);
-  
-  template<int T> void Event();
-  template<int T> void Event(event::Command const& command);
-  template<int T> void Step();
-  template<int T> void Modulation(float r, float g, float b, float a);
-
-  void Fade();
-  void Chosen();
-  void Reset();
-
-  void Pause();
-  void Resume();
-  
+  auto Render() const -> void;
+  auto Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right, double timer) -> void;
+  template<int T> auto Event() -> void;
+  template<int T> auto Event(event::Command const& command) -> void;
+  template<int T> auto Step() -> void;
+  template<int T> auto Modulation(float r, float g, float b, float a) -> void;
+  auto Fade() -> void;
+  auto Chosen() -> void;
+  auto Reset() -> void;
+  auto Pause() -> void;
+  auto Resume() -> void;
   bool paused_;
   display::Window window_;
   sdl::Font font_;
@@ -149,7 +144,7 @@ Choice::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue
   }
 }
 
-void Choice::Impl::Reset()
+auto Choice::Impl::Reset() -> void
 {
   for(bool& choice : choices_)
   {
@@ -177,7 +172,7 @@ void Choice::Impl::Reset()
   }
 }
 
-void Choice::Impl::Render() const
+auto Choice::Impl::Render() const -> void
 {
   for(int i = 0; i < 5; ++i)
   {
@@ -196,7 +191,7 @@ void Choice::Impl::Render() const
   }
 }
 
-void Choice::Impl::Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right, double timer)
+auto Choice::Impl::Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right, double timer) -> void
 {
   Reset();
 
@@ -220,7 +215,8 @@ void Choice::Impl::Choice(std::string const& up, std::string const& down, std::s
     }
   }
 
-  if(choices_[4] = (timer > 0.))
+  choices_[4] = (timer > 0.);
+  if(choices_[4])
   {
     fade_timer_ = event::Timer(timer / 255., 255);
     fade_timer_.Add(function::Bind(&Impl::Fade, shared_from_this()));
@@ -235,7 +231,7 @@ void Choice::Impl::Choice(std::string const& up, std::string const& down, std::s
   }
 }
 
-template<int T> void Choice::Impl::Modulation(float r, float g, float b, float a)
+template<int T> auto Choice::Impl::Modulation(float r, float g, float b, float a) -> void
 {
   modulation_[T].r(r);
   modulation_[T].g(g);
@@ -247,12 +243,12 @@ template<int T> void Choice::Impl::Modulation(float r, float g, float b, float a
   current_modulation_[T].a(a * current_fade_modulation_.a());
 }
 
-template<int T> void Choice::Impl::Step()
+template<int T> auto Choice::Impl::Step() -> void
 {
   ++current_icons_[T];
 }
 
-template<int T> void Choice::Impl::Event()
+template<int T> auto Choice::Impl::Event() -> void
 {
   if(choices_[T] && !bool(animation_timer_))
   {
@@ -277,7 +273,7 @@ template<int T> void Choice::Impl::Event()
   }
 }
 
-void Choice::Impl::Fade()
+auto Choice::Impl::Fade() -> void
 {
   ++count_;
   float fade = float(count_) / 255.f;
@@ -295,7 +291,7 @@ void Choice::Impl::Fade()
   }
 }
 
-void Choice::Impl::Pause()
+auto Choice::Impl::Pause() -> void
 {
   if(!paused_)
   {
@@ -311,7 +307,7 @@ void Choice::Impl::Pause()
   }
 }
 
-void Choice::Impl::Resume()
+auto Choice::Impl::Resume() -> void
 {
   if(paused_)
   {
@@ -327,92 +323,92 @@ void Choice::Impl::Resume()
   }
 }
 
-template<int T> void Choice::Impl::Event(event::Command const& command)
+template<int T> auto Choice::Impl::Event(event::Command const& command) -> void
 {
   signals_[T].Add(command);
 }
 
-void Choice::Up(event::Command const& command)
+auto Choice::Up(event::Command const& command) -> void
 {
   impl_->Event<0>(command);
 }
 
-void Choice::Down(event::Command const& command)
+auto Choice::Down(event::Command const& command) -> void
 {
   impl_->Event<1>(command);
 }
 
-void Choice::Left(event::Command const& command)
+auto Choice::Left(event::Command const& command) -> void
 {
   impl_->Event<2>(command);
 }
 
-void Choice::Right(event::Command const& command)
+auto Choice::Right(event::Command const& command) -> void
 {
   impl_->Event<3>(command);
 }
 
-void Choice::Timer(event::Command const& command)
+auto Choice::Timer(event::Command const& command) -> void
 {
   impl_->Event<4>(command);
 }
 
-void Choice::Up(float r, float g, float b, float a)
+auto Choice::Up(float r, float g, float b, float a) -> void
 {
   impl_->Modulation<0>(r, g, b, a);
 }
 
-void Choice::Down(float r, float g, float b, float a)
+auto Choice::Down(float r, float g, float b, float a) -> void
 {
   impl_->Modulation<1>(r, g, b, a);
 }
 
-void Choice::Left(float r, float g, float b, float a)
+auto Choice::Left(float r, float g, float b, float a) -> void
 {
   impl_->Modulation<2>(r, g, b, a);
 }
 
-void Choice::Right(float r, float g, float b, float a)
+auto Choice::Right(float r, float g, float b, float a) -> void
 {
   impl_->Modulation<3>(r, g, b, a);
 }
 
-void Choice::operator()(std::string const& up, std::string const& down, std::string const& left, std::string const& right, double timer)
+auto Choice::operator()(std::string const& up, std::string const& down, std::string const& left, std::string const& right, double timer) -> void
 {
   impl_->Choice(up, down, left, right, timer);
 }
 
-void Choice::Pause()
+auto Choice::Pause() -> void
 {
   impl_->Pause();
 }
 
-void Choice::Resume()
+auto Choice::Resume() -> void
 {
   impl_->Resume();
 }
 
-void Choice::Render() const
+auto Choice::Render() const -> void
 {
   impl_->Render();
 }
 
-void Choice::Up()
+auto Choice::Up() -> void
 {
   impl_->Event<0>();
 }
 
-void Choice::Down()
+auto Choice::Down() -> void
 {
   impl_->Event<1>();
 }
 
-void Choice::Left()
+auto Choice::Left() -> void
 {
   impl_->Event<2>();
 }
 
-void Choice::Right()
+auto Choice::Right() -> void
 {
   impl_->Event<3>();
 }

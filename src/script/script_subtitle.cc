@@ -2,13 +2,13 @@
 #include "bind.h"
 namespace game
 {
-void Script::Impl::SubtitleInit()
+auto Script::Impl::SubtitleInit() -> void
 {
   lua_.Add(function::Bind(&Impl::SubtitleText, shared_from_this()), "subtitle_text", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::SubtitleModulation, shared_from_this()), "subtitle_modulation", 0, "metallic_crow");
 }
 
-void Script::Impl::SubtitleText()
+auto Script::Impl::SubtitleText() -> void
 {
   StagePtr stage;
   {
@@ -26,7 +26,7 @@ void Script::Impl::SubtitleText()
   }
 }
 
-void Script::Impl::SubtitleModulation()
+auto Script::Impl::SubtitleModulation() -> void
 {
   StagePtr stage;
   {

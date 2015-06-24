@@ -2,11 +2,14 @@
 #include <climits>
 #include "sdl_exception.h"
 #include "SDL.h"
+namespace
+{
+bool initialised = false;
+int reference_count[CHAR_BIT * sizeof(Uint32)] = {0};
+}
+
 namespace sdl
 {
-static bool initialised;
-static int reference_count[CHAR_BIT * sizeof(Uint32)];
-
 Library::Library(Uint32 flags) : flags_(flags)
 {
   if(!initialised)
@@ -20,7 +23,7 @@ Library::Library(Uint32 flags) : flags_(flags)
   }
   else
   {
-    int const init_flags = flags & (SDL_WasInit(0u) ^ flags);
+    int init_flags = flags & (SDL_WasInit(0u) ^ flags);
     if(SDL_InitSubSystem(init_flags) < 0)
     {
       BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
@@ -55,7 +58,7 @@ Library::~Library()
 
         if(reference_count[index] == 0)
         {
-          quit_flags |= (Uint32)0x01u << index;
+          quit_flags |= static_cast<Uint32>(0x01u) << index;
         }
       }
     }

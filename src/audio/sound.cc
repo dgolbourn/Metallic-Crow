@@ -23,10 +23,10 @@ class Sound::Impl
 public:
   Impl(boost::filesystem::path const& file, float volume, bool repeat);
   ~Impl();
-  void Pause();
-  void Resume();
-  void End();
-  void Play(float volume);
+  auto Pause() -> void;
+  auto Resume() -> void;
+  auto End() -> void;
+  auto Play(float volume) -> void;
   mix::Library mix_;
   Chunk chunk_;
   int channel_;
@@ -40,7 +40,7 @@ public:
 
 namespace
 {
-Mix_Chunk* Init(boost::filesystem::path const& file)
+auto Init(boost::filesystem::path const& file) -> Mix_Chunk*
 {
   Mix_Chunk* chunk = Mix_LoadWAV(file.string().c_str());
   if(!chunk)
@@ -52,7 +52,7 @@ Mix_Chunk* Init(boost::filesystem::path const& file)
 
 std::unordered_map<boost::filesystem::path, WeakChunk, boost::hash<boost::filesystem::path>> chunks;
 
-Chunk MakeChunk(boost::filesystem::path const& file)
+auto MakeChunk(boost::filesystem::path const& file) -> Chunk
 {
   Chunk chunk;
   auto fileiter = chunks.find(file);
@@ -73,12 +73,12 @@ std::unordered_map<boost::filesystem::path, Chunk, boost::hash<boost::filesystem
 
 std::vector<audio::Sound::Impl*> sounds;
 
-void ChannelFinished(int channel) noexcept
+auto ChannelFinished(int channel) noexcept -> void
 {
   try
   {
     std::lock_guard<mix::Mutex> lock(mix::mutex);
-    if(channel < int(sounds.size()))
+    if(channel < static_cast<int>(sounds.size()))
     {
       audio::Sound::Impl* sound = sounds[channel];
       sounds[channel] = nullptr;
@@ -98,7 +98,7 @@ void ChannelFinished(int channel) noexcept
   }
 }
 
-void InitHookSound()
+auto InitHookSound() -> void
 {
   static bool initialised;
   if(!initialised)
@@ -111,17 +111,17 @@ void InitHookSound()
 
 namespace audio
 {
-void Sound::Load(boost::filesystem::path const& file)
+auto Sound::Load(boost::filesystem::path const& file) -> void
 {
   cache.emplace(file, MakeChunk(file));
 }
 
-void Sound::Free(boost::filesystem::path const& file)
+auto Sound::Free(boost::filesystem::path const& file) -> void
 {
   cache.erase(file);
 }
 
-void Sound::Impl::Play(float volume)
+auto Sound::Impl::Play(float volume) -> void
 {
   std::lock_guard<mix::Mutex> lock(mix::mutex);
   play_volume_ = volume;
@@ -145,7 +145,7 @@ void Sound::Impl::Play(float volume)
   }
   if(channel_ != -1)
   {
-    Mix_Volume(channel_, int(play_volume_ * volume_ * MIX_MAX_VOLUME));
+    Mix_Volume(channel_, static_cast<int>(play_volume_ * volume_ * MIX_MAX_VOLUME));
   }
   end_ = false;
 }
@@ -167,7 +167,7 @@ Sound::Impl::~Impl()
   }
 }
 
-void Sound::Impl::Pause()
+auto Sound::Impl::Pause() -> void
 {
   std::lock_guard<mix::Mutex> lock(mix::mutex);
   paused_ = true;
@@ -177,7 +177,7 @@ void Sound::Impl::Pause()
   }
 }
 
-void Sound::Impl::Resume()
+auto Sound::Impl::Resume() -> void
 {
   std::lock_guard<mix::Mutex> lock(mix::mutex);
   paused_ = false;
@@ -187,7 +187,7 @@ void Sound::Impl::Resume()
   }
 }
 
-void Sound::Impl::End()
+auto Sound::Impl::End() -> void
 {
   std::lock_guard<mix::Mutex> lock(mix::mutex);
   end_ = true;
@@ -220,22 +220,22 @@ Sound::Sound(lua::Stack& lua, boost::filesystem::path const& path)
   impl_ = std::make_shared<Impl>(path / file, volume, repeat);
 }
 
-void Sound::Pause()
+auto Sound::Pause() -> void
 {
   impl_->Pause();
 }
 
-void Sound::Resume()
+auto Sound::Resume() -> void
 {
   impl_->Resume();
 }
 
-void Sound::End()
+auto Sound::End() -> void
 {
   impl_->End();
 }
 
-bool Sound::operator()(float volume)
+auto Sound::operator()(float volume) -> bool
 {
   bool valid = bool(impl_);
   if(valid)

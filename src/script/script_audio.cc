@@ -2,7 +2,7 @@
 #include "bind.h"
 namespace game
 {
-void Script::Impl::AudioInit()
+auto Script::Impl::AudioInit() -> void
 {
   lua_.Add(function::Bind(&Impl::SoundLoad, shared_from_this()), "sound_load", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::SoundFree, shared_from_this()), "sound_free", 0, "metallic_crow");
@@ -14,7 +14,7 @@ void Script::Impl::AudioInit()
   lua_.Add(function::Bind(&Impl::MusicEnd, shared_from_this()), "music_end", 0, "metallic_crow");
 }
 
-void Script::Impl::SoundLoad()
+auto Script::Impl::SoundLoad() -> void
 {
   StagePtr stage;
   {
@@ -43,7 +43,7 @@ void Script::Impl::SoundLoad()
   }
 }
 
-void Script::Impl::SoundFree()
+auto Script::Impl::SoundFree() -> void
 {
   StagePtr stage;
   {
@@ -62,7 +62,7 @@ void Script::Impl::SoundFree()
   }
 }
 
-void Script::Impl::SoundPlay()
+auto Script::Impl::SoundPlay() -> void
 {
   StagePtr stage;
   {
@@ -91,7 +91,7 @@ void Script::Impl::SoundPlay()
   }
 }
 
-void Script::Impl::SoundEnd()
+auto Script::Impl::SoundEnd() -> void
 {
   StagePtr stage;
   {
@@ -114,7 +114,7 @@ void Script::Impl::SoundEnd()
   }
 }
 
-void Script::Impl::MusicLoad()
+auto Script::Impl::MusicLoad() -> void
 {
   StagePtr stage;
   {
@@ -143,7 +143,7 @@ void Script::Impl::MusicLoad()
   }
 }
 
-void Script::Impl::MusicFree()
+auto Script::Impl::MusicFree() -> void
 {
   StagePtr stage;
   {
@@ -161,7 +161,7 @@ void Script::Impl::MusicFree()
   }
 }
 
-void Script::Impl::MusicEnd()
+auto Script::Impl::MusicEnd() -> void
 {
   StagePtr stage;
   {
@@ -183,7 +183,7 @@ void Script::Impl::MusicEnd()
   }
 }
 
-void Script::Impl::MusicPlay()
+auto Script::Impl::MusicPlay() -> void
 {
   StagePtr stage;
   {

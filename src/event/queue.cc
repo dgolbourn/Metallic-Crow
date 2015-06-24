@@ -2,20 +2,20 @@
 #include <list>
 namespace event
 {
-class QueueImpl
+class Queue::Impl
 {
 public:
-  void Add(Command const& command);
-  void Check();
+  auto Add(Command const& command) -> void;
+  auto Check() -> void;
   std::list<Command> commands_;
 };
 
-void QueueImpl::Add(Command const& command)
+auto Queue::Impl::Add(Command const& command) -> void
 {
   commands_.push_back(command);
 }
 
-void QueueImpl::Check()
+auto Queue::Impl::Check() -> void
 {
   for(auto iter = commands_.begin(); iter != commands_.end();)
   {
@@ -30,18 +30,18 @@ void QueueImpl::Check()
   }
 }
 
-void Queue::Add(Command const& command)
+auto Queue::Add(Command const& command) -> void
 {
   impl_->Add(command);
 }
 
-void Queue::operator()()
+auto Queue::operator()() -> void
 {
   impl_->Check();
 }
 
 Queue::Queue()
 {
-  impl_ = std::make_shared<QueueImpl>();
+  impl_ = std::make_shared<Impl>();
 }
 }

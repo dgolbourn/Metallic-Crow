@@ -9,13 +9,13 @@ class Timer::Impl
 {
 public:
   Impl(double interval, int loops);
-  void Pause();
-  void Resume();
-  void Reset(double interval, int loops);
-  void Add(Command const& command);
-  void End(Command const& command);
-  void Check();
-  bool Valid();
+  auto Pause() -> void;
+  auto Resume() -> void;
+  auto Reset(double interval, int loops) -> void;
+  auto Add(Command const& command) -> void;
+  auto End(Command const& command) -> void;
+  auto Check() -> void;
+  auto Valid() -> bool;
 
   Clock::duration interval_;
   Clock::time_point tick_;
@@ -34,7 +34,7 @@ Timer::Impl::Impl(double interval, int loops)
   paused_ = true;
 }
 
-void Timer::Impl::Reset(double interval, int loops)
+auto Timer::Impl::Reset(double interval, int loops) -> void
 {
   if(interval <= 0.)
   { 
@@ -46,13 +46,13 @@ void Timer::Impl::Reset(double interval, int loops)
     ++loops;
   }
   
-  static const double scale = double(Clock::period::den) / double(Clock::period::num);
+  static const double scale = static_cast<double>(Clock::period::den) / static_cast<double>(Clock::period::num);
   interval *= scale;
   interval_ = Clock::duration(Clock::rep(interval));
   loops_ = loops;
 }
 
-void Timer::Impl::Pause()
+auto Timer::Impl::Pause() -> void
 {
   if(!paused_)
   {
@@ -61,7 +61,7 @@ void Timer::Impl::Pause()
   }
 }
 
-void Timer::Impl::Resume()
+auto Timer::Impl::Resume() -> void
 {
   if(paused_)
   {
@@ -70,22 +70,22 @@ void Timer::Impl::Resume()
   }
 }
 
-void Timer::Impl::Add(event::Command const& command)
+auto Timer::Impl::Add(event::Command const& command) -> void
 {
   signal_.Add(command);
 }
 
-void Timer::Impl::End(event::Command const& command)
+auto Timer::Impl::End(event::Command const& command) -> void
 {
   end_.Add(command);
 }
 
-bool Timer::Impl::Valid()
+auto Timer::Impl::Valid() -> bool
 {
   return loops_ != 0;
 }
 
-void Timer::Impl::Check()
+auto Timer::Impl::Check() -> void
 {
   if(!paused_ && (loops_ != 0))
   {
@@ -113,32 +113,32 @@ Timer::Timer(double interval, int loops) : impl_(std::make_shared<Impl>(interval
 {
 }
 
-void Timer::Pause()
+auto Timer::Pause() -> void
 {
   impl_->Pause();
 }
 
-void Timer::Resume()
+auto Timer::Resume() -> void
 {
   impl_->Resume();
 }
 
-void Timer::Add(event::Command const& command)
+auto Timer::Add(event::Command const& command) -> void
 {
   impl_->Add(command);
 }
 
-void Timer::End(event::Command const& command)
+auto Timer::End(event::Command const& command) -> void
 {
   impl_->End(command);
 }
 
-void Timer::operator()()
+auto Timer::operator()() -> void
 {
   impl_->Check();
 }
 
-void Timer::Reset(double interval, int loops)
+auto Timer::Reset(double interval, int loops) -> void
 {
   impl_->Reset(interval, loops);
 }

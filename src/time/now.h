@@ -3,6 +3,6 @@
 #include <string>
 namespace calendar
 {
-std::string Now();
+auto Now() -> std::string;
 }
 #endif

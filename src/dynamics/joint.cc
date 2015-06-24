@@ -5,21 +5,11 @@
 #include "exception.h"
 #include "body_impl.h"
 #include "log.h"
-namespace dynamics
+namespace 
 {
-class JointImpl
-{
-public:
-  JointImpl(lua::Stack& lua, Body& body_a, Body& body_b, World& world);
-  ~JointImpl();
-  bool Valid() const;
-  b2Joint* joint_;
-  World::WeakPtr world_;
-};
-
 typedef std::unique_ptr<b2JointDef> JointDefinition;
 
-static JointDefinition Spring(lua::Stack& lua, b2Body* body_a, b2Body* body_b, WorldImpl const& world)
+auto Spring(lua::Stack& lua, b2Body* body_a, b2Body* body_b, dynamics::WorldImpl const& world) -> JointDefinition 
 {
   JointDefinition def(new b2DistanceJointDef);
   b2DistanceJointDef& joint = *(b2DistanceJointDef*)def.get();
@@ -42,7 +32,7 @@ static JointDefinition Spring(lua::Stack& lua, b2Body* body_a, b2Body* body_b, W
   return def;
 }
 
-static JointDefinition Rope(lua::Stack& lua, b2Body* body_a, b2Body* body_b)
+auto Rope(lua::Stack& lua, b2Body* body_a, b2Body* body_b) -> JointDefinition
 {
   JointDefinition def(new b2RopeJointDef);
   b2RopeJointDef& joint = *(b2RopeJointDef*)def.get();
@@ -58,7 +48,7 @@ static JointDefinition Rope(lua::Stack& lua, b2Body* body_a, b2Body* body_b)
   return def;
 }
 
-static JointDefinition Weld(lua::Stack& lua, b2Body* body_a, b2Body* body_b, WorldImpl const& world)
+auto Weld(lua::Stack& lua, b2Body* body_a, b2Body* body_b, dynamics::WorldImpl const& world) -> JointDefinition
 {
   b2Body* a = body_a;
   b2Body* b = body_b;
@@ -79,6 +69,19 @@ static JointDefinition Weld(lua::Stack& lua, b2Body* body_a, b2Body* body_b, Wor
   
   return def;
 }
+}
+
+namespace dynamics
+{
+class JointImpl
+{
+public:
+  JointImpl(lua::Stack& lua, Body& body_a, Body& body_b, World& world);
+  ~JointImpl();
+  auto Valid() const -> bool;
+  b2Joint* joint_;
+  World::WeakPtr world_;
+};
 
 JointImpl::JointImpl(lua::Stack& lua, Body& body_a, Body& body_b, World& world) : joint_(nullptr), world_(world)
 {
@@ -136,7 +139,7 @@ JointImpl::~JointImpl()
   }
 }
 
-bool JointImpl::Valid() const
+auto JointImpl::Valid() const -> bool
 {
   return (joint_ != nullptr) && bool(world_.Lock());
 }

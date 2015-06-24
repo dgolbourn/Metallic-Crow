@@ -11,9 +11,9 @@ class Texture
 public:
   Texture() = default;
   Texture(SDL_Renderer* renderer, SDL_Surface* surface);
-  Texture::Texture(SDL_Renderer* renderer, boost::filesystem::path const& file);
+  Texture(SDL_Renderer* renderer, boost::filesystem::path const& file);
   explicit operator SDL_Texture*() const;
-  SDL_Texture* operator->() const;
+  auto operator->() const -> SDL_Texture*;
   explicit operator bool() const;
   typedef memory::WeakPtr<class Texture, SDL_Texture> WeakPtr;
 private:

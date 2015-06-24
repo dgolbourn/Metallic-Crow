@@ -6,31 +6,31 @@
 #include "log.h"
 #include <iostream>
 #include <fstream>
-namespace game
-{
 namespace
 {
 typedef std::tuple<int, int, std::string> Save;
 typedef std::array<Save, 8> SaveArray;
 }
 
+namespace game
+{
 class Saves::Impl
 {
 public:
   Impl(boost::filesystem::path const& file);
   ~Impl();
 
-  bool Playing() const;
-  int Size() const;
-  int Progress(int slot) const;
-  int Current(int slot) const;
-  std::string LastPlayed(int slot) const;
-  int LastPlayed() const;
-  void Play(int slot);
-  void Stop();
-  void Current(int slot, int current);
-  bool Check(int slot) const;
-  void Save();
+  auto Playing() const ->  bool;
+  auto Size() const -> int;
+  auto Progress(int slot) const -> int;
+  auto Current(int slot) const -> int;
+  auto LastPlayed(int slot) const -> std::string;
+  auto LastPlayed() const -> int;
+  auto Play(int slot) -> void;
+  auto Stop() -> void;
+  auto Current(int slot, int current) -> void;
+  auto Check(int slot) const -> bool;
+  auto Save() -> void;
   
   SaveArray saves_;
   SaveArray::size_type slot_;
@@ -73,7 +73,7 @@ Saves::Impl::Impl(boost::filesystem::path const& file) : file_(file), slot_(0), 
   }
 }
 
-void Saves::Impl::Save()
+auto Saves::Impl::Save() -> void
 { 
   if(playing_)
   {
@@ -108,12 +108,12 @@ Saves::Impl::~Impl()
   }
 }
 
-bool Saves::Impl::Check(int slot) const
+auto Saves::Impl::Check(int slot) const -> bool
 {
   return (slot < int(saves_.size())) && (slot >= 0);
 }
 
-void Saves::Impl::Play(int slot)
+auto Saves::Impl::Play(int slot) -> void
 {
   Stop();
 
@@ -124,7 +124,7 @@ void Saves::Impl::Play(int slot)
   }
 }
 
-void Saves::Impl::Stop()
+auto Saves::Impl::Stop() -> void
 {
   if(playing_)
   {
@@ -133,27 +133,27 @@ void Saves::Impl::Stop()
   }
 }
 
-bool Saves::Impl::Playing() const
+auto Saves::Impl::Playing() const -> bool
 {
   return playing_;
 }
 
-int Saves::Impl::Size() const
+auto Saves::Impl::Size() const -> int
 {
   return saves_.size();
 }
 
-int Saves::Impl::Progress(int slot) const
+auto Saves::Impl::Progress(int slot) const -> int
 {
   return std::get<0>(saves_.at(slot));
 }
 
-int Saves::Impl::Current(int slot) const
+auto Saves::Impl::Current(int slot) const -> int
 {
   return std::get<1>(saves_.at(slot));
 }
 
-void Saves::Impl::Current(int slot, int current)
+auto Saves::Impl::Current(int slot, int current) -> void
 {
   auto& saves = saves_.at(slot);
   std::get<1>(saves) = current;
@@ -163,57 +163,57 @@ void Saves::Impl::Current(int slot, int current)
   }
 }
 
-std::string Saves::Impl::LastPlayed(int slot) const
+auto Saves::Impl::LastPlayed(int slot) const -> std::string
 {
   return std::get<2>(saves_.at(slot));
 }
 
-int Saves::Impl::LastPlayed() const
+auto Saves::Impl::LastPlayed() const -> int
 {
   return slot_;
 }
 
-bool Saves::Playing() const
+auto Saves::Playing() const -> bool
 {
   return impl_->Playing();
 }
 
-int Saves::Size() const
+auto Saves::Size() const -> int
 {
   return impl_->Size();
 }
 
-int Saves::Progress(int slot) const
+auto Saves::Progress(int slot) const -> int
 {
   return impl_->Progress(slot);
 }
 
-int Saves::Current(int slot) const
+auto Saves::Current(int slot) const -> int
 {
   return impl_->Current(slot);
 }
 
-std::string Saves::LastPlayed(int slot) const
+auto Saves::LastPlayed(int slot) const -> std::string
 {
   return impl_->LastPlayed(slot);
 }
 
-int Saves::LastPlayed() const
+auto Saves::LastPlayed() const -> int
 {
   return impl_->LastPlayed();
 }
 
-void Saves::Play(int slot)
+auto Saves::Play(int slot) -> void
 {
   impl_->Play(slot);
 }
 
-void Saves::Stop()
+auto Saves::Stop() -> void
 {
   impl_->Stop();
 }
 
-void Saves::Current(int slot, int current)
+auto Saves::Current(int slot, int current) -> void
 {
   impl_->Current(slot, current);
 }
@@ -223,7 +223,7 @@ Saves::operator bool() const
   return bool(impl_);
 }
 
-void Saves::Save()
+auto Saves::Save() -> void
 {
   impl_->Save();
 }

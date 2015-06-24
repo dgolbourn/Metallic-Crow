@@ -19,7 +19,6 @@ class Saves::Impl
 public:
   Impl(boost::filesystem::path const& file);
   ~Impl();
-
   auto Playing() const ->  bool;
   auto Size() const -> int;
   auto Progress(int slot) const -> int;
@@ -31,7 +30,6 @@ public:
   auto Current(int slot, int current) -> void;
   auto Check(int slot) const -> bool;
   auto Save() -> void;
-  
   SaveArray saves_;
   SaveArray::size_type slot_;
   boost::filesystem::path file_;
@@ -48,10 +46,10 @@ Saves::Impl::Impl(boost::filesystem::path const& file) : file_(file), slot_(0), 
     lua::Guard guard = lua.Get("last_active_save");
     lua.Pop(slot);
   }
-  slot_ = SaveArray::size_type(slot);
+  slot_ = static_cast<SaveArray::size_type>(slot);
 
   lua::Guard guard = lua.Get("saves");
-  for (SaveArray::size_type i = 0; i < saves_.size(); ++i)
+  for(SaveArray::size_type i = 0; i < saves_.size(); ++i)
   {
     lua::Guard guard = lua.Field(i + 1);
     auto& saves = saves_[i];
@@ -110,7 +108,7 @@ Saves::Impl::~Impl()
 
 auto Saves::Impl::Check(int slot) const -> bool
 {
-  return (slot < int(saves_.size())) && (slot >= 0);
+  return (slot < static_cast<int>(saves_.size())) && (slot >= 0);
 }
 
 auto Saves::Impl::Play(int slot) -> void

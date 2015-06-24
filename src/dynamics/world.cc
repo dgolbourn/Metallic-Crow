@@ -5,7 +5,7 @@
 #include "body_impl_iterator.h"
 namespace
 {
-bool ToggleContact(b2Contact* contact, dynamics::BodyImplCount& contacts, bool begin)
+auto ToggleContact(b2Contact* contact, dynamics::BodyImplCount& contacts, bool begin) -> bool
 {
   dynamics::BodyImpl* body_a = static_cast<dynamics::BodyImpl*>(contact->GetFixtureA()->GetBody()->GetUserData());
   dynamics::BodyImpl* body_b = static_cast<dynamics::BodyImpl*>(contact->GetFixtureB()->GetBody()->GetUserData());
@@ -164,12 +164,12 @@ WorldImpl::WorldImpl(lua::Stack& lua, collision::Collision& collision) : world_(
     lua.Pop(rate);
   }
 
-  f_ = float32(rate);
+  f_ = static_cast<float32>(rate);
   double interval = 1. / rate;
 
-  dt_ = float32(interval);
-  interval *= double(Clock::period::den) / double(Clock::period::num);
-  interval_ = Clock::duration(Clock::rep(interval));
+  dt_ = static_cast<float32>(interval);
+  interval *= static_cast<double>(Clock::period::den) / static_cast<double>(Clock::period::num);
+  interval_ = static_cast<Clock::duration>(static_cast<Clock::rep>(interval));
   remaining_ = interval_;
 
   {

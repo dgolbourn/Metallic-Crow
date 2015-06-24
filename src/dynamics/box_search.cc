@@ -10,7 +10,7 @@ auto BoxSearch::ReportFixture(b2Fixture* fixture) -> bool
 {
   if(b2Body* body = fixture->GetBody())
   {
-    if(BodyImpl* impl = (BodyImpl*)body->GetUserData())
+    if(BodyImpl* impl = static_cast<BodyImpl*>(body->GetUserData()))
     {
       impl_.insert(impl);
     }

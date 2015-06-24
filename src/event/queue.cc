@@ -40,8 +40,7 @@ auto Queue::operator()() -> void
   impl_->Check();
 }
 
-Queue::Queue()
+Queue::Queue() : impl_(std::make_shared<Impl>())
 {
-  impl_ = std::make_shared<Impl>();
 }
 }

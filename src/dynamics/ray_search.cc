@@ -10,7 +10,7 @@ auto RaySearch::ReportFixture(b2Fixture* fixture, b2Vec2 const&, b2Vec2 const&, 
 {
   if(b2Body* body = fixture->GetBody())
   {
-    if(BodyImpl* impl = (BodyImpl*)body->GetUserData())
+    if(BodyImpl* impl = static_cast<BodyImpl*>(body->GetUserData()))
     {
       impl_.insert(impl);
     }

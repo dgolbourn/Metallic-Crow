@@ -137,7 +137,7 @@ auto Event(lua_State* state) noexcept -> int
     int out;
     if(lua_isnumber(state, lua_upvalueindex(3)))
     {
-      out = (int)lua_tointeger(state, lua_upvalueindex(3));
+      out = static_cast<int>(lua_tointeger(state, lua_upvalueindex(3)));
     }
     else
     {
@@ -259,7 +259,7 @@ auto StackImpl::Pop(int& out) -> void
   Release();
 
   int ret;
-  out = (int)lua_tointegerx(state_, -1, &ret); 
+  out = static_cast<int>(lua_tointegerx(state_, -1, &ret)); 
   lua_pop(state_, 1);
   if(!ret)
   {
@@ -272,7 +272,7 @@ auto StackImpl::Pop(float& out) -> void
   Release();
 
   int ret;
-  out = (float)lua_tonumberx(state_, -1, &ret);
+  out = static_cast<float>(lua_tonumberx(state_, -1, &ret));
   lua_pop(state_, 1);
   if(!ret)
   {
@@ -446,13 +446,13 @@ auto Stack::Push(int in) -> Guard
 
 auto Stack::Push(float in) -> Guard
 {
-  lua_pushnumber(impl_->state_, lua_Number(in));
+  lua_pushnumber(impl_->state_, static_cast<lua_Number>(in));
   return Guard(impl_.get());
 }
 
 auto Stack::Push(double in) -> Guard 
 {
-  lua_pushnumber(impl_->state_, lua_Number(in));
+  lua_pushnumber(impl_->state_, static_cast<lua_Number>(in));
   return Guard(impl_.get());
 }
 
@@ -464,7 +464,7 @@ auto Stack::Push(std::string const& in) -> Guard
 
 auto Stack::Push(bool in) -> Guard
 {
-  lua_pushboolean(impl_->state_, int(in));
+  lua_pushboolean(impl_->state_, static_cast<int>(in));
   return Guard(impl_.get());
 }
 

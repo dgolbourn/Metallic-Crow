@@ -207,9 +207,9 @@ Event::Impl::Impl(lua::Stack& lua) : sdl_(SDL_INIT_EVENTS | SDL_INIT_GAMECONTROL
       lua.Pop(threshold);
     }
 
-    update_offset_ = -float(min);
-    update_scale_ = float(1. / (max - min));
-    update_threshold_ = float(threshold * threshold);
+    update_offset_ = -static_cast<float>(min);
+    update_scale_ = static_cast<float>(1. / (max - min));
+    update_threshold_ = static_cast<float>(threshold * threshold);
   }
   catch(...)
   {
@@ -434,11 +434,11 @@ auto Event::Impl::Check() -> void
       {
         if(controller.second.m_)
         {
-          state->second.x_raw_ = float(controller.second.x_) / controller.second.m_;
+          state->second.x_raw_ = static_cast<float>(controller.second.x_) / controller.second.m_;
         }
         if(controller.second.n_)
         {
-          state->second.y_raw_ = float(controller.second.y_) / controller.second.n_;
+          state->second.y_raw_ = static_cast<float>(controller.second.y_) / controller.second.n_;
         }
 
         float angle = std::atan2(state->second.y_raw_, state->second.x_raw_);

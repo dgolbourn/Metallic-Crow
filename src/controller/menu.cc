@@ -99,7 +99,7 @@ Menu::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
 auto Menu::Impl::Choice(Options const& options) -> void
 {
   selection_ = 0;
-  selections_ = int(options.size());
+  selections_ = static_cast<int>(options.size());
 
   idle_text_.clear();
   active_text_.clear();

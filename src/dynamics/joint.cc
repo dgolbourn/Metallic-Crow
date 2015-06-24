@@ -12,7 +12,7 @@ typedef std::unique_ptr<b2JointDef> JointDefinition;
 auto Spring(lua::Stack& lua, b2Body* body_a, b2Body* body_b, dynamics::WorldImpl const& world) -> JointDefinition 
 {
   JointDefinition def(new b2DistanceJointDef);
-  b2DistanceJointDef& joint = *(b2DistanceJointDef*)def.get();
+  b2DistanceJointDef& joint = *static_cast<b2DistanceJointDef*>(def.get());
 
   {
     lua::Guard guard = lua.Field("length");
@@ -35,7 +35,7 @@ auto Spring(lua::Stack& lua, b2Body* body_a, b2Body* body_b, dynamics::WorldImpl
 auto Rope(lua::Stack& lua, b2Body* body_a, b2Body* body_b) -> JointDefinition
 {
   JointDefinition def(new b2RopeJointDef);
-  b2RopeJointDef& joint = *(b2RopeJointDef*)def.get();
+  b2RopeJointDef& joint = *static_cast<b2RopeJointDef*>(def.get());
 
   {
     lua::Guard guard = lua.Field("length");
@@ -57,7 +57,7 @@ auto Weld(lua::Stack& lua, b2Body* body_a, b2Body* body_b, dynamics::WorldImpl c
   anchor *= .5f;
 
   JointDefinition def(new b2WeldJointDef);
-  b2WeldJointDef& joint = *(b2WeldJointDef*)def.get();
+  b2WeldJointDef& joint = *static_cast<b2WeldJointDef*>(def.get());
   joint.Initialize(a, b, anchor);
 
   lua::Guard guard = lua.Field("damping");
@@ -149,8 +149,7 @@ Joint::operator bool() const
   return bool(impl_) && impl_->Valid();
 }
 
-Joint::Joint(lua::Stack& lua, Body& body_a, Body& body_b, World& world)
+Joint::Joint(lua::Stack& lua, Body& body_a, Body& body_b, World& world) : impl_(std::make_shared<JointImpl>(lua, body_a, body_b, world))
 {
-  impl_ = std::make_shared<JointImpl>(lua, body_a, body_b, world);
 }
 }

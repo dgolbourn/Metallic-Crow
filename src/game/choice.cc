@@ -276,7 +276,7 @@ template<int T> auto Choice::Impl::Event() -> void
 auto Choice::Impl::Fade() -> void
 {
   ++count_;
-  float fade = float(count_) / 255.f;
+  float fade = static_cast<float>(count_) / 255.f;
   current_fade_modulation_.r(1.f - fade + fade * fade_modulation_.r());
   current_fade_modulation_.g(1.f - fade + fade * fade_modulation_.g());
   current_fade_modulation_.b(1.f - fade + fade * fade_modulation_.b());

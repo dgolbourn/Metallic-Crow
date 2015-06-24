@@ -300,7 +300,7 @@ auto BodyImpl::MakeBody(b2Body* body_ptr) -> Body
   Body body;
   if(body_ptr)
   {
-    BodyImpl* impl = (BodyImpl*)body_ptr->GetUserData();
+    BodyImpl* impl = static_cast<BodyImpl*>(body_ptr->GetUserData());
     if(impl)
     {
       body.impl_ = impl->shared_from_this();

@@ -48,7 +48,7 @@ auto Timer::Impl::Reset(double interval, int loops) -> void
   
   static const double scale = static_cast<double>(Clock::period::den) / static_cast<double>(Clock::period::num);
   interval *= scale;
-  interval_ = Clock::duration(Clock::rep(interval));
+  interval_ = static_cast<Clock::duration>(static_cast<Clock::rep>(interval));
   loops_ = loops;
 }
 

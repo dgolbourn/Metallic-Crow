@@ -103,19 +103,19 @@ WindowImpl::WindowImpl(lua::Stack& lua) : sdl_(SDL_INIT_VIDEO), img_(IMG_INIT_PN
     std::string mode;
     {
       lua::Guard guard = lua.Field("mode");
-      if (lua.Check())
+      if(lua.Check())
       {
         lua.Pop(mode);
       }
     }
 
     Uint32 flags = 0u;
-    if (mode == "full screen")
+    if(mode == "full screen")
     {
       flags |= SDL_WINDOW_FULLSCREEN;
       SDL_ShowCursor(SDL_DISABLE);
     }
-    else if (mode == "borderless")
+    else if(mode == "borderless")
     {
       flags |= SDL_WINDOW_BORDERLESS | SDL_WINDOW_MAXIMIZED;
     }
@@ -165,7 +165,7 @@ WindowImpl::WindowImpl(lua::Stack& lua) : sdl_(SDL_INIT_VIDEO), img_(IMG_INIT_PN
     
     int w, h;
     SDL_GetWindowSize(window_, &w, &h);
-    scale_ = float(std::min(w, h)) / 1024.f;
+    scale_ = static_cast<float>(std::min(w, h)) / 1024.f;
   }
   catch(...)
   {
@@ -202,12 +202,12 @@ auto WindowImpl::Load(boost::filesystem::path const& file) -> sdl::Texture
 
 auto WindowImpl::Text(std::string const& text, sdl::Font const& font, float length) -> sdl::Texture
 {
-  return sdl::Texture(renderer_, (SDL_Surface*)sdl::Surface(text, font, Uint32(length)));
+  return sdl::Texture(renderer_, static_cast<SDL_Surface*>(sdl::Surface(text, font, Uint32(length))));
 }
 
 auto WindowImpl::Text(std::string const& text, sdl::Font const& font) -> sdl::Texture
 {
-  return sdl::Texture(renderer_, (SDL_Surface*)sdl::Surface(text, font));
+  return sdl::Texture(renderer_, static_cast<SDL_Surface*>(sdl::Surface(text, font)));
 }
 
 auto WindowImpl::Draw(BoundingBox const& box, Modulation const& modulation) const -> void
@@ -225,10 +225,10 @@ auto WindowImpl::Draw(BoundingBox const& box, Modulation const& modulation) cons
   SDL_Rect rect;
   if(box)
   {
-    rect.x = int(std::round(box.x()));
-    rect.y = int(std::round(box.y()));
-    rect.w = int(std::round(box.w()));
-    rect.h = int(std::round(box.h()));
+    rect.x = static_cast<int>(std::round(box.x()));
+    rect.y = static_cast<int>(std::round(box.y()));
+    rect.w = static_cast<int>(std::round(box.w()));
+    rect.h = static_cast<int>(std::round(box.h()));
     rect_ptr = &rect;
   }
 
@@ -275,10 +275,10 @@ auto WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, 
   SDL_Rect source_copy;
   if(source)
   {
-    source_copy.x = (int)std::round(source.x());
-    source_copy.y = (int)std::round(source.y());
-    source_copy.w = (int)std::round(source.w());
-    source_copy.h = (int)std::round(source.h());
+    source_copy.x = static_cast<int>(std::round(source.x()));
+    source_copy.y = static_cast<int>(std::round(source.y()));
+    source_copy.w = static_cast<int>(std::round(source.w()));
+    source_copy.h = static_cast<int>(std::round(source.h()));
     source_ptr = &source_copy;
   }
 
@@ -304,23 +304,23 @@ auto WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, 
     modulation_copy.b = sdl::Colour(b--);
     modulation_copy.a = sdl::Colour(modulation.a());
 
-    sdl::Render(window_, renderer_, (SDL_Texture*)texture, source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, &modulation_copy, scale_);
+    sdl::Render(window_, renderer_, static_cast<SDL_Texture*>(texture), source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, &modulation_copy, scale_);
 
     if((r > 0.f) || (g > 0.f) || (b > 0.f))
     {
-      BlendMode blend_mode((SDL_Texture*)texture, SDL_BLENDMODE_ADD);
+      BlendMode blend_mode(static_cast<SDL_Texture*>(texture), SDL_BLENDMODE_ADD);
       do
       {
         modulation_copy.r = sdl::Colour(r--);
         modulation_copy.g = sdl::Colour(g--);
         modulation_copy.b = sdl::Colour(b--);
-        sdl::Render(window_, renderer_, (SDL_Texture*)texture, source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, &modulation_copy, scale_);
+        sdl::Render(window_, renderer_, static_cast<SDL_Texture*>(texture), source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, &modulation_copy, scale_);
       } while((r > 0.f) || (g > 0.f) || (b > 0.f));
     }
   }
   else
   {
-    sdl::Render(window_, renderer_, (SDL_Texture*)texture, source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, nullptr, scale_);
+    sdl::Render(window_, renderer_, static_cast<SDL_Texture*>(texture), source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, nullptr, scale_);
   }
 }
 

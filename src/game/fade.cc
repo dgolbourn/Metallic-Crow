@@ -107,7 +107,7 @@ auto Fade::Impl::Next() -> void
     --count_;
   }
 
-  current_ = float(count_) / steps_;
+  current_ = static_cast<float>(count_) / steps_;
 
   modulation_.a(current_);
 }

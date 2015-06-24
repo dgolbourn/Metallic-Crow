@@ -45,7 +45,7 @@ auto begin(b2World const& world) -> dynamics::BodyImpl::Iterator
   dynamics::BodyImpl* impl = nullptr;
   if(b2Body const* body = world.GetBodyList())
   {
-    impl = (dynamics::BodyImpl*)body->GetUserData();
+    impl = static_cast<dynamics::BodyImpl*>(body->GetUserData());
   }
   return dynamics::BodyImpl::Iterator(impl);
 }

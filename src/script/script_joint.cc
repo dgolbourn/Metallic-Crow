@@ -52,7 +52,7 @@ auto Script::Impl::JointFree() -> void
     lua::Guard guard = lua_.Get(-2);
     stage = StageGet();
   }
-  if (stage)
+  if(stage)
   {
     std::string name;
     {

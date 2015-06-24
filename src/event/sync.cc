@@ -31,9 +31,8 @@ auto Sync::Impl::Synchronise() -> void
   std::this_thread::sleep_until(tick_);
 }
 
-Sync::Sync(double frame_rate)
+Sync::Sync(double frame_rate) : impl_(std::make_shared<Impl>(frame_rate))
 {
-  impl_ = std::make_shared<Impl>(frame_rate);
 }
 
 auto Sync::operator()() -> void

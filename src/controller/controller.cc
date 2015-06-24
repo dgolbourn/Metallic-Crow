@@ -49,7 +49,7 @@ auto Chapters(lua::Stack& lua, Strings& names, Paths& files, boost::filesystem::
 auto ChapterOptions(game::Menu& menu, int progress, Strings const& chapters) -> void
 {
   Strings options;
-  int max = int(chapters.size()) - 1;
+  int max = static_cast<int>(chapters.size()) - 1;
   if(progress > max)
   {
     progress = max;
@@ -85,7 +85,7 @@ auto LoadOptions(game::Menu& menu, game::Saves& saves, Strings const& chapters) 
         stream << chapters[current] << " / ";
       }
       
-      if(int(chapters.size()) == progress)
+      if(static_cast<int>(chapters.size()) == progress)
       {
         stream << "Complete";
       }
@@ -358,7 +358,7 @@ auto Controller::Impl::Add(event::Command const& command) -> void
 
 auto Controller::Impl::Control(float x, float y) -> void
 {
-  int sign = int(0.f < y) - int(y < 0.f);
+  int sign = static_cast<int>(0.f < y) - static_cast<int>(y < 0.f);
   bool up = (sign_ <= 0) && (sign > 0);
   bool down = (sign_ >= 0) && (sign < 0);
   sign_ = sign;

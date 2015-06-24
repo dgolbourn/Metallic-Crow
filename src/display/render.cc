@@ -101,10 +101,10 @@ auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
   {
     if(SDL_IntersectRect(source_ptr, &source, &source))
     {
-      clip.x = (source.x - source_ptr->x) / float(source_ptr->w);
-      clip.y = (source.y - source_ptr->y) / float(source_ptr->h);
-      clip.w = source.w / float(source_ptr->w);
-      clip.h = source.h / float(source_ptr->h);
+      clip.x = (source.x - source_ptr->x) / static_cast<float>(source_ptr->w);
+      clip.y = (source.y - source_ptr->y) / static_cast<float>(source_ptr->h);
+      clip.w = source.w / static_cast<float>(source_ptr->w);
+      clip.h = source.h / static_cast<float>(source_ptr->h);
     }
     else
     {
@@ -116,8 +116,8 @@ auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
   {
     int w, h;
     SDL_GetWindowSize(window, &w, &h);
-    float wf = float(w);
-    float hf = float(h);
+    float wf = static_cast<float>(w);
+    float hf = static_cast<float>(h);
 
     SDL_FRect destination;
     if(destination_ptr)

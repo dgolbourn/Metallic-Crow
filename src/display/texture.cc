@@ -19,7 +19,7 @@ auto Clip(display::BoundingBox const& current, display::BoundingBox const& clip,
     }
     else
     {
-      box = display::BoundingBox(display::BoundingBox(0.f, 0.f, float(texture->w), float(texture->h)), clip);
+      box = display::BoundingBox(display::BoundingBox(0.f, 0.f, static_cast<float>(texture->w), static_cast<float>(texture->h)), clip);
     }
   }
   else if(current)
@@ -95,7 +95,7 @@ auto Texture::Impl::Shape() const -> display::Shape
   }
   else if(texture_)
   {
-    shape = display::Shape(float(texture_->w), float(texture_->h));
+    shape = display::Shape(static_cast<float>(texture_->w), static_cast<float>(texture_->h));
   }
   else
   {

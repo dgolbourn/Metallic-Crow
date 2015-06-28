@@ -33,7 +33,7 @@ auto Script::Impl::Init(boost::filesystem::path const& file) -> void
   AudioInit();
 
   typedef void(event::Signal::*Notify)();
-  lua_.Add(function::Bind((Notify)&event::Signal::operator(), signal_), "script_end", 0, "metallic_crow");
+  lua_.Add(function::Bind((Notify)&event::Signal::operator(), signal_), "exit", 0, "metallic_crow");
 
   lua_.Load(file);
 }
@@ -76,7 +76,7 @@ auto Script::Impl::Resume() -> void
   if(!begun_)
   {
     begun_ = true;
-    Call("script_begin");
+    Call("main");
   }
 
   if(paused_)

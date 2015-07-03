@@ -32,6 +32,8 @@ public:
   auto Next() -> void;
   auto Dilation() const -> double;
   auto Dilation(double dilation) -> void;
+  auto Rotation() const -> double;
+  auto Rotation(double angle) -> void;
 
   game::Position position_;
   display::Modulation modulation_;

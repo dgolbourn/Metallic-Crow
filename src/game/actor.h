@@ -35,6 +35,8 @@ public:
   auto Mouth(int open) -> void;
   auto Dilation() const -> double;
   auto Dilation(double dilation) -> void;
+  auto Rotation(double angle) -> void;
+  auto Rotation() const -> double;
   explicit operator bool() const;
 private:
   class Impl;

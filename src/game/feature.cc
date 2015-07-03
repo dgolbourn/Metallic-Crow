@@ -17,7 +17,7 @@ public:
   auto Expression(std::string const& expression) -> void;
   auto Expression(int index) -> void;
   auto Expression() -> void;
-  auto Render(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, bool facing) const -> void;
+  auto Render(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, double angle, bool facing) const -> void;
   TextureMap textures_;
   TextureMap::iterator current_;
   Key state_;
@@ -119,17 +119,17 @@ auto Feature::Impl::Expression() -> void
   state_.second = current_->first.second;
 }
 
-auto Feature::Impl::Render(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, bool facing) const -> void
+auto Feature::Impl::Render(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, double angle, bool facing) const -> void
 {
   if(current_ != textures_.end())
   {
     if(facing)
     {
-      current_->second.first(display::BoundingBox(), render_box, parallax, false, 0., modulation);
+      current_->second.first(display::BoundingBox(), render_box, parallax, false, angle, modulation);
     }
     else
     {
-      current_->second.second(display::BoundingBox(), render_box, parallax, false, 0., modulation);
+      current_->second.second(display::BoundingBox(), render_box, parallax, false, angle, modulation);
     }
   }
 }
@@ -153,12 +153,12 @@ auto Feature::Expression(int index) -> void
   impl_->Expression(index);
 }
 
-auto Feature::operator()(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, bool facing) const -> bool
+auto Feature::operator()(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, double angle, bool facing) const -> bool
 {
   bool valid = bool(impl_);
   if(valid)
   {
-    impl_->Render(render_box, modulation, parallax, facing);
+    impl_->Render(render_box, modulation, parallax, angle, facing);
   }
   return valid;
 }

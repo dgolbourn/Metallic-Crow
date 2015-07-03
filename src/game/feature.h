@@ -14,7 +14,7 @@ public:
   auto Expression(std::string const& expression, int index) -> void;
   auto Expression(std::string const& expression) -> void;
   auto Expression(int index) -> void;
-  auto operator()(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, bool facing) const -> bool;
+  auto operator()(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, double angle, bool facing) const -> bool;
   explicit operator bool() const;
 private:
   class Impl;

@@ -333,6 +333,24 @@ auto Actor::Impl::Dilation(double dilation) -> void
   dilation_ = dilation;
 }
 
+auto Actor::Impl::Rotation() const -> double
+{
+  double angle = 0;
+  if(game_body_)
+  {
+    angle = game_body_.Rotation();
+  }
+  return angle;
+}
+
+auto Actor::Impl::Rotation(double angle) -> void
+{
+  if(game_body_)
+  {
+    game_body_.Rotation(angle);
+  }
+}
+
 auto Actor::Position(game::Position const& position) -> void
 {
   impl_->Position(position);
@@ -421,6 +439,16 @@ auto Actor::Dilation(double dilation) -> void
 Actor::operator bool() const
 {
   return bool(impl_);
+}
+
+auto Actor::Rotation(double angle) -> void
+{
+  impl_->Rotation(angle);
+}
+  
+auto Actor::Rotation() const -> double
+{
+  return impl_->Rotation();
 }
 
 Actor::Actor(lua::Stack& lua, display::Window& window, Scene& scene, collision::Group& collision, event::Queue& queue, dynamics::World& world, boost::filesystem::path const& path)

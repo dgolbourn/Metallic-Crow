@@ -7,6 +7,7 @@ auto Script::Impl::ViewInit() -> void
   lua_.Add(function::Bind(&Impl::ViewAddActor, shared_from_this()), "view_add", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ViewActor, shared_from_this()), "view", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ViewZoom, shared_from_this()), "view_zoom", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ViewRotate, shared_from_this()), "view_rotate", 0, "metallic_crow");
 }
 
 auto Script::Impl::ViewAddActor() -> void
@@ -66,6 +67,25 @@ auto Script::Impl::ViewZoom() -> void
   {
     lua::Guard guard = lua_.Get(-1);
     lua_.Pop(stage->zoom_);
+  }
+}
+
+auto Script::Impl::ViewRotate() -> void
+{
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-2);
+    stage = StageGet();
+  }
+  if(stage)
+  {
+    lua::Guard guard = lua_.Get(-1);
+    lua_.Pop(stage->angle_);
+
+    if(stage_.second = stage)
+    {
+      window_.Rotation(stage->angle_);
+    }
   }
 }
 

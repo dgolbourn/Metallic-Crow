@@ -63,6 +63,8 @@ auto Script::Impl::StageNominate() -> void
         sound.second(volume_);
       }
       stage_.second->current_music_(volume_);
+
+      window_.Rotation(stage_.second->angle_);
     }
   }
 }
@@ -90,6 +92,7 @@ auto Script::Impl::StageLoad() -> void
     stage->paused_[0] = paused_;
     stage->paused_[1] = true;
     stage->zoom_ = 1.f;
+    stage->angle_ = 0.;
 
     {
       lua::Guard guard = lua_.Field("collision");

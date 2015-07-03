@@ -46,6 +46,7 @@ struct Stage
   audio::Music current_music_;
   ActorList subjects_;
   float zoom_;
+  double angle_;
 
   Scene scene_;
   Choice choice_;
@@ -135,6 +136,7 @@ public:
   auto ViewAddActor() -> void;
   auto ViewActor() -> void;
   auto ViewZoom() -> void;
+  auto ViewRotate() -> void;
 
   auto CollisionInit() -> void;
   auto CollisionBegin() -> void;

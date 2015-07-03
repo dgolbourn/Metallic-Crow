@@ -162,6 +162,7 @@ WindowImpl::WindowImpl(lua::Stack& lua) : sdl_(SDL_INIT_VIDEO), img_(IMG_INIT_PN
 
     view_ = {0.f, 0.f};
     zoom_ = 1.f;
+    view_angle_ = {0., 0., 1.0};
     
     int w, h;
     SDL_GetWindowSize(window_, &w, &h);
@@ -269,6 +270,14 @@ auto WindowImpl::View(float x, float y, float zoom) -> void
   zoom_ = zoom;
 }
 
+auto WindowImpl::Rotation(double angle) -> void
+{
+  view_angle_.angle_ = angle;
+  angle *= M_PI / 180.;
+  view_angle_.cos_ = std::cos(angle);
+  view_angle_.sin_ = std::sin(angle);
+}
+
 auto WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const -> void
 {
   SDL_Rect const* source_ptr = nullptr;
@@ -304,7 +313,7 @@ auto WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, 
     modulation_copy.b = sdl::Colour(b--);
     modulation_copy.a = sdl::Colour(modulation.a());
 
-    sdl::Render(window_, renderer_, static_cast<SDL_Texture*>(texture), source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, &modulation_copy, scale_);
+    sdl::Render(window_, renderer_, static_cast<SDL_Texture*>(texture), source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, &modulation_copy, scale_, &view_angle_);
 
     if((r > 0.f) || (g > 0.f) || (b > 0.f))
     {
@@ -314,13 +323,13 @@ auto WindowImpl::Render(sdl::Texture const& texture, BoundingBox const& source, 
         modulation_copy.r = sdl::Colour(r--);
         modulation_copy.g = sdl::Colour(g--);
         modulation_copy.b = sdl::Colour(b--);
-        sdl::Render(window_, renderer_, static_cast<SDL_Texture*>(texture), source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, &modulation_copy, scale_);
+        sdl::Render(window_, renderer_, static_cast<SDL_Texture*>(texture), source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, &modulation_copy, scale_, &view_angle_);
       } while((r > 0.f) || (g > 0.f) || (b > 0.f));
     }
   }
   else
   {
-    sdl::Render(window_, renderer_, static_cast<SDL_Texture*>(texture), source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, nullptr, scale_);
+    sdl::Render(window_, renderer_, static_cast<SDL_Texture*>(texture), source_ptr, destination_ptr, view_, zoom_, parallax, tile, angle, nullptr, scale_, &view_angle_);
   }
 }
 
@@ -356,6 +365,11 @@ auto Window::Free(boost::filesystem::path const& file) -> void
 auto Window::View(float x, float y, float zoom) -> void
 {
   impl_->View(x, y, zoom);
+}
+
+auto Window::Rotation(double angle) -> void
+{
+  impl_->Rotation(angle);
 }
 
 Window::operator bool() const

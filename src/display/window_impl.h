@@ -13,6 +13,7 @@
 #include "SDL_sysrender.h"
 #include "boost/filesystem.hpp"
 #include "boost/functional/hash.hpp"
+#include "render.h"
 namespace display
 {
 class WindowImpl
@@ -29,6 +30,7 @@ public:
   auto Destroy() noexcept -> void;
   auto Draw(BoundingBox const& box, Modulation const& modulation) const -> void;
   auto View(float x, float y, float zoom) -> void;
+  auto Rotation(double angle) -> void;
   auto Render(sdl::Texture const& texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) const -> void;
   ~WindowImpl();
   sdl::Library sdl_;
@@ -41,6 +43,7 @@ public:
   SDL_FPoint view_;
   float zoom_;
   float scale_;
+  sdl::Angle view_angle_;
 };
 }
 #endif

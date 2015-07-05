@@ -70,7 +70,7 @@ Font::Impl::Impl(lua::Stack& lua, boost::filesystem::path const& path)
 
 auto Font::Impl::LineSpacing() const -> float
 {
-  return float(TTF_FontLineSkip(font_.get()));
+  return static_cast<float>(TTF_FontLineSkip(font_.get()));
 }
 
 auto Font::LineSpacing() const -> float

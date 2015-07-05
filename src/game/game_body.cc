@@ -32,9 +32,10 @@ struct Feature final : public Renderable
 struct Texture final : public Renderable
 {
   display::Texture texture_;
+  bool tile_;
   auto operator()() const -> void override
   {
-    texture_(display::BoundingBox(), current_box_, parallax_, false, current_angle_, modulation_);
+    texture_(display::BoundingBox(), current_box_, parallax_, tile_, current_angle_, modulation_);
   }
 };
 
@@ -298,7 +299,17 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
                 render->angle_ = angle;
                 render->current_angle_ = angle;
               }
-  
+
+              {
+                bool tile = false;
+                lua::Guard guard = lua.Field("tile");
+                if(lua.Check())
+                {
+                  lua.Pop(tile);
+                }
+                static_cast<::Texture*>(render.get())->tile_ = tile;
+              }
+ 
               render->modulation_ = modulation_;
 
               static_cast<::Texture*>(render.get())->texture_ = display::Texture(display::Texture(path / page, window), clip);

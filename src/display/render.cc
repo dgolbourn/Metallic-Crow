@@ -117,26 +117,22 @@ auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
     if(destination_ptr)
     {
       destination = *destination_ptr;
+      
+      float w2 = wf * .5f;
+      float h2 = hf * .5f;
 
       if(parallax <= 0.f)
       {
-        parallax = 1.f;
-        view.x = 0.f;
-        view.y = 0.f;
-
         destination.x *= scale;
-        destination.x += wf * .5f;
+        destination.x += w2;
         destination.y *= scale;
-        destination.y += hf * .5f;
+        destination.y += h2;
         destination.w *= scale;
         destination.h *= scale;
       }
       else
       {
         scale *= zoom;
-
-        float w2 = wf * .5f;
-        float h2 = hf * .5f;
 
         destination.x -= parallax * (view.x - w2);
         destination.x -= w2;

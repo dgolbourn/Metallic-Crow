@@ -21,8 +21,6 @@ auto Script::Impl::Init(boost::filesystem::path const& file) -> void
 
   ActorInit();
   StageInit();
-  SceneryInit();
-  ScreenInit();
   ChoiceInit();
   SubtitleInit();
   TimerInit();

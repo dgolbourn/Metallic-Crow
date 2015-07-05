@@ -205,10 +205,6 @@ auto Script::Impl::Pause(StagePtr const& stage, bool& paused) -> void
     {
       actor.second.Pause();
     }
-    for(auto& screen : stage->screens_)
-    {
-      screen.second.Pause();
-    }
     stage->world_.Pause();
     stage->choice_.Pause();
     for(auto timer = stage->timers_.begin(); timer != stage->timers_.end();)
@@ -245,10 +241,6 @@ auto Script::Impl::Resume(StagePtr const& stage, bool& paused) -> void
     for(auto& actor : stage->actors_)
     {
       actor.second.Resume();
-    }
-    for(auto& screen : stage->screens_)
-    {
-      screen.second.Resume();
     }
     stage->world_.Resume();
     stage->choice_.Resume();

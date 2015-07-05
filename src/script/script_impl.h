@@ -2,12 +2,10 @@
 #define SCRIPT_IMPL_H_
 #include "script.h"
 #include "actor.h"
-#include "scenery.h"
 #include "timer.h"
 #include "lua_stack.h"
 #include "choice.h"
 #include "scene.h"
-#include "screen.h"
 #include <memory>
 #include <map>
 #include <string>
@@ -25,10 +23,8 @@ namespace game
 {
 typedef std::list<Actor::WeakPtr> ActorList;
 typedef std::multimap<std::string, Joint> JointMap;
-typedef std::multimap<std::string, Scenery> SceneryMap;
 typedef std::multimap<std::string, Actor> ActorMap;
 typedef std::multimap<std::string, event::Timer> TimerMap;
-typedef std::multimap<std::string, Screen> ScreenMap;
 typedef std::multimap<std::string, audio::Sound> SoundMap;
 typedef std::map<std::string, audio::Music> MusicMap;
 typedef std::array<bool, 2> Paused;
@@ -36,11 +32,9 @@ typedef std::array<bool, 2> Paused;
 struct Stage
 {
   JointMap joints_;
-  SceneryMap scenery_;
   ActorMap actors_;
   Paused paused_;
   TimerMap timers_;
-  ScreenMap screens_;
   SoundMap sounds_;
   MusicMap music_;
   audio::Music current_music_;

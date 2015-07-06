@@ -10,7 +10,7 @@
 #include "modulation.h"
 namespace dynamics
 {
-typedef std::array<b2Vec2, 4> Cubic;
+typedef std::array<b2Vec3, 4> Cubic;
 
 class BodyImpl final : public std::enable_shared_from_this<BodyImpl>
 {
@@ -21,6 +21,8 @@ public:
   auto Position(float x, float y) -> void;
   auto Velocity() const -> game::Position;
   auto Velocity(float x, float y) -> void;
+  auto Rotation() const -> double;
+  auto Rotation(double angle) -> void;
   auto Force(float x, float y) -> void;
   auto Impulse(float x, float y) -> void;
   auto Begin() -> void;
@@ -30,8 +32,8 @@ public:
   static Body MakeBody(b2Body* body);
   World::WeakPtr world_;
   b2Body* body_;
-  b2Vec2 position_;
-  b2Vec2 velocity_;
+  b2Vec3 position_;
+  b2Vec3 velocity_;
   Cubic cubic_;
   Light light_;
   class Iterator;

@@ -87,8 +87,8 @@ auto Actor::Impl::End() -> void
   game::Position position(dynamics_body_.Position());
   position.first += position_.first;
   position.second += position_.second;
-  game_body_.Position(position);
-
+  game_body_.Position(position, angle_ + dynamics_body_.Rotation());
+ 
   display::Modulation modulation(dynamics_body_.Modulation());
   game_body_.Modulation(modulation.r() * modulation_.r(), modulation.g() * modulation_.g(), modulation.b() * modulation_.b(), modulation.a() * modulation_.a());
 }
@@ -223,7 +223,7 @@ auto Actor::Impl::Blink() -> void
   eyes_.Expression(open_);
 }
 
-Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, int& plane, boost::filesystem::path const& path) : force_(0.f, 0.f), open_(true)
+Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, int& plane, boost::filesystem::path const& path) : force_(0.f, 0.f), open_(true), angle_(0.)
 {
   {
     lua::Guard guard = lua.Field("dynamics_body");
@@ -291,6 +291,7 @@ Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue,
 
     position_.first = game_position.first - dynamics_position.first;
     position_.second = game_position.second - dynamics_position.second;
+    angle_ = game_body_.Rotation() - dynamics_body_.Rotation();
   }
 }
 
@@ -335,8 +336,12 @@ auto Actor::Impl::Dilation(double dilation) -> void
 
 auto Actor::Impl::Rotation() const -> double
 {
-  double angle = 0;
-  if(game_body_)
+  double angle;
+  if(dynamics_body_)
+  {
+    angle = dynamics_body_.Rotation();
+  }
+  else if(game_body_)
   {
     angle = game_body_.Rotation();
   }
@@ -345,9 +350,13 @@ auto Actor::Impl::Rotation() const -> double
 
 auto Actor::Impl::Rotation(double angle) -> void
 {
+  if(dynamics_body_)
+  {
+    dynamics_body_.Rotation(angle);
+  }
   if(game_body_)
   {
-    game_body_.Rotation(angle);
+    game_body_.Rotation(angle + angle_);
   }
 }
 

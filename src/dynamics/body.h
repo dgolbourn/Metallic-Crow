@@ -17,6 +17,8 @@ public:
   auto operator<(Body const& other) const -> bool;
   auto Position() const -> game::Position;
   auto Position(float x, float y) -> void;
+  auto Rotation() const -> double;
+  auto Rotation(double angle) -> void;
   auto Velocity() const -> game::Position;
   auto Velocity(float x, float y) -> void;
   auto Force(float x, float y) -> void;

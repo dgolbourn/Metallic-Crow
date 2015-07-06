@@ -67,6 +67,12 @@ auto Rotate(double cos, double sin, display::BoundingBox const& box) -> game::Po
   position.second = static_cast<float>(dx * sin + dy * cos) - h;
   return position;
 }
+
+auto Radians(double degrees) -> double
+{
+  static const double scale = M_PI / 180.;
+  return degrees * scale;
+}
 }
 
 namespace game
@@ -86,6 +92,7 @@ public:
   auto Modulation(float r, float g, float b, float a) -> void;
   auto Modulation() const -> display::Modulation;
   auto Render() const -> void;
+  auto Position(game::Position const& position, double angle) -> void;
   auto Rotation(double angle) -> void;
   auto Rotation() const -> double;
   auto UpdateFrame() -> void;
@@ -361,7 +368,7 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
     if(lua.Check()) 
     {
       lua.Pop(angle_);
-      double angle = angle_ * M_PI / 180.;
+      double angle = Radians(angle_);
       cos_ = std::cos(angle);
       sin_ = std::sin(angle);
     }
@@ -467,6 +474,16 @@ auto Body::Impl::Render() const -> void
   }
 }
 
+auto Body::Impl::Position(game::Position const& position, double angle) -> void
+{
+  position_ = position;
+  angle_ = angle;
+  angle = Radians(angle_ );
+  cos_ = std::cos(angle);
+  sin_ = std::sin(angle);
+  UpdateFrame();
+}
+
 auto Body::Impl::Position(game::Position const& position) -> void
 {
   position_ = position;
@@ -500,7 +517,7 @@ auto Body::Impl::Modulation() const -> display::Modulation
 auto Body::Impl::Rotation(double angle) -> void
 {
   angle_ = angle;
-  angle = angle_ * M_PI / 180.;
+  angle = Radians(angle_);
   cos_ = std::cos(angle);
   sin_ = std::sin(angle);
   UpdateFrame();
@@ -543,6 +560,11 @@ auto Body::Render() const -> void
 auto Body::Position(game::Position const& position) -> void
 {
   impl_->Position(position);
+}
+
+auto Body::Position(game::Position const& position, double angle) -> void
+{
+  impl_->Position(position, angle);
 }
 
 auto Body::Position() const -> game::Position

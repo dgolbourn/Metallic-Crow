@@ -25,6 +25,7 @@ public:
   auto Modulation(float r, float g, float b, float a) -> void;
   auto Modulation() const -> display::Modulation;
   auto Render() const -> void;
+  auto Position(game::Position const& position, double angle) -> void;
   auto Rotation(double angle) -> void;
   auto Rotation() const -> double;
   explicit operator bool() const;

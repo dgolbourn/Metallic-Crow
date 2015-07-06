@@ -3,6 +3,7 @@
 #include <vector>
 #include "exception.h"
 #include "log.h"
+#include "SDL_stdinc.h"
 namespace 
 {
 typedef std::unique_ptr<b2Shape> Shape;
@@ -115,7 +116,7 @@ auto Chain(dynamics::WorldImpl const& world, lua::Stack& lua) -> ShapePair
   return shape;
 }
 
-auto BodyDefinition(dynamics::WorldImpl const& world, lua::Stack& lua, float32 damping, float32 x, float32 y) -> b2BodyDef
+auto BodyDefinition(dynamics::WorldImpl const& world, lua::Stack& lua, float32 damping, float32 x, float32 y, bool rotation) -> b2BodyDef
 {
   b2BodyDef body_def;
  
@@ -147,7 +148,7 @@ auto BodyDefinition(dynamics::WorldImpl const& world, lua::Stack& lua, float32 d
   body_def.angularVelocity = 0.f;
   body_def.linearDamping = damping;
   body_def.angularDamping = 0.f;
-  body_def.fixedRotation = true;
+  body_def.fixedRotation = !rotation;
   return body_def;
 }
 
@@ -173,6 +174,30 @@ auto FixtureDefinition(float32 area, float32 mass, float32 friction, float32 res
     fixture.restitution = restitution;
   }
   return fixture;
+}
+
+auto Position(b2Body const& body) -> b2Vec3
+{
+  b2Vec2 xy = body.GetPosition();
+  return b2Vec3(xy.x, xy.y, body.GetAngle());
+}
+
+auto Velocity(b2Body const& body) -> b2Vec3
+{
+  b2Vec2 xy = body.GetLinearVelocity();
+  return b2Vec3(xy.x, xy.y, body.GetAngularVelocity());
+}
+
+auto Radians(double degrees) -> float32
+{
+  static const double scale = M_PI / 180.;
+  return static_cast<float32>(degrees * scale);
+}
+
+auto Degrees(float32 radians) -> double
+{
+  static const double scale = 180. / M_PI;
+  return static_cast<double>(radians) * scale;
 }
 }
 
@@ -249,7 +274,16 @@ BodyImpl::BodyImpl(lua::Stack& lua, World& world)
     }
   }
 
-  b2BodyDef body_def = BodyDefinition(*world.impl_, lua, drag, world.impl_->Metres(x), world.impl_->Metres(y));
+  bool rotation = false;
+  {
+    lua::Guard guard = lua.Field("rotation");
+    if(lua.Check())
+    {
+      lua.Pop(rotation);
+    }
+  }
+
+  b2BodyDef body_def = BodyDefinition(*world.impl_, lua, drag, world.impl_->Metres(x), world.impl_->Metres(y), rotation);
 
   body_ = world.impl_->world_.CreateBody(&body_def);
   body_->SetUserData(this);
@@ -283,8 +317,8 @@ BodyImpl::BodyImpl(lua::Stack& lua, World& world)
   body_->ResetMassData();
 
   world_ = world;
-  position_ = body_->GetPosition();
-  velocity_ = body_->GetLinearVelocity();
+  position_ = ::Position(*body_);
+  velocity_ = ::Velocity(*body_);
 
   {
     lua::Guard guard = lua.Field("light");
@@ -318,7 +352,17 @@ auto BodyImpl::Position() const -> game::Position
 auto BodyImpl::Position(float x, float y) -> void
 {
   auto world = world_.Lock().impl_;
-  body_->SetTransform(b2Vec2(world->Metres(x), world->Metres(y)), 0.f);
+  body_->SetTransform(b2Vec2(world->Metres(x), world->Metres(y)), body_->GetAngle());
+}
+
+auto BodyImpl::Rotation() const -> double
+{
+  return Degrees(position_.z);
+}
+
+auto BodyImpl::Rotation(double angle) -> void
+{
+  body_->SetTransform(body_->GetPosition(), Radians(angle));
 }
 
 auto BodyImpl::Velocity() const -> game::Position
@@ -349,8 +393,8 @@ auto BodyImpl::Begin() -> void
 {
   if(body_->GetType() != b2_staticBody)
   {
-    position_ = body_->GetPosition();
-    velocity_ = body_->GetLinearVelocity();
+    position_ = ::Position(*body_);
+    velocity_ = ::Velocity(*body_);
   }
 }
 
@@ -358,8 +402,8 @@ auto BodyImpl::End(float32 dt) -> void
 {
   if(body_->GetType() != b2_staticBody)
   {
-    b2Vec2 v = body_->GetLinearVelocity() + velocity_;
-    b2Vec2 dx = body_->GetPosition() - position_;
+    b2Vec3 v = ::Velocity(*body_) + velocity_;
+    b2Vec3 dx = ::Position(*body_) - position_;
     cubic_[3] = dt * v - 2.f * dx;
     cubic_[2] = -dt * (v + velocity_) + 3.f * dx;
     cubic_[1] = dt * velocity_;
@@ -415,6 +459,16 @@ auto Body::Position() const -> game::Position
 auto Body::Position(float x, float y) -> void
 {
   impl_->Position(x, y);
+}
+
+auto Body::Rotation() const -> double
+{
+  return impl_->Rotation();
+}
+
+auto Body::Rotation(double angle) -> void
+{
+  impl_->Rotation(angle);
 }
 
 auto Body::Velocity() const -> game::Position

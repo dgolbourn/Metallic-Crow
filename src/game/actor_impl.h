@@ -36,6 +36,7 @@ public:
   auto Rotation(double angle) -> void;
 
   game::Position position_;
+  double angle_;
   display::Modulation modulation_;
 
   dynamics::Body dynamics_body_;

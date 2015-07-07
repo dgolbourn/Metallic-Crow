@@ -85,7 +85,7 @@ Change the text colour.
 Stage
 =====
 
-A stage is a physical world for actors to play out the story.  Its configuration also defines the style of fonts and graphics for choices and subtitles.  A stage represents a locale, room, level or zone.  For example, the interior and exterior of a house could be two stages that are part of the same script.  Multiple stages can be loaded and running at the same time, but only one can be displayed.  Entities of type `actor`_, `audio`_, `screen`_, `timer`_, `subtitle`_, `choice`_ and `scenery`_ are all inextricably linked to their stages; they are paused when their stage is paused, visible and audible when their stage is displayed and freed when their stage is freed.
+A stage is a physical world for actors to play out the story.  Its configuration also defines the style of fonts and graphics for choices and subtitles.  A stage represents a locale, room, level or zone.  For example, the interior and exterior of a house could be two stages that are part of the same script.  Multiple stages can be loaded and running at the same time, but only one can be displayed.  Calls such as `actor`_, `audio`_, `view`_, `timer`_, `subtitle`_ and `choice`_  are all inextricably linked to their stages. Entities associated with a stage are paused when their stage is paused, visible and audible when their stage is displayed and freed when their stage is freed.
 
 .. function:: stage_nominate(name)
 
@@ -110,24 +110,6 @@ Pause the stage.
 .. function:: stage_resume(name)
 
 Resume the stage.
-
-
-Screen
-======
-
-A screen is a non-animated repeating surface which can be used as a background or foreground.
-
-.. function:: screen_load(stage, name, configuration)
-
-Load the screen with the given configuration as ``name`` in the given stage.
-
-.. function:: screen_free(stage, name)
-
-Free the screen
-
-.. function:: screen_modulation(stage, name, r, g, b)
-
-Change the colour of the screen.
 
 
 Fade
@@ -237,6 +219,9 @@ Change the animation speed of the actor.
 
 Chage the actor's colour.
 
+.. function:: actor_rotate(stage, name, angle)
+
+Rotate the actor
 
 View
 ====
@@ -251,10 +236,13 @@ Position the camera on the actor ``name``.
 
 Position the camera such that actor ``name`` is also in view.
 
-.. function:: view_zoom(zoom)
+.. function:: view_zoom(stage, zoom)
 
 Change the zoom of the camera.
 
+.. function:: view_rotate(stage, angle)
+
+Rotate the camera.
 
 Audio
 =====
@@ -292,24 +280,6 @@ Play the music.
 .. function:: music_end(stage, name)
 
 Stop the music.
-
-
-Scenery
-=======
-
-Scenery are non-interactive props that can be used for backgrounds or foregrounds.
-
-.. function:: scenery_load(stage, name, configuration)
-
-Load ``name`` using the given configuration table.
-
-.. function:: scenery_free(stage, name)
-
-Free the scenery.
-
-.. function:: scenery_modulate(stage, name, r, g, b, a)
-
-Change the colour of the scenery.
 
 
 Joint

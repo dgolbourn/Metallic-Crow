@@ -478,7 +478,7 @@ auto Body::Impl::Position(game::Position const& position, double angle) -> void
 {
   position_ = position;
   angle_ = angle;
-  angle = Radians(angle_ );
+  angle = Radians(angle_);
   cos_ = std::cos(angle);
   sin_ = std::sin(angle);
   UpdateFrame();

@@ -116,7 +116,7 @@ auto Chain(dynamics::WorldImpl const& world, lua::Stack& lua) -> ShapePair
   return shape;
 }
 
-auto BodyDefinition(dynamics::WorldImpl const& world, lua::Stack& lua, float32 damping, float32 x, float32 y, bool rotation) -> b2BodyDef
+auto BodyDefinition(dynamics::WorldImpl const& world, lua::Stack& lua, float32 damping, float32 x, float32 y, bool allow_rotation, float32 angle) -> b2BodyDef
 {
   b2BodyDef body_def;
  
@@ -145,10 +145,11 @@ auto BodyDefinition(dynamics::WorldImpl const& world, lua::Stack& lua, float32 d
   }
 
   body_def.position.Set(x, y);
+  body_def.angle = angle;
   body_def.angularVelocity = 0.f;
   body_def.linearDamping = damping;
   body_def.angularDamping = 0.f;
-  body_def.fixedRotation = !rotation;
+  body_def.fixedRotation = !allow_rotation;
   return body_def;
 }
 
@@ -276,14 +277,23 @@ BodyImpl::BodyImpl(lua::Stack& lua, World& world)
 
   bool rotation = false;
   {
-    lua::Guard guard = lua.Field("rotation");
+    lua::Guard guard = lua.Field("allow_rotation");
     if(lua.Check())
     {
       lua.Pop(rotation);
     }
   }
 
-  b2BodyDef body_def = BodyDefinition(*world.impl_, lua, drag, world.impl_->Metres(x), world.impl_->Metres(y), rotation);
+  double angle = 0.;
+  {
+    lua::Guard guard = lua.Field("angle");
+    if(lua.Check())
+    {
+      lua.Pop(angle);
+    }
+  }
+
+  b2BodyDef body_def = BodyDefinition(*world.impl_, lua, drag, world.impl_->Metres(x), world.impl_->Metres(y), rotation, Radians(angle));
 
   body_ = world.impl_->world_.CreateBody(&body_def);
   body_->SetUserData(this);

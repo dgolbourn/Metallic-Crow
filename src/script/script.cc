@@ -19,6 +19,8 @@ auto Script::Impl::Init(boost::filesystem::path const& file) -> void
   collect_.Add(function::Bind(&Impl::Collect, shared_from_this()));
   queue_.Add(function::Bind(&event::Timer::operator(), collect_));
 
+  lua_.Resume();
+
   ActorInit();
   StageInit();
   ChoiceInit();
@@ -34,6 +36,9 @@ auto Script::Impl::Init(boost::filesystem::path const& file) -> void
   lua_.Add(function::Bind((Notify)&event::Signal::operator(), signal_), "exit", 0, "metallic_crow");
 
   lua_.Load(file);
+
+  lua_.Collect(-1);
+  lua_.Pause();
 }
 
 auto Script::Impl::Call(std::string const& call) -> void

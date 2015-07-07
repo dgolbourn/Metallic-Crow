@@ -15,6 +15,7 @@ auto Script::Impl::ActorInit() -> void
   lua_.Add(function::Bind(&Impl::ActorImpulse, shared_from_this()), "actor_impulse", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ActorModulation, shared_from_this()), "actor_modulation", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ActorDilation, shared_from_this()), "actor_dilation", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ActorRotation, shared_from_this()), "actor_rotation", 0, "metallic_crow");
 }
 
 auto Script::Impl::ActorLoad() -> void
@@ -367,6 +368,33 @@ auto Script::Impl::ActorDilation() -> void
     for(auto& actor = range.first; actor != range.second; ++actor)
     {
       actor->second.Dilation(dilation);
+    }
+  }
+}
+
+auto Script::Impl::ActorRotation() -> void
+{
+  StagePtr stage;
+  {
+    lua::Guard guard = lua_.Get(-3);
+    stage = StageGet();
+  }
+  if(stage)
+  {
+    std::string name;
+    {
+      lua::Guard guard = lua_.Get(-2);
+      lua_.Pop(name);
+    }
+    double angle;
+    {
+      lua::Guard guard = lua_.Get(-1);
+      lua_.Pop(angle);
+    }
+    auto range = stage->actors_.equal_range(name);
+    for(auto& actor = range.first; actor != range.second; ++actor)
+    {
+      actor->second.Rotation(angle);
     }
   }
 }

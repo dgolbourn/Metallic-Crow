@@ -211,7 +211,7 @@ Change the continuous force applied to the actor.
 
 Apply an impulse to the actor.
 
-.. function:: actor_dilate(stage, name, dilation)
+.. function:: actor_dilation(stage, name, dilation)
 
 Change the animation speed of the actor.
 
@@ -219,7 +219,7 @@ Change the animation speed of the actor.
 
 Chage the actor's colour.
 
-.. function:: actor_rotate(stage, name, angle)
+.. function:: actor_rotation(stage, name, angle)
 
 Rotate the actor
 
@@ -240,7 +240,7 @@ Position the camera such that actor ``name`` is also in view.
 
 Change the zoom of the camera.
 
-.. function:: view_rotate(stage, angle)
+.. function:: view_rotation(stage, angle)
 
 Rotate the camera.
 

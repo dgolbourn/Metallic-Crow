@@ -91,6 +91,7 @@ public:
   auto ActorImpulse() -> void;
   auto ActorModulation() -> void;
   auto ActorDilation() -> void;
+  auto ActorRotation() -> void;
 
   auto SceneryInit() -> void;
   auto SceneryLoad() -> void;
@@ -130,7 +131,7 @@ public:
   auto ViewAddActor() -> void;
   auto ViewActor() -> void;
   auto ViewZoom() -> void;
-  auto ViewRotate() -> void;
+  auto ViewRotation() -> void;
 
   auto CollisionInit() -> void;
   auto CollisionBegin() -> void;

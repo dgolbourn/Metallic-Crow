@@ -7,7 +7,7 @@ auto Script::Impl::ViewInit() -> void
   lua_.Add(function::Bind(&Impl::ViewAddActor, shared_from_this()), "view_add", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ViewActor, shared_from_this()), "view", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ViewZoom, shared_from_this()), "view_zoom", 0, "metallic_crow");
-  lua_.Add(function::Bind(&Impl::ViewRotate, shared_from_this()), "view_rotate", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ViewRotation, shared_from_this()), "view_rotation", 0, "metallic_crow");
 }
 
 auto Script::Impl::ViewAddActor() -> void
@@ -70,7 +70,7 @@ auto Script::Impl::ViewZoom() -> void
   }
 }
 
-auto Script::Impl::ViewRotate() -> void
+auto Script::Impl::ViewRotation() -> void
 {
   StagePtr stage;
   {

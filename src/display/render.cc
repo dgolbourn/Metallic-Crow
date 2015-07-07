@@ -161,6 +161,8 @@ auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
       destination.y = 0.f;
       destination.w = wf;
       destination.h = hf;
+      angle = 0.f;
+      tile = false;
     }
 
     SDL_FRect original = destination;

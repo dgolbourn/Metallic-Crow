@@ -216,6 +216,7 @@ auto Actor::Impl::Blink() -> void
   {
     t = interval();
   }
+  t *= dilation_;
 
   blink_.Reset(t, -1);
 
@@ -238,6 +239,11 @@ Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue,
     if(lua.Check())
     {
       {
+        lua::Guard guard = lua.Field("dilation");
+        lua.Pop(dilation_);
+      }
+
+      {
         lua::Guard guard = lua.Field("eyes");
         if(lua.Check())
         {
@@ -250,7 +256,7 @@ Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue,
             lua.Pop(blink);
             if(blink)
             {
-              blink_ = event::Timer(interval(), -1);
+              blink_ = event::Timer(interval() * dilation_, -1);
               queue.Add(function::Bind(&event::Timer::operator(), blink_));
             }
           }
@@ -267,11 +273,6 @@ Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue,
 
       game_body_ = game::Body(lua, window, path, eyes_, mouth_);
     
-      {
-        lua::Guard guard = lua.Field("dilation");
-        lua.Pop(dilation_);
-      }
-
       animation_ = event::Timer(dilation_ * game_body_.Period(), -1);
       queue.Add(function::Bind(&event::Timer::operator(), animation_));
 
@@ -332,11 +333,27 @@ auto Actor::Impl::Dilation() const -> double
 auto Actor::Impl::Dilation(double dilation) -> void
 {
   dilation_ = dilation;
+
+  if(blink_)
+  {
+    double t = .2;
+    if(!open_)
+    {
+      t = interval();
+    }
+    t *= dilation_;
+    blink_.Reset(t, -1);
+  }
+
+  if(animation_)
+  {
+    animation_.Reset(dilation_ * game_body_.Period(), -1);
+  }
 }
 
 auto Actor::Impl::Rotation() const -> double
 {
-  double angle;
+  double angle = 0.;
   if(dynamics_body_)
   {
     angle = dynamics_body_.Rotation();

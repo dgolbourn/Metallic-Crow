@@ -6,6 +6,12 @@
 #include "SDL_stdinc.h"
 namespace 
 {
+auto Radians(double degrees) -> float32
+{
+  static const double scale = M_PI / 180.;
+  return static_cast<float32>(degrees * scale);
+}
+
 typedef std::unique_ptr<b2Shape> Shape;
 typedef std::pair<Shape, float32> ShapePair;
 
@@ -35,13 +41,22 @@ auto Box(dynamics::WorldImpl const& world, lua::Stack& lua) -> ShapePair
     lua.Pop(h);
   }
 
+  double angle = 0.;
+  {
+    lua::Guard guard = lua.Field("angle");
+    if(lua.Check())
+    {
+      lua.Pop(angle);
+    }
+  }
+
   float32 width = world.Metres(w);
   float32 height = world.Metres(h);
 
   ShapePair shape;
   shape.first = Shape(new b2PolygonShape);
   b2PolygonShape& box = *dynamic_cast<b2PolygonShape*>(shape.first.get());
-  box.SetAsBox(.5f * width, .5f * height, b2Vec2(world.Metres(x), world.Metres(y)), 0.f);
+  box.SetAsBox(.5f * width, .5f * height, b2Vec2(world.Metres(x), world.Metres(y)), Radians(angle));
 
   shape.second = width * height;
   return shape;
@@ -187,12 +202,6 @@ auto Velocity(b2Body const& body) -> b2Vec3
 {
   b2Vec2 xy = body.GetLinearVelocity();
   return b2Vec3(xy.x, xy.y, body.GetAngularVelocity());
-}
-
-auto Radians(double degrees) -> float32
-{
-  static const double scale = M_PI / 180.;
-  return static_cast<float32>(degrees * scale);
 }
 
 auto Degrees(float32 radians) -> double

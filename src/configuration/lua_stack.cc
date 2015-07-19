@@ -336,7 +336,7 @@ auto StackImpl::Add(event::Command const& command, std::string const& name, int 
 {
   lua_pushlightuserdata(state_, static_cast<void*>(this));
   lua_pushstring(state_, name.c_str());
-  lua_pushinteger(state_, (lua_Integer)out);
+  lua_pushinteger(state_, static_cast<lua_Integer>(out));
   lua_pushcclosure(state_, Event, 3);
   PushToLibrary(state_, name, library);
   if(!map_.emplace(name, command).second)

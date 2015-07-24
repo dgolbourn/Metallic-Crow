@@ -483,4 +483,14 @@ Actor::Actor(lua::Stack& lua, display::Window& window, Scene& scene, collision::
   impl_ = std::make_shared<Impl>(lua, window, queue, world, collision, plane, path);
   impl_->Init(scene, world, plane);
 }
+
+size_t Actor::Hash(Actor const& actor)
+{
+  return std::hash<std::shared_ptr<Impl>>()(actor.impl_);
+}
+
+bool Actor::operator==(Actor const& other) const
+{
+  return impl_ == other.impl_;
+}
 }

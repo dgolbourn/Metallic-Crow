@@ -38,6 +38,7 @@ public:
   auto Rotation(double angle) -> void;
   auto Rotation() const -> double;
   explicit operator bool() const;
+  bool operator==(Actor const& other) const;
 private:
   class Impl;
   std::shared_ptr<Impl> impl_;
@@ -45,6 +46,18 @@ public:
   typedef memory::WeakPtr<Actor> WeakPtr;
   friend WeakPtr;
   friend class JointImpl;
+  static size_t Hash(Actor const& actor);
+};
+}
+
+namespace std 
+{
+template<> struct hash<game::Actor> 
+{
+  size_t operator()(game::Actor const& actor) const 
+  { 
+    return game::Actor::Hash(actor); 
+  }
 };
 }
 #endif

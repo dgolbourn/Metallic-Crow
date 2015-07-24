@@ -12,47 +12,20 @@ auto Script::Impl::ViewInit() -> void
 
 auto Script::Impl::ViewAddActor() -> void
 {
-  StagePtr stage;
+  std::pair<StagePtr, Actor> actor = StageDataGet<Actor>();
+  if(actor.first && actor.second)
   {
-    lua::Guard guard = lua_.Get(-2);
-    stage = StageGet();
-  }
-  if(stage)
-  {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(name);
-    }
-    auto range = stage->actors_.equal_range(name);
-    for(auto& actor = range.first; actor != range.second; ++actor)
-    {
-      stage->subjects_.push_back(actor->second);
-    }
+    actor.first->subjects_.emplace(actor.second);
   }
 }
 
 auto Script::Impl::ViewActor() -> void
 {
-  StagePtr stage;
+  std::pair<StagePtr, Actor> actor = StageDataGet<Actor>();
+  if(actor.first && actor.second)
   {
-    lua::Guard guard = lua_.Get(-2);
-    stage = StageGet();
-  }  
-  if(stage)
-  {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(name);
-    }
-
-    stage->subjects_.clear();
-    auto range = stage->actors_.equal_range(name);
-    for(auto& actor = range.first; actor != range.second; ++actor)
-    {
-      stage->subjects_.push_back(actor->second);
-    }
+    actor.first->subjects_.clear();
+    actor.first->subjects_.emplace(actor.second);
   }
 }
 
@@ -82,7 +55,7 @@ auto Script::Impl::ViewRotation() -> void
     lua::Guard guard = lua_.Get(-1);
     lua_.Pop(stage->angle_);
 
-    if(stage_.second = stage)
+    if(stage_ = stage)
     {
       window_.Rotation(stage->angle_);
     }
@@ -94,7 +67,7 @@ auto Script::Impl::View() -> void
   game::Position view(0.f, 0.f);
   int count = 0;
 
-  for(auto iter = stage_.second->subjects_.begin(); iter != stage_.second->subjects_.end();)
+  for(auto iter = stage_->subjects_.begin(); iter != stage_->subjects_.end();)
   {
     if(Actor subject = iter->Lock())
     {
@@ -106,13 +79,13 @@ auto Script::Impl::View() -> void
     }
     else
     {
-      iter = stage_.second->subjects_.erase(iter);
+      iter = stage_->subjects_.erase(iter);
     }
   }
 
   if(count)
   {
-    window_.View(view.first / count, view.second / count, stage_.second->zoom_);
+    window_.View(view.first / count, view.second / count, stage_->zoom_);
   }
 }
 }

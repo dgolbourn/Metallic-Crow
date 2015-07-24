@@ -29,6 +29,7 @@ source_group ("Source Files\\audio" FILES ${AUDIO_SOURCES})
 include_directories ("${PROJECT_SOURCE_DIR}/src/configuration")
 
 set (CONFIGURATION_SOURCES
+	"${PROJECT_SOURCE_DIR}/src/configuration/lua_data.h"
 	"${PROJECT_SOURCE_DIR}/src/configuration/lua_exception.h"
 	"${PROJECT_SOURCE_DIR}/src/configuration/lua_stack.cc"
 	"${PROJECT_SOURCE_DIR}/src/configuration/lua_stack.h"

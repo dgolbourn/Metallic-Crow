@@ -255,4 +255,14 @@ Sound::operator bool() const
   }
   return valid;
 }
+
+size_t Sound::Hash(Sound const& sound)
+{
+  return std::hash<std::shared_ptr<Impl>>()(sound.impl_);
+}
+
+bool Sound::operator==(Sound const& other) const
+{
+  return impl_ == other.impl_;
+}
 }

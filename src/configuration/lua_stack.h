@@ -5,6 +5,11 @@
 #include "command.h"
 #include "boost/filesystem.hpp"
 #include "lua_guard.h"
+extern "C" 
+{
+typedef struct lua_State lua_State;
+}
+
 namespace lua
 {
 class Stack
@@ -35,6 +40,7 @@ public:
   auto Collect(int size) -> void;
   auto Pause() -> void;
   auto Resume() -> void;
+  explicit operator lua_State*() const;
 private:
   std::shared_ptr<class StackImpl> impl_;
 };

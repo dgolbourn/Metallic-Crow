@@ -147,4 +147,14 @@ Timer::operator bool() const
 {
   return bool(impl_) && impl_->Valid();
 }
+
+size_t Timer::Hash(Timer const& timer)
+{
+  return std::hash<std::shared_ptr<Impl>>()(timer.impl_);
+}
+
+bool Timer::operator==(Timer const& other) const
+{
+  return impl_ == other.impl_;
+}
 }

@@ -5,6 +5,7 @@
 #include "log.h"
 #include "lua_stack_impl.h"
 #include "lua_command.h"
+#include "lua_data.h"
 namespace
 {
 auto Path(lua_State* state, boost::filesystem::path const& path) -> void
@@ -30,45 +31,15 @@ auto WeakRegistry(lua_State* state) -> int
   return luaL_ref(state, LUA_REGISTRYINDEX);
 }
 
-auto PushException(lua_State* state) noexcept -> void
-{
-  std::exception_ptr* ptr = static_cast<std::exception_ptr*>(lua_newuserdata(state, sizeof(std::exception_ptr)));
-  luaL_getmetatable(state, "exception");
-  lua_setmetatable(state, -2);
-  ptr = new (ptr)std::exception_ptr;
-  *ptr = std::current_exception();
-}
-
 auto PopException(lua_State* state) -> void
 {
-  std::exception_ptr* ptr = static_cast<std::exception_ptr*>(luaL_testudata(state, -1, "exception"));
-  if(ptr != nullptr)
+  std::exception_ptr exception;
+  lua::Get(state, exception);
+  if(exception)
   {
-    std::exception_ptr exception = std::move(*ptr);
     lua_pop(state, 1);
     std::rethrow_exception(exception);
   }
-}
-
-auto FinaliseException(lua_State *state) -> int
-{
-  static_cast<std::exception_ptr*>(lua_touserdata(state, 1))->~exception_ptr();
-  return 0;
-}
-
-auto InitException(lua_State* state) -> void
-{
-  luaL_newmetatable(state, "exception");
-
-  lua_pushliteral(state, "__gc");
-  lua_pushcfunction(state, FinaliseException);
-  lua_rawset(state, -3);
-
-  lua_pushliteral(state, "__index");
-  lua_pushvalue(state, -2);
-  lua_rawset(state, -3);
-
-  lua_pop(state, 1);
 }
 
 auto PushToLibrary(lua_State* state, std::string const& function, std::string const& library) -> void
@@ -88,7 +59,7 @@ auto PushToLibrary(lua_State* state, std::string const& function, std::string co
   lua_pop(state, 4);
 }
 
-auto Init(boost::filesystem::path const& path) -> lua_State* 
+auto InitState(boost::filesystem::path const& path) -> lua_State* 
 {
   lua_State* state = luaL_newstate();
   if(state == nullptr)
@@ -105,7 +76,7 @@ auto Init(boost::filesystem::path const& path) -> lua_State*
   
   Path(state, path);
 
-  InitException(state);
+  lua::Init<std::exception_ptr>(state);
 
   return state;
 }
@@ -156,7 +127,7 @@ auto Event(lua_State* state) noexcept -> int
   }
   catch(...)
   {
-    PushException(state);
+    lua::Push(state, std::current_exception());
   }
   return lua_error(state);
 }
@@ -164,7 +135,7 @@ auto Event(lua_State* state) noexcept -> int
 
 namespace lua
 {
-StackImpl::StackImpl(boost::filesystem::path const& path) : state_(Init(path))
+StackImpl::StackImpl(boost::filesystem::path const& path) : state_(InitState(path))
 {
   weak_registry_ = WeakRegistry(state_);
   Pause();
@@ -506,5 +477,10 @@ auto Stack::Size() -> int
 
 Stack::Stack(boost::filesystem::path const& path) : impl_(std::make_shared<StackImpl>(path))
 {
+}
+
+Stack::operator lua_State*() const
+{
+  return impl_->state_;
 }
 }

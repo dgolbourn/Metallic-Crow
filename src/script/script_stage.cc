@@ -1,33 +1,21 @@
 #include "script_impl.h"
 #include "bind.h"
 #include <algorithm>
+#include "lua_data.h"
 namespace game
 {
 auto Script::Impl::StageGet() -> StagePtr
 {
-  StagePtr ptr;
-  std::string name;
-  lua_.Pop(name);
-
-  if(name == stage_.first)
-  {
-    ptr = stage_.second;
-  }
-  else
-  {
-    auto stage = stages_.find(name);
-    if(stage != stages_.end())
-    {
-      ptr = stage->second;
-    }
-  }
-  return ptr;
+  WeakStagePtr ptr;
+  lua::Get(static_cast<lua_State*>(lua_), ptr);
+  return ptr.lock();
 }
 
 auto Script::Impl::StageInit() -> void
 {
+  lua::Init<WeakStagePtr>(static_cast<lua_State*>(lua_));
   lua_.Add(function::Bind(&Impl::StageNominate, shared_from_this()), "stage_nominate", 0, "metallic_crow");
-  lua_.Add(function::Bind(&Impl::StageLoad, shared_from_this()), "stage_load", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::StageLoad, shared_from_this()), "stage_load", 1, "metallic_crow");
   lua_.Add(function::Bind(&Impl::StageFree, shared_from_this()), "stage_free", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::StageAmbient, shared_from_this()), "stage_ambient", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::StagePause, shared_from_this()), "stage_pause", 0, "metallic_crow");
@@ -36,99 +24,80 @@ auto Script::Impl::StageInit() -> void
 
 auto Script::Impl::StageNominate() -> void
 {
-  std::string name;
-  {
-    lua::Guard guard = lua_.Get(-1);
-    lua_.Pop(name);
-  }
+  StagePtr stage = StageGet();
 
-  if(name != stage_.first)
+  if(stage)
   {
-    auto stage = stages_.find(name);
-    if(stage != stages_.end())
+    if(stage != stage_)
     {
-      if(stage_.second)
+      if(stage_)
       {
-        for(auto& sound : stage_.second->sounds_)
+        for(auto sound : stage_->sounds_)
         {
-          sound.second(0.f);
+          sound(0.f);
         }
       }
 
-      stage_.first = stage->first;
-      stage_.second = stage->second;
-      
-      for(auto& sound : stage_.second->sounds_)
-      {
-        sound.second(volume_);
-      }
-      stage_.second->current_music_(volume_);
+      stage_ = stage;
 
-      window_.Rotation(stage_.second->angle_);
+      for(auto sound : stage_->sounds_)
+      {
+        sound(volume_);
+      }
+
+      stage_->current_music_(volume_);
+
+      window_.Rotation(stage_->angle_);
     }
   }
 }
 
 auto Script::Impl::StageLoad() -> void
 {
-  std::string name;
-  {
-    lua::Guard guard = lua_.Get(-2);
-    lua_.Pop(name);
-  }
-
   StagePtr stage = std::make_shared<Stage>();
   
   stage->collision_ = collision::Collision(queue_);
 
   {
-    lua::Guard guard = lua_.Get(-1);
-    
-    {
-      lua::Guard guard = lua_.Field("world");
-      stage->world_ = dynamics::World(lua_, stage->collision_, queue_);
-    }
-
-    stage->paused_[0] = paused_;
-    stage->paused_[1] = true;
-    stage->zoom_ = 1.f;
-    stage->angle_ = 0.;
-
-    {
-      lua::Guard guard = lua_.Field("collision");
-      stage->group_ = collision::Group(lua_, stage->collision_);
-    }
-
-    Choice choice;
-    {
-      lua::Guard guard = lua_.Field("choice");
-      choice = Choice(lua_, window_, queue_, path_);
-    }
-
-    choice.Up(function::Bind(&Impl::Call, shared_from_this(), "choice_up"));
-    choice.Down(function::Bind(&Impl::Call, shared_from_this(), "choice_down"));
-    choice.Left(function::Bind(&Impl::Call, shared_from_this(), "choice_left"));
-    choice.Right(function::Bind(&Impl::Call, shared_from_this(), "choice_right"));
-    choice.Timer(function::Bind(&Impl::Call, shared_from_this(), "choice_timer"));
-    stage->choice_ = choice;
-
-    {
-      lua::Guard guard = lua_.Field("subtitle");
-      stage->subtitle_ = Subtitle(lua_, window_, path_);
-    }
+    lua::Guard guard = lua_.Field("world");
+    stage->world_ = dynamics::World(lua_, stage->collision_, queue_);
   }
 
-  stages_.emplace(name, stage);
+  stage->paused_[0] = paused_;
+  stage->paused_[1] = true;
+  stage->zoom_ = 1.f;
+  stage->angle_ = 0.;
+
+  {
+    lua::Guard guard = lua_.Field("collision");
+    stage->group_ = collision::Group(lua_, stage->collision_);
+  }
+
+  Choice choice;
+  {
+    lua::Guard guard = lua_.Field("choice");
+    choice = Choice(lua_, window_, queue_, path_);
+  }
+
+  choice.Up(function::Bind(&Impl::Call, shared_from_this(), "choice_up"));
+  choice.Down(function::Bind(&Impl::Call, shared_from_this(), "choice_down"));
+  choice.Left(function::Bind(&Impl::Call, shared_from_this(), "choice_left"));
+  choice.Right(function::Bind(&Impl::Call, shared_from_this(), "choice_right"));
+  choice.Timer(function::Bind(&Impl::Call, shared_from_this(), "choice_timer"));
+  stage->choice_ = choice;
+
+  {
+    lua::Guard guard = lua_.Field("subtitle");
+    stage->subtitle_ = Subtitle(lua_, window_, path_);
+  }
+
+  stages_.emplace(stage);
+  lua::Push(static_cast<lua_State*>(lua_), WeakStagePtr(stage));
 }
 
 auto Script::Impl::StageFree() -> void
 {
-  std::string name;
-  {
-    lua::Guard guard = lua_.Get(-1);
-    lua_.Pop(name);
-  }
-  stages_.erase(name);
+  stages_.erase(StageGet());
 }
 
 auto Script::Impl::StageAmbient() -> void
@@ -164,11 +133,7 @@ auto Script::Impl::StageAmbient() -> void
 
 auto Script::Impl::StagePause() -> void
 {
-  StagePtr stage;
-  {
-    lua::Guard guard = lua_.Get(-1);
-    stage = StageGet();
-  }
+  StagePtr stage = StageGet();
   if(stage)
   {
     Pause(stage, stage->paused_[1]);
@@ -177,11 +142,7 @@ auto Script::Impl::StagePause() -> void
 
 auto Script::Impl::StageResume() -> void
 {
-  StagePtr stage;
-  {
-    lua::Guard guard = lua_.Get(-1);
-    stage = StageGet();
-  }
+  StagePtr stage = StageGet();
   if(stage)
   {
     Resume(stage, stage->paused_[1]);
@@ -201,31 +162,23 @@ auto Script::Impl::Pause(StagePtr const& stage, bool& paused) -> void
 
   if(next && !current)
   {
-    for(auto& actor : stage->actors_)
+    for(auto actor : stage->actors_)
     {
-      actor.second.Pause();
+      actor.Pause();
     }
     stage->world_.Pause();
     stage->choice_.Pause();
-    for(auto timer = stage->timers_.begin(); timer != stage->timers_.end();)
+    for(auto timer : stage->timers_)
     {
-      if(timer->second)
-      {
-        timer->second.Pause();
-        ++timer;
-      }
-      else
-      {
-        timer = stage->timers_.erase(timer);
-      }
+      timer.Pause();
     }
-    for(auto& sound : stage->sounds_)
+    for(auto sound : stage->sounds_)
     {
-      sound.second.Pause();
+      sound.Pause();
     }
-    for(auto& music : stage->music_)
+    for(auto music : stage->music_)
     {
-      music.second.Pause();
+      music.Pause();
     }
   }
 }
@@ -238,31 +191,23 @@ auto Script::Impl::Resume(StagePtr const& stage, bool& paused) -> void
 
   if(current && !next)
   {
-    for(auto& actor : stage->actors_)
+    for(auto actor : stage->actors_)
     {
-      actor.second.Resume();
+      actor.Resume();
     }
     stage->world_.Resume();
     stage->choice_.Resume();
-    for(auto timer = stage->timers_.begin(); timer != stage->timers_.end();)
+    for(auto timer : stage->timers_)
     {
-      if(timer->second)
-      {
-        timer->second.Resume();
-        ++timer;
-      }
-      else
-      {
-        timer = stage->timers_.erase(timer);
-      }
+      timer.Resume();
     }
-    for(auto& sound : stage->sounds_)
+    for(auto sound : stage->sounds_)
     {
-      sound.second.Resume();
+      sound.Resume();
     }
-    for(auto& music : stage->music_)
+    for(auto music : stage->music_)
     {
-      music.second.Resume();
+      music.Resume();
     }
   }
 }

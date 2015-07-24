@@ -8,8 +8,9 @@
 #include "scene.h"
 #include <memory>
 #include <map>
+#include <unordered_set>
 #include <string>
-#include <list>
+#include <set>
 #include <array>
 #include "subtitle.h"
 #include "fade.h"
@@ -19,26 +20,27 @@
 #include "music.h"
 #include "sound.h"
 #include "timer.h"
+#include "lua_data.h"
 namespace game
 {
-typedef std::list<Actor::WeakPtr> ActorList;
-typedef std::multimap<std::string, Joint> JointMap;
-typedef std::multimap<std::string, Actor> ActorMap;
-typedef std::multimap<std::string, event::Timer> TimerMap;
-typedef std::multimap<std::string, audio::Sound> SoundMap;
-typedef std::map<std::string, audio::Music> MusicMap;
+typedef std::set<Actor::WeakPtr> WeakActorSet;
+typedef std::unordered_set<Joint> JointSet;
+typedef std::unordered_set<Actor> ActorSet;
+typedef std::unordered_set<event::Timer> TimerSet;
+typedef std::unordered_set<audio::Sound> SoundSet;
+typedef std::unordered_set<audio::Music> MusicSet;
 typedef std::array<bool, 2> Paused;
 
 struct Stage
 {
-  JointMap joints_;
-  ActorMap actors_;
   Paused paused_;
-  TimerMap timers_;
-  SoundMap sounds_;
-  MusicMap music_;
+  JointSet joints_;
+  ActorSet actors_;
+  TimerSet timers_;
+  SoundSet sounds_;
+  MusicSet music_;
   audio::Music current_music_;
-  ActorList subjects_;
+  WeakActorSet subjects_;
   float zoom_;
   double angle_;
 
@@ -51,9 +53,9 @@ struct Stage
   collision::Group group_;
 };
 
+typedef std::weak_ptr<Stage> WeakStagePtr;
 typedef std::shared_ptr<Stage> StagePtr;
-typedef std::map<std::string, StagePtr> StageMap;
-typedef std::pair<std::string, StagePtr> StagePair;
+typedef std::unordered_set<StagePtr> StageSet;
 
 class Script::Impl final : public std::enable_shared_from_this<Impl>
 {
@@ -93,15 +95,19 @@ public:
   auto ActorDilation() -> void;
   auto ActorRotation() -> void;
 
-  auto SceneryInit() -> void;
-  auto SceneryLoad() -> void;
-  auto SceneryFree() -> void;
-  auto SceneryModulation() -> void;
+  template<class Data> auto StageDataGet() -> std::pair<StagePtr, Data>
+  {
+    std::pair<WeakStagePtr, Data::WeakPtr> ptr;
+    lua::Get(static_cast<lua_State*>(lua_), ptr);
+    return std::make_pair(ptr.first.lock(), ptr.second.Lock());
+  }
 
-  auto ScreenInit() -> void;
-  auto ScreenLoad() -> void;
-  auto ScreenFree() -> void;
-  auto ScreenModulation() -> void;
+  template<class Data> auto DataGet() -> Data
+  {
+    std::pair<WeakStagePtr, Data::WeakPtr> ptr;
+    lua::Get(static_cast<lua_State*>(lua_), ptr);
+    return ptr.second.Lock();
+  }
 
   auto StageInit() -> void;
   auto StageLoad() -> void;
@@ -159,8 +165,8 @@ public:
   lua::Stack lua_;
   display::Window window_;
   event::Queue queue_;
-  StageMap stages_;
-  StagePair stage_;
+  StageSet stages_;
+  StagePtr stage_;
   bool paused_;
   Fade fade_;
   event::Signal signal_;

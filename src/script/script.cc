@@ -65,7 +65,7 @@ auto Script::Impl::Pause() -> void
     paused_ = true;
     for(auto& stage : stages_)
     {
-      Pause(stage.second, stage.second->paused_[0]);
+      Pause(stage, stage->paused_[0]);
     }
     fade_.Pause();
     collect_.Pause();
@@ -87,7 +87,7 @@ auto Script::Impl::Resume() -> void
     paused_ = false;
     for(auto& stage : stages_)
     {
-      Resume(stage.second, stage.second->paused_[0]);
+      Resume(stage, stage->paused_[0]);
     }
     fade_.Resume();
     collect_.Resume();
@@ -96,45 +96,45 @@ auto Script::Impl::Resume() -> void
 
 auto Script::Impl::Render() -> void
 {
-  if(stage_.second)
+  if(stage_)
   {
     View();
-    stage_.second->scene_.Render();
-    stage_.second->choice_.Render();
-    stage_.second->subtitle_.Render();
+    stage_->scene_.Render();
+    stage_->choice_.Render();
+    stage_->subtitle_.Render();
   }
   fade_.Render();
 }
 
 auto Script::Impl::ChoiceUp() -> void
 {
-  if(stage_.second)
+  if(stage_)
   {
-    stage_.second->choice_.Up();
+    stage_->choice_.Up();
   }
 }
 
 auto Script::Impl::ChoiceDown() -> void
 {
-  if(stage_.second)
+  if(stage_)
   {
-    stage_.second->choice_.Down();
+    stage_->choice_.Down();
   }
 }
 
 auto Script::Impl::ChoiceLeft() -> void
 {
-  if(stage_.second)
+  if(stage_)
   {
-    stage_.second->choice_.Left();
+    stage_->choice_.Left();
   }
 }
 
 auto Script::Impl::ChoiceRight() -> void
 {
-  if(stage_.second)
+  if(stage_)
   {
-    stage_.second->choice_.Right();
+    stage_->choice_.Right();
   }
 }
 

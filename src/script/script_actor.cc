@@ -4,7 +4,8 @@ namespace game
 {
 auto Script::Impl::ActorInit() -> void
 {
-  lua_.Add(function::Bind(&Impl::ActorLoad, shared_from_this()), "actor_load", 0, "metallic_crow");
+  lua::Init<std::pair<WeakStagePtr, Actor::WeakPtr>>(static_cast<lua_State*>(lua_));
+  lua_.Add(function::Bind(&Impl::ActorLoad, shared_from_this()), "actor_load", 1, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ActorFree, shared_from_this()), "actor_free", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ActorBody, shared_from_this()), "actor_body", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ActorEyes, shared_from_this()), "actor_eyes", 0, "metallic_crow");
@@ -20,20 +21,14 @@ auto Script::Impl::ActorInit() -> void
 
 auto Script::Impl::ActorLoad() -> void
 {
+  Actor actor;
   StagePtr stage;
   {
-    lua::Guard guard = lua_.Get(-3);
+    lua::Guard guard = lua_.Get(-2);
     stage = StageGet();
   }
   if(stage)
   {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(name);
-    }
-
-    Actor actor;
     {
       lua::Guard guard = lua_.Get(-1);
       actor = Actor(lua_, window_, stage->scene_, stage->group_, queue_, stage->world_, path_);
@@ -43,43 +38,30 @@ auto Script::Impl::ActorLoad() -> void
     {
       actor.Resume();
     }
-    stage->actors_.emplace(name, actor);
+
+    stage->actors_.emplace(actor);
   }
+  lua::Push(static_cast<lua_State*>(lua_), std::pair<WeakStagePtr, Actor::WeakPtr>(stage, actor));
 }
 
 auto Script::Impl::ActorFree() -> void
 {  
-  StagePtr stage;
+  std::pair<StagePtr, Actor> actor = StageDataGet<Actor>();
+  if(actor.first && actor.second)
   {
-    lua::Guard guard = lua_.Get(-2);
-    stage = StageGet();
-  }
-  if(stage)
-  {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(name);
-    }
-    stage->actors_.erase(name);
+    actor.first->actors_.erase(actor.second);
   }
 }
 
 auto Script::Impl::ActorBody() -> void
 {
-  StagePtr stage;
+  Actor actor;
   {
-    lua::Guard guard = lua_.Get(-4);
-    stage = StageGet();
+    lua::Guard guard = lua_.Get(-3);
+    actor = DataGet<Actor>();
   }
-  if(stage)
+  if(actor)
   {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-3);
-      lua_.Pop(name);
-    }
-
     std::string expression;
     {
       lua::Guard guard = lua_.Get(-2);
@@ -92,99 +74,70 @@ auto Script::Impl::ActorBody() -> void
       lua_.Pop(facing);
     }
 
-    auto range = stage->actors_.equal_range(name);
-    for(auto& actor = range.first; actor != range.second; ++actor)
+    if(expression == "")
     {
-      if(expression == "")
+      if(facing)
       {
-        if(facing)
-        {
-          actor->second.Body(facing < 0);
-        }
+        actor.Body(facing < 0);
       }
-      else if(facing)
-      {
-        actor->second.Body(expression, facing < 0);
-      }
-      else
-      {
-        actor->second.Body(expression);
-      }
+    }
+    else if(facing)
+    {
+      actor.Body(expression, facing < 0);
+    }
+    else
+    {
+      actor.Body(expression);
     }
   }
 }
 
 auto Script::Impl::ActorEyes() -> void
 {
-  StagePtr stage;
+  Actor actor;
   {
-    lua::Guard guard = lua_.Get(-3);
-    stage = StageGet();
+    lua::Guard guard = lua_.Get(-2);
+    actor = DataGet<Actor>();
   }
-  if(stage)
+  if(actor)
   {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(name);
-    }
     std::string expression;
     {
       lua::Guard guard = lua_.Get(-1);
       lua_.Pop(expression);
     }
-
-    auto range = stage->actors_.equal_range(name);
-    for(auto& actor = range.first; actor != range.second; ++actor)
-    {
-      actor->second.Eyes(expression);
-    }
+    actor.Eyes(expression);
   }
 }
 
 auto Script::Impl::ActorMouth() -> void
 {
-  StagePtr stage;
+  Actor actor;
   {
-    lua::Guard guard = lua_.Get(-3);
-    stage = StageGet();
+    lua::Guard guard = lua_.Get(-2);
+    actor = DataGet<Actor>();
   }
-  if(stage)
+  if(actor)
   {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(name);
-    }
     std::string expression;
     {
       lua::Guard guard = lua_.Get(-1);
       lua_.Pop(expression);
     }
 
-    auto range = stage->actors_.equal_range(name);
-    for(auto& actor = range.first; actor != range.second; ++actor)
-    {
-      actor->second.Mouth(expression);
-    }
+    actor.Mouth(expression);
   }
 }
 
 auto Script::Impl::ActorPosition() -> void
 {
-  StagePtr stage;
+  Actor actor;
   {
-    lua::Guard guard = lua_.Get(-4);
-    stage = StageGet();
+    lua::Guard guard = lua_.Get(-3);
+    actor = DataGet<Actor>();
   }
-  if(stage)
+  if(actor)
   {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-3);
-      lua_.Pop(name);
-    }
-
     Position position;
     {
       lua::Guard guard = lua_.Get(-2);
@@ -195,29 +148,19 @@ auto Script::Impl::ActorPosition() -> void
       lua_.Pop(position.second);
     }
 
-    auto range = stage->actors_.equal_range(name);
-    for(auto& actor = range.first; actor != range.second; ++actor)
-    {
-      actor->second.Position(position);
-    }
+    actor.Position(position);
   }
 }
 
 auto Script::Impl::ActorVelocity() -> void
 {
-  StagePtr stage;
+  Actor actor;
   {
-    lua::Guard guard = lua_.Get(-4);
-    stage = StageGet();
+    lua::Guard guard = lua_.Get(-3);
+    actor = DataGet<Actor>();
   }
-  if(stage)
+  if(actor)
   {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-3);
-      lua_.Pop(name);
-    }
-
     Position velocity;
     {
       lua::Guard guard = lua_.Get(-2);
@@ -228,29 +171,19 @@ auto Script::Impl::ActorVelocity() -> void
       lua_.Pop(velocity.second);
     }
 
-    auto range = stage->actors_.equal_range(name);
-    for(auto& actor = range.first; actor != range.second; ++actor)
-    {
-      actor->second.Velocity(velocity);
-    }
+    actor.Velocity(velocity);
   }
 }
 
 auto Script::Impl::ActorForce() -> void
 {
-  StagePtr stage;
+  Actor actor;
   {
-    lua::Guard guard = lua_.Get(-4);
-    stage = StageGet();
+    lua::Guard guard = lua_.Get(-3);
+    actor = DataGet<Actor>();
   }
-  if(stage)
+  if(actor)
   {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-3);
-      lua_.Pop(name);
-    }
-
     Position force;
     {
       lua::Guard guard = lua_.Get(-2);
@@ -261,29 +194,19 @@ auto Script::Impl::ActorForce() -> void
       lua_.Pop(force.second);
     }
 
-    auto range = stage->actors_.equal_range(name);
-    for(auto& actor = range.first; actor != range.second; ++actor)
-    {
-      actor->second.Force(force);
-    }
+    actor.Force(force);
   }
 }
 
 auto Script::Impl::ActorImpulse() -> void
 {
-  StagePtr stage;
+  Actor actor;
   {
-    lua::Guard guard = lua_.Get(-4);
-    stage = StageGet();
+    lua::Guard guard = lua_.Get(-3);
+    actor = DataGet<Actor>();
   }
-  if(stage)
+  if(actor)
   {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-3);
-      lua_.Pop(name);
-    }
-
     Position impulse;
     {
       lua::Guard guard = lua_.Get(-2);
@@ -293,29 +216,19 @@ auto Script::Impl::ActorImpulse() -> void
       lua::Guard guard = lua_.Get(-1);
       lua_.Pop(impulse.second);
     }
-
-    auto range = stage->actors_.equal_range(name);
-    for(auto& actor = range.first; actor != range.second; ++actor)
-    {
-      actor->second.Impulse(impulse);
-    }
+    actor.Impulse(impulse);
   }
 }
 
 auto Script::Impl::ActorModulation() -> void
 {
-  StagePtr stage;
+  Actor actor;
   {
-    lua::Guard guard = lua_.Get(-6);
-    stage = StageGet();
+    lua::Guard guard = lua_.Get(-5);
+    actor = DataGet<Actor>();
   }
-  if(stage)
+  if(actor)
   {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-5);
-      lua_.Pop(name);
-    }
     float r;
     {
       lua::Guard guard = lua_.Get(-4);
@@ -336,66 +249,43 @@ auto Script::Impl::ActorModulation() -> void
       lua::Guard guard = lua_.Get(-1);
       lua_.Pop(a);
     }
-
-    auto range = stage->actors_.equal_range(name);
-    for(auto& actor = range.first; actor != range.second; ++actor)
-    {
-      actor->second.Modulation(r, g, b, a);
-    }
+    actor.Modulation(r, g, b, a);
   }
 }
 
 auto Script::Impl::ActorDilation() -> void
 {
-  StagePtr stage;
+  Actor actor;
   {
-    lua::Guard guard = lua_.Get(-3);
-    stage = StageGet();
+    lua::Guard guard = lua_.Get(-2);
+    actor = DataGet<Actor>();
   }
-  if(stage)
+  if(actor)
   {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(name);
-    }
     float dilation;
     {
       lua::Guard guard = lua_.Get(-1);
       lua_.Pop(dilation);
     }
-    auto range = stage->actors_.equal_range(name);
-    for(auto& actor = range.first; actor != range.second; ++actor)
-    {
-      actor->second.Dilation(dilation);
-    }
+    actor.Dilation(dilation);
   }
 }
 
 auto Script::Impl::ActorRotation() -> void
 {
-  StagePtr stage;
+  Actor actor;
   {
-    lua::Guard guard = lua_.Get(-3);
-    stage = StageGet();
+    lua::Guard guard = lua_.Get(-2);
+    actor = DataGet<Actor>();
   }
-  if(stage)
+  if(actor)
   {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(name);
-    }
     double angle;
     {
       lua::Guard guard = lua_.Get(-1);
       lua_.Pop(angle);
     }
-    auto range = stage->actors_.equal_range(name);
-    for(auto& actor = range.first; actor != range.second; ++actor)
-    {
-      actor->second.Rotation(angle);
-    }
+    actor.Rotation(angle);
   }
 }
 }

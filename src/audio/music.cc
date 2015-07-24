@@ -253,4 +253,14 @@ auto Music::End() -> void
 {
   impl_->End();
 }
+
+size_t Music::Hash(Music const& music)
+{
+  return std::hash<std::shared_ptr<Impl>>()(music.impl_);
+}
+
+bool Music::operator==(Music const& other) const
+{
+  return impl_ == other.impl_;
+}
 }

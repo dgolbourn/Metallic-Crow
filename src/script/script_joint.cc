@@ -4,62 +4,45 @@ namespace game
 {
 auto Script::Impl::JointInit() -> void
 {
-  lua_.Add(function::Bind(&Impl::JointLoad, shared_from_this()), "joint_load", 0, "metallic_crow");
+  lua::Init<std::pair<WeakStagePtr, Joint::WeakPtr>>(static_cast<lua_State*>(lua_));
+  lua_.Add(function::Bind(&Impl::JointLoad, shared_from_this()), "joint_load", 1, "metallic_crow");
   lua_.Add(function::Bind(&Impl::JointFree, shared_from_this()), "joint_free", 0, "metallic_crow");
 }
 
 auto Script::Impl::JointLoad() -> void
 {
-  StagePtr stage;
+  Joint joint;
+
+  std::pair<StagePtr, Actor> actor_a;
   {
-    lua::Guard guard = lua_.Get(-5);
-    stage = StageGet();
+    lua::Guard guard = lua_.Get(-3);
+    actor_a = StageDataGet<Actor>();
   }
-  if(stage)
-  {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-4);
-      lua_.Pop(name);
-    }
-    std::string actor_a_name;
-    {
-      lua::Guard guard = lua_.Get(-3);
-      lua_.Pop(actor_a_name);
-    }
-    std::string actor_b_name;
+  if(actor_a.first && actor_a.second)
+  {    
+    std::pair<StagePtr, Actor> actor_b;
     {
       lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(actor_b_name);
+      actor_b = StageDataGet<Actor>();
     }
-    auto range_a = stage->actors_.equal_range(actor_a_name);
-    auto range_b = stage->actors_.equal_range(actor_b_name);
-    for(auto& actor_a = range_a.first; actor_a != range_a.second; ++actor_a)
+
+    if((actor_b.first == actor_a.first) && actor_b.second)
     {
-      for(auto& actor_b = range_b.first; actor_b != range_b.second; ++actor_b)
-      {
-        lua::Guard guard = lua_.Get(-1);
-        stage->joints_.emplace(name, Joint(lua_, actor_a->second, actor_b->second, stage->world_));
-      }
+      lua::Guard guard = lua_.Get(-1);
+      joint = Joint(lua_, actor_a.second, actor_b.second, actor_a.first->world_);
+      actor_a.first->joints_.emplace(joint);
     }
   }
+
+  lua::Push(static_cast<lua_State*>(lua_), std::pair<WeakStagePtr, Joint::WeakPtr>(actor_a.first, joint));
 }
 
 auto Script::Impl::JointFree() -> void
 {
-  StagePtr stage;
+  std::pair<StagePtr, Joint> joint = StageDataGet<Joint>(); 
+  if(joint.first && joint.second)
   {
-    lua::Guard guard = lua_.Get(-2);
-    stage = StageGet();
-  }
-  if(stage)
-  {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(name);
-    }
-    stage->joints_.erase(name);
+    joint.first->joints_.erase(joint.second);
   }
 }
 }

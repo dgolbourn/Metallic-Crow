@@ -3,6 +3,7 @@
 #include <memory>
 #include "boost/filesystem.hpp"
 #include "lua_stack.h"
+#include "weak_ptr.h"
 namespace audio
 {
 class Music
@@ -21,6 +22,22 @@ public:
   class Impl;
 private:
   std::shared_ptr<Impl> impl_;
+public:
+  bool operator==(Music const& other) const;
+  typedef memory::WeakPtr<Music> WeakPtr;
+  friend WeakPtr;
+  static size_t Hash(Music const& music);
+};
+}
+
+namespace std 
+{
+template<> struct hash<audio::Music> 
+{
+  size_t operator()(audio::Music const& music) const 
+  { 
+    return audio::Music::Hash(music); 
+  }
 };
 }
 #endif

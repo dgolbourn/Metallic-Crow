@@ -4,11 +4,13 @@ namespace game
 {
 auto Script::Impl::AudioInit() -> void
 {
-  lua_.Add(function::Bind(&Impl::SoundLoad, shared_from_this()), "sound_load", 0, "metallic_crow");
+  lua::Init<std::pair<WeakStagePtr, audio::Sound::WeakPtr>>(static_cast<lua_State*>(lua_));
+  lua_.Add(function::Bind(&Impl::SoundLoad, shared_from_this()), "sound_load", 1, "metallic_crow");
   lua_.Add(function::Bind(&Impl::SoundFree, shared_from_this()), "sound_free", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::SoundPlay, shared_from_this()), "sound_play", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::SoundEnd, shared_from_this()), "sound_end", 0, "metallic_crow");
-  lua_.Add(function::Bind(&Impl::MusicLoad, shared_from_this()), "music_load", 0, "metallic_crow");
+  lua::Init<std::pair<WeakStagePtr, audio::Music::WeakPtr>>(static_cast<lua_State*>(lua_));
+  lua_.Add(function::Bind(&Impl::MusicLoad, shared_from_this()), "music_load", 1, "metallic_crow");
   lua_.Add(function::Bind(&Impl::MusicFree, shared_from_this()), "music_free", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::MusicPlay, shared_from_this()), "music_play", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::MusicEnd, shared_from_this()), "music_end", 0, "metallic_crow");
@@ -16,35 +18,8 @@ auto Script::Impl::AudioInit() -> void
 
 auto Script::Impl::SoundLoad() -> void
 {
-  StagePtr stage;
-  {
-    lua::Guard guard = lua_.Get(-3);
-    stage = StageGet();
-  }
-  if(stage)
-  {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(name);
-    }
-    
-    audio::Sound sound;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      sound = audio::Sound(lua_, path_);
-    }
+  audio::Sound sound;
 
-    if(!Pause(stage))
-    {
-      sound.Resume();
-    }
-    stage->sounds_.emplace(name, sound);
-  }
-}
-
-auto Script::Impl::SoundFree() -> void
-{
   StagePtr stage;
   {
     lua::Guard guard = lua_.Get(-2);
@@ -52,99 +27,58 @@ auto Script::Impl::SoundFree() -> void
   }
   if(stage)
   {
-    std::string name;
     {
       lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(name);
+      sound = audio::Sound(lua_, path_);
     }
-    
-    stage->sounds_.erase(name);
+    if(!Pause(stage))
+    {
+      sound.Resume();
+    }
+    stage->sounds_.emplace(sound);
+  }
+
+  lua::Push(static_cast<lua_State*>(lua_), std::pair<WeakStagePtr, audio::Sound::WeakPtr>(stage, sound));
+}
+
+auto Script::Impl::SoundFree() -> void
+{
+  std::pair<StagePtr, audio::Sound> sound = StageDataGet<audio::Sound>();
+  if(sound.first && sound.second)
+  {
+    sound.first->sounds_.erase(sound.second);
   }
 }
 
 auto Script::Impl::SoundPlay() -> void
 {
-  StagePtr stage;
-  {
-    lua::Guard guard = lua_.Get(-2);
-    stage = StageGet();
-  }
-  if(stage)
-  {
-    std::string name;
+  std::pair<StagePtr, audio::Sound> sound = StageDataGet<audio::Sound>();
+  if(sound.first && sound.second)
+  { 
+    if(sound.first == stage_)
     {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(name);
+      sound.second(volume_);
     }
-    
-    float volume = 0.f;
-    if(stage == stage_.second)
+    else
     {
-      volume = volume_;
-    }
-
-    auto range = stage->sounds_.equal_range(name);
-    for(auto& sound = range.first; sound != range.second; ++sound)
-    {
-      sound->second(volume);
+      sound.second(0.f);
     }
   }
 }
 
 auto Script::Impl::SoundEnd() -> void
 {
-  StagePtr stage;
+  audio::Sound sound = DataGet<audio::Sound>();
+  if(sound)
   {
-    lua::Guard guard = lua_.Get(-2);
-    stage = StageGet();
-  }
-  if(stage)
-  {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(name);
-    }
-
-    auto range = stage->sounds_.equal_range(name);
-    for(auto& sound = range.first; sound != range.second; ++sound)
-    {
-      sound->second.End();
-    }
+    sound.End();
   }
 }
 
 auto Script::Impl::MusicLoad() -> void
 {
-  StagePtr stage;
-  {
-    lua::Guard guard = lua_.Get(-3);
-    stage = StageGet();
-  }
-  if(stage)
-  {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(name);
-    }
-    
-    audio::Music music;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      music = audio::Music(lua_, path_);
-    }
+  audio::Music music;
 
-    if(!Pause(stage))
-    {
-      music.Resume();
-    }
-    stage->music_.emplace(name, music);
-  }
-}
-
-auto Script::Impl::MusicFree() -> void
-{
   StagePtr stage;
   {
     lua::Guard guard = lua_.Get(-2);
@@ -152,64 +86,47 @@ auto Script::Impl::MusicFree() -> void
   }
   if(stage)
   {
-    std::string name;
     {
       lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(name);
+      music = audio::Music(lua_, path_);
     }
-    stage->music_.erase(name);
+    if(!Pause(stage))
+    {
+      music.Resume();
+    }
+    stage->music_.emplace(music);
+  }
+
+  lua::Push(static_cast<lua_State*>(lua_), std::pair<WeakStagePtr, audio::Music::WeakPtr>(stage, music));
+}
+
+auto Script::Impl::MusicFree() -> void
+{
+  std::pair<StagePtr, audio::Music> music = StageDataGet<audio::Music>();
+  if(music.first && music.second)
+  {
+    music.first->music_.erase(music.second);
   }
 }
 
 auto Script::Impl::MusicEnd() -> void
 {
-  StagePtr stage;
+  audio::Music music = DataGet<audio::Music>();
+  if(music)
   {
-    lua::Guard guard = lua_.Get(-2);
-    stage = StageGet();
-  }
-  if(stage)
-  {
-    std::string name;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(name);
-    }
-    auto iter = stage->music_.find(name);
-    if(iter != stage->music_.end())
-    {
-      iter->second.End();
-    }
+    music.End();
   }
 }
 
 auto Script::Impl::MusicPlay() -> void
 {
-  StagePtr stage;
+  std::pair<StagePtr, audio::Music> music = StageDataGet<audio::Music>();
+  if(music.first)
   {
-    lua::Guard guard = lua_.Get(-2);
-    stage = StageGet();
-  }
-  if(stage)
-  {
-    std::string name;
+    music.first->current_music_ = music.second;
+    if(music.first == stage_)
     {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(name);
-    }
-    auto iter = stage->music_.find(name);
-    if(iter != stage->music_.end())
-    {
-      stage->current_music_ = iter->second;
-    }
-    else
-    {
-      stage->current_music_ = audio::Music();
-    }
-
-    if(stage == stage_.second)
-    {
-      stage->current_music_(volume_);
+      stage_->current_music_(volume_);
     }
   }
 }

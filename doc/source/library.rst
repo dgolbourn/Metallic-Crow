@@ -61,9 +61,9 @@ Timers allow you to trigger events after a time interval.  Timers are associated
 
 .. function:: timer_load(stage, name, command, interval, loops)
 
-Start a new timer called ``name`` associatd with ``stage``.  After ``interval`` seconds call ``command()``, repeat ``loops`` times.
+Start a new timer managed by ``stage``.  After ``interval`` seconds call ``command()``, repeat ``loops`` times.  Returns a timer handle to use for identifying the timer in subsequent calls.
 
-.. function:: timer_free(stage, name)
+.. function:: timer_free(timer)
 
 Halt the timer.
 
@@ -87,27 +87,27 @@ Stage
 
 A stage is a physical world for actors to play out the story.  Its configuration also defines the style of fonts and graphics for choices and subtitles.  A stage represents a locale, room, level or zone.  For example, the interior and exterior of a house could be two stages that are part of the same script.  Multiple stages can be loaded and running at the same time, but only one can be displayed.  Calls such as `actor`_, `audio`_, `view`_, `timer`_, `subtitle`_ and `choice`_  are all inextricably linked to their stages. Entities associated with a stage are paused when their stage is paused, visible and audible when their stage is displayed and freed when their stage is freed.
 
-.. function:: stage_nominate(name)
+.. function:: stage_nominate(stage)
 
-Choose ``name`` to be the displayed stage.
+Choose ``stage`` to be the displayed stage.
 
-.. function:: stage_load(name, configuration)
+.. function:: stage_load(configuration)
 
-Load ``name`` with the provided configuration table.
+Load stage with the provided configuration table.  Returns a stage handle to use for identifying the stage in subsequent calls.
 
-.. function:: stage_free(name)
+.. function:: stage_free(stage)
 
 Free the stage.
 
-.. function:: stage_modulate(name, r, g, b)
+.. function:: stage_modulate(stage, r, g, b)
 
 Set the ambient lighting.
 
-.. function:: stage_pause(name)
+.. function:: stage_pause(stage)
 
 Pause the stage.
 
-.. function:: stage_resume(name)
+.. function:: stage_resume(stage)
 
 Resume the stage.
 
@@ -135,13 +135,13 @@ Collision
 
 Collisions are events that occur when two actors touch.
 
-.. function:: collision_begin(stage, name_a, name_b, command)
+.. function:: collision_begin(stage, group_a, group_b, command)
 
-Register ``command`` to be called when ``name_a`` beings a collision with ``name_b``
+Register ``command`` to be called when an actor associated with ``group_a`` beings a collision with an actor in ``group_b``
 
-.. function:: collision_end(stage, name_a, name_b, command)
+.. function:: collision_end(stage, group_a, group_b, command)
 
-Register ``command`` to be called when ``name_a`` ends its collision with ``name_b``
+Register ``command`` to be called when an actor associated with ``group_a`` ends its collision with an actor in ``group_b``
 
 
 Choice
@@ -175,51 +175,51 @@ Actor
 
 Actors are the primary entities that make up a story.  They can have physics properties such as mass and velocity and can collide with one another.  They also have animation properties and can have multiple expressions and poses.  Actors are used to create many things, for example: static props, animated pieces of terrain, the ground that other actors stand on and the characters of the story.
 
-.. function:: actor_load(stage, name, configuration)
+.. function:: actor_load(stage, configuration)
 
-Load an actor ``name`` using the given configuration table. 
+Load an actor using the given configuration table. Returns an actor handle to use for identifying the actor in subsequent calls.
 
-.. function:: actor_free(stage, name)
+.. function:: actor_free(actor)
 
 Free the actor.
 
-.. function:: actor_body(stage, name, expression)
+.. function:: actor_body(actor, expression)
 
 Change the body expression of the actor.
 
-.. function:: actor_eyes(stage, name, expression)
+.. function:: actor_eyes(actor, expression)
 
 Change the eyes expression of the actor.
 
-.. function:: actor_mouth(stage, name, expression)
+.. function:: actor_mouth(actor, expression)
 
 Change the mouth expression of the actor.
 
-.. function:: actor_position(stage, name, x, y)
+.. function:: actor_position(actor, x, y)
 
 Move the actor.
 
-.. function:: actor_velocity(stage, name, u, v)
+.. function:: actor_velocity(actor, u, v)
 
 Change the actor's velocity.
 
-.. function:: actor_force(stage, name, f, g)
+.. function:: actor_force(actor, f, g)
 
 Change the continuous force applied to the actor.
 
-.. function:: actor_impulse(stage, name, i, j)
+.. function:: actor_impulse(actor, i, j)
 
 Apply an impulse to the actor.
 
-.. function:: actor_dilation(stage, name, dilation)
+.. function:: actor_dilation(actor, dilation)
 
 Change the animation speed of the actor.
 
-.. function:: actor_modulation(stage, name, r, g, b, a)
+.. function:: actor_modulation(actor, r, g, b, a)
 
 Chage the actor's colour.
 
-.. function:: actor_rotation(stage, name, angle)
+.. function:: actor_rotation(actor, angle)
 
 Rotate the actor
 
@@ -228,13 +228,13 @@ View
 
 View controls the location of the camera in its associated stage.
 
-.. function:: view(stage, name)
+.. function:: view(actor)
 
-Position the camera on the actor ``name``.
+Position the camera on the actor ``actor``.
 
-.. function:: view_add(stage, name)
+.. function:: view_add(actor)
 
-Position the camera such that actor ``name`` is also in view.
+Position the camera such that actor ``actor`` is also in view.
 
 .. function:: view_zoom(stage, zoom)
 
@@ -249,35 +249,35 @@ Audio
 
 Sound effects and music are associated with a given stage and are paused and resumed when the stage is paused and resumed.  Also, they are only audible when the stage is displayed.  Sound refers to generally short sound effects, such as talking, explosions and footsteps, Music refers to longer sounds such as background music.  At any one time there can only be one piece of music playing but there can be many sound effects.
 
-.. function:: sound_load(stage, name, configuration)
+.. function:: sound_load(stage, configuration)
 
-Load the sound as ``name`` using the given configuration table.
+Load the sound using the given configuration table.  Returns a sound handle to use for identifying the sound in subsequent calls.
 
-.. function:: sound_free(stage, name)
+.. function:: sound_free(sound)
 
 Free the sound.
 
-.. function:: sound_play(stage, name, volume)
+.. function:: sound_play(sound, volume)
 
 Play the sound.
 
-.. function:: sound_end(stage, name)
+.. function:: sound_end(sound)
 
 Stop the sound.
 
-.. function:: music_load(stage, name, configuration)
+.. function:: music_load(stage, configuration)
 
-Load the music as ``name`` using the given configuration table.
+Load the music using the given configuration table.  Returns a music handle to use for identifying the music in subsequent calls.
 
-.. function:: music_free(stage, name)
+.. function:: music_free(music)
 
 Free the music.
 
-.. function:: music_play(stage, name, volume)
+.. function:: music_play(music)
 
 Play the music.
 
-.. function:: music_end(stage, name)
+.. function:: music_end(music)
 
 Stop the music.
 
@@ -287,10 +287,10 @@ Joint
 
 A joint is a physics object that can be used to join two actors together.
 
-.. function:: joint_load(stage, name, actor_a, actor_b, configuration)
+.. function:: joint_load(actor_a, actor_b, configuration)
 
-Create a new joint between actor_a and actor_b using the given configuration table.
+Create a new joint between actor_a and actor_b using the given configuration table.  Returns a joint handle to use for identifying the joint in subsequent calls.
 
-.. function:: joint_free(stage, name)
+.. function:: joint_free(joint)
 
 Remove the joint.

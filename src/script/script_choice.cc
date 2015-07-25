@@ -20,32 +20,7 @@ auto Script::Impl::ChoiceChoice() -> void
   }
   if(stage)
   {
-    std::string up;
-    {
-      lua::Guard guard = lua_.Get(-5);
-      lua_.Pop(up);
-    }
-    std::string down;
-    {
-      lua::Guard guard = lua_.Get(-4);
-      lua_.Pop(down);
-    }
-    std::string left;
-    {
-      lua::Guard guard = lua_.Get(-3);
-      lua_.Pop(left);
-    }
-    std::string right;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(right);
-    }
-    double interval;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(interval);
-    }
-    stage->choice_(up, down, left, right, interval);
+    stage->choice_(lua_.At<std::string>(-5), lua_.At<std::string>(-4), lua_.At<std::string>(-3), lua_.At<std::string>(-2), lua_.At<double>(-1));
   }
 }
 
@@ -58,27 +33,7 @@ auto Script::Impl::ChoiceUpModulation() -> void
   }
   if(stage)
   {
-    float r;
-    {
-      lua::Guard guard = lua_.Get(-4);
-      lua_.Pop(r);
-    }
-    float g;
-    {
-      lua::Guard guard = lua_.Get(-3);
-      lua_.Pop(g);
-    }
-    float b;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(b);
-    }
-    float a;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(a);
-    }
-    stage->choice_.Up(r, g, b, a);
+    stage->choice_.Up(lua_.At<float>(-4), lua_.At<float>(-3), lua_.At<float>(-2), lua_.At<float>(-1));
   }
 }
 
@@ -91,27 +46,7 @@ auto Script::Impl::ChoiceDownModulation() -> void
   }
   if(stage)
   {
-    float r;
-    {
-      lua::Guard guard = lua_.Get(-4);
-      lua_.Pop(r);
-    }
-    float g;
-    {
-      lua::Guard guard = lua_.Get(-3);
-      lua_.Pop(g);
-    }
-    float b;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(b);
-    }
-    float a;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(a);
-    }
-    stage->choice_.Down(r, g, b, a);
+    stage->choice_.Down(lua_.At<float>(-4), lua_.At<float>(-3), lua_.At<float>(-2), lua_.At<float>(-1));
   }
 }
 
@@ -124,27 +59,7 @@ auto Script::Impl::ChoiceLeftModulation() -> void
   }
   if(stage)
   {
-    float r;
-    {
-      lua::Guard guard = lua_.Get(-4);
-      lua_.Pop(r);
-    }
-    float g;
-    {
-      lua::Guard guard = lua_.Get(-3);
-      lua_.Pop(g);
-    }
-    float b;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(b);
-    }
-    float a;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(a);
-    }
-    stage->choice_.Left(r, g, b, a);
+    stage->choice_.Left(lua_.At<float>(-4), lua_.At<float>(-3), lua_.At<float>(-2), lua_.At<float>(-1));
   }
 }
 
@@ -157,28 +72,7 @@ auto Script::Impl::ChoiceRightModulation() -> void
   }
   if(stage)
   {
-    float r;
-    {
-      lua::Guard guard = lua_.Get(-4);
-      lua_.Pop(r);
-    }
-    float g;
-    {
-      lua::Guard guard = lua_.Get(-3);
-      lua_.Pop(g);
-    }
-    float b;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(b);
-    }
-    float a;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(a);
-    }
-
-    stage->choice_.Right(r, g, b, a);
+    stage->choice_.Right(lua_.At<float>(-4), lua_.At<float>(-3), lua_.At<float>(-2), lua_.At<float>(-1));
   }
 }
 }

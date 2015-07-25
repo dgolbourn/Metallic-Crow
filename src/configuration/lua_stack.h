@@ -41,6 +41,13 @@ public:
   auto Pause() -> void;
   auto Resume() -> void;
   explicit operator lua_State*() const;
+  template<class T> auto At(int index) -> T
+  {
+    Guard guard = Get(index);
+    T value;
+    Pop(value);
+    return value;
+  }
 private:
   std::shared_ptr<class StackImpl> impl_;
 };

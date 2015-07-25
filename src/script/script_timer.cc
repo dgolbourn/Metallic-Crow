@@ -20,26 +20,8 @@ auto Script::Impl::TimerLoad() -> void
   }
   if(stage)
   {
-    event::Command command;
-    {
-      lua::Guard guard = lua_.Get(-3);
-      lua_.Pop(command);
-    }
-
-    double interval;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(interval);
-    }
-
-    int loops;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(loops);
-    }
-
-    timer = event::Timer(interval, loops);
-    timer.Add(command);
+    timer = event::Timer(lua_.At<double>(-2), lua_.At<int>(-1));
+    timer.Add(lua_.At<event::Command>(-3));
     if(!Pause(stage))
     {
       timer.Resume();

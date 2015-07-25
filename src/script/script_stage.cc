@@ -109,25 +109,7 @@ auto Script::Impl::StageAmbient() -> void
   }
   if(stage)
   {
-    float r;
-    {
-      lua::Guard guard = lua_.Get(-3);
-      lua_.Pop(r);
-    }
-
-    float g;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(g);
-    }
-
-    float b;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(b);
-    }
-
-    stage->world_.Ambient(r, g, b);
+    stage->world_.Ambient(lua_.At<float>(-3), lua_.At<float>(-2), lua_.At<float>(-1));
   }
 }
 

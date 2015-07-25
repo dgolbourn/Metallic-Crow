@@ -17,12 +17,7 @@ auto Script::Impl::SubtitleText() -> void
   }
   if(stage)
   {
-    std::string text;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(text);
-    }
-    stage->subtitle_(text);
+    stage->subtitle_(lua_.At<std::string>(-1));
   }
 }
 
@@ -35,27 +30,7 @@ auto Script::Impl::SubtitleModulation() -> void
   }
   if(stage)
   {
-    float r;
-    {
-      lua::Guard guard = lua_.Get(-4);
-      lua_.Pop(r);
-    }
-    float g;
-    {
-      lua::Guard guard = lua_.Get(-3);
-      lua_.Pop(g);
-    }
-    float b;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(b);
-    }
-    float a;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(a);
-    }
-    stage->subtitle_.Modulation(r, g, b, a);
+    stage->subtitle_.Modulation(lua_.At<float>(-4), lua_.At<float>(-3), lua_.At<float>(-2), lua_.At<float>(-1));
   }
 }
 }

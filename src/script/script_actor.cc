@@ -62,17 +62,8 @@ auto Script::Impl::ActorBody() -> void
   }
   if(actor)
   {
-    std::string expression;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(expression);
-    }
-
-    int facing;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(facing);
-    }
+    std::string expression = lua_.At<std::string>(-2);
+    int facing = lua_.At<int>(-1);
 
     if(expression == "")
     {
@@ -101,12 +92,7 @@ auto Script::Impl::ActorEyes() -> void
   }
   if(actor)
   {
-    std::string expression;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(expression);
-    }
-    actor.Eyes(expression);
+    actor.Eyes(lua_.At<std::string>(-1));
   }
 }
 
@@ -119,13 +105,7 @@ auto Script::Impl::ActorMouth() -> void
   }
   if(actor)
   {
-    std::string expression;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(expression);
-    }
-
-    actor.Mouth(expression);
+    actor.Mouth(lua_.At<std::string>(-1));
   }
 }
 
@@ -138,17 +118,7 @@ auto Script::Impl::ActorPosition() -> void
   }
   if(actor)
   {
-    Position position;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(position.first);
-    }
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(position.second);
-    }
-
-    actor.Position(position);
+    actor.Position(std::make_pair(lua_.At<float>(-2), lua_.At<float>(-1)));
   }
 }
 
@@ -161,17 +131,7 @@ auto Script::Impl::ActorVelocity() -> void
   }
   if(actor)
   {
-    Position velocity;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(velocity.first);
-    }
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(velocity.second);
-    }
-
-    actor.Velocity(velocity);
+    actor.Velocity(std::make_pair(lua_.At<float>(-2), lua_.At<float>(-1)));
   }
 }
 
@@ -184,17 +144,7 @@ auto Script::Impl::ActorForce() -> void
   }
   if(actor)
   {
-    Position force;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(force.first);
-    }
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(force.second);
-    }
-
-    actor.Force(force);
+    actor.Force(std::make_pair(lua_.At<float>(-2), lua_.At<float>(-1)));
   }
 }
 
@@ -207,16 +157,7 @@ auto Script::Impl::ActorImpulse() -> void
   }
   if(actor)
   {
-    Position impulse;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(impulse.first);
-    }
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(impulse.second);
-    }
-    actor.Impulse(impulse);
+    actor.Impulse(std::make_pair(lua_.At<float>(-2), lua_.At<float>(-1)));
   }
 }
 
@@ -229,27 +170,7 @@ auto Script::Impl::ActorModulation() -> void
   }
   if(actor)
   {
-    float r;
-    {
-      lua::Guard guard = lua_.Get(-4);
-      lua_.Pop(r);
-    }
-    float g;
-    {
-      lua::Guard guard = lua_.Get(-3);
-      lua_.Pop(g);
-    }
-    float b;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(b);
-    }
-    float a;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(a);
-    }
-    actor.Modulation(r, g, b, a);
+    actor.Modulation(lua_.At<float>(-4), lua_.At<float>(-3), lua_.At<float>(-2), lua_.At<float>(-1));
   }
 }
 
@@ -262,12 +183,7 @@ auto Script::Impl::ActorDilation() -> void
   }
   if(actor)
   {
-    float dilation;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(dilation);
-    }
-    actor.Dilation(dilation);
+    actor.Dilation(lua_.At<float>(-1));
   }
 }
 
@@ -280,12 +196,7 @@ auto Script::Impl::ActorRotation() -> void
   }
   if(actor)
   {
-    double angle;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(angle);
-    }
-    actor.Rotation(angle);
+    actor.Rotation(lua_.At<double>(-1));
   }
 }
 }

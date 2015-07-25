@@ -17,25 +17,7 @@ auto Script::Impl::CollisionBegin() -> void
   }
   if(stage)
   {
-    std::string group_a;
-    {
-      lua::Guard guard = lua_.Get(-3);
-      lua_.Pop(group_a);
-    }
-
-    std::string group_b;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(group_b);
-    }
-
-    event::Command command;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(command);
-    }    
-    
-    stage->group_.Begin(group_a, group_b, command);
+    stage->group_.Begin(lua_.At<std::string>(-3), lua_.At<std::string>(-2), lua_.At<event::Command>(-1));
   }
 }
 
@@ -48,25 +30,7 @@ auto Script::Impl::CollisionEnd() -> void
   }
   if(stage)
   {
-    std::string group_a;
-    {
-      lua::Guard guard = lua_.Get(-3);
-      lua_.Pop(group_a);
-    }
-
-    std::string group_b;
-    {
-      lua::Guard guard = lua_.Get(-2);
-      lua_.Pop(group_b);
-    }
-
-    event::Command command;
-    {
-      lua::Guard guard = lua_.Get(-1);
-      lua_.Pop(command);
-    }
-
-    stage->group_.End(group_a, group_b, command);
+    stage->group_.End(lua_.At<std::string>(-3), lua_.At<std::string>(-2), lua_.At<event::Command>(-1));
   }
 }
 }

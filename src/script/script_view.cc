@@ -38,8 +38,7 @@ auto Script::Impl::ViewZoom() -> void
   }
   if(stage)
   {
-    lua::Guard guard = lua_.Get(-1);
-    lua_.Pop(stage->zoom_);
+    stage->zoom_ = lua_.At<float>(-1);
   }
 }
 
@@ -52,9 +51,7 @@ auto Script::Impl::ViewRotation() -> void
   }
   if(stage)
   {
-    lua::Guard guard = lua_.Get(-1);
-    lua_.Pop(stage->angle_);
-
+    stage->angle_ = lua_.At<double>(-1);
     if(stage_ = stage)
     {
       window_.Rotation(stage->angle_);

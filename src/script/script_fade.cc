@@ -11,31 +11,16 @@ auto Script::Impl::FadeInit() -> void
 
 auto Script::Impl::FadeUp() -> void
 {
-  float period;
-  {
-    lua::Guard guard = lua_.Get(-1);
-    lua_.Pop(period);
-  }
-  fade_.Up(period);
+  fade_.Up(lua_.At<float>(-1));
 }
 
 auto Script::Impl::FadeDown() -> void
 {
-  float period;
-  {
-    lua::Guard guard = lua_.Get(-1);
-    lua_.Pop(period);
-  }
-  fade_.Down(period);
+  fade_.Down(lua_.At<float>(-1));
 }
 
 auto Script::Impl::FadeEnd() -> void
 {
-  event::Command command;
-  {
-    lua::Guard guard = lua_.Get(-1);
-    lua_.Pop(command);
-  }
-  fade_.Add(command);
+  fade_.Add(lua_.At<event::Command>(-1));
 }
 }

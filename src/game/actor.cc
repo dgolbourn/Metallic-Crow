@@ -93,9 +93,12 @@ auto Actor::Impl::End() -> void
   game_body_.Modulation(modulation.r() * modulation_.r(), modulation.g() * modulation_.g(), modulation.b() * modulation_.b(), modulation.a() * modulation_.a());
 }
 
-auto Actor::Impl::Render() -> void
+auto Actor::Impl::Render() const -> void
 {
-  game_body_.Render();
+  if(game_body_)
+  {
+    game_body_.Render();
+  }
 }
 
 auto Actor::Impl::Position(game::Position const& position) -> void
@@ -224,7 +227,7 @@ auto Actor::Impl::Blink() -> void
   eyes_.Expression(open_);
 }
 
-Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, int& plane, boost::filesystem::path const& path) : force_(0.f, 0.f), open_(true), angle_(0.)
+Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, boost::filesystem::path const& path) : force_(0.f, 0.f), open_(true), angle_(0.)
 {
   {
     lua::Guard guard = lua.Field("dynamics_body");
@@ -275,11 +278,6 @@ Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue,
     
       animation_ = event::Timer(dilation_ * game_body_.Period(), -1);
       queue.Add(function::Bind(&event::Timer::operator(), animation_));
-
-      {
-        lua::Guard guard = lua.Field("plane");
-        lua.Pop(plane);
-      }
     }
   }
   
@@ -296,7 +294,7 @@ Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue,
   }
 }
 
-auto Actor::Impl::Init(Scene& scene, dynamics::World& world, int plane) -> void
+auto Actor::Impl::Init(dynamics::World& world) -> void
 {
   if(dynamics_body_)
   {
@@ -305,10 +303,6 @@ auto Actor::Impl::Init(Scene& scene, dynamics::World& world, int plane) -> void
     {
       world.End(function::Bind(&Impl::End, shared_from_this()));
     }
-  }
-  if(game_body_)
-  {
-    scene.Add(function::Bind(&Impl::Render, shared_from_this()), plane);
   }
   if(blink_)
   {
@@ -477,11 +471,15 @@ auto Actor::Rotation() const -> double
   return impl_->Rotation();
 }
 
-Actor::Actor(lua::Stack& lua, display::Window& window, Scene& scene, collision::Group& collision, event::Queue& queue, dynamics::World& world, boost::filesystem::path const& path)
+auto Actor::Render() const -> void
 {
-  int plane;
-  impl_ = std::make_shared<Impl>(lua, window, queue, world, collision, plane, path);
-  impl_->Init(scene, world, plane);
+  impl_->Render();
+}
+
+Actor::Actor(lua::Stack& lua, display::Window& window, collision::Group& collision, event::Queue& queue, dynamics::World& world, boost::filesystem::path const& path)
+{
+  impl_ = std::make_shared<Impl>(lua, window, queue, world, collision, path);
+  impl_->Init(world);
 }
 
 size_t Actor::Hash(Actor const& actor)

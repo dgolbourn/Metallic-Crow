@@ -62,25 +62,15 @@ auto Script::Impl::ViewRotation() -> void
 auto Script::Impl::View() -> void
 {
   game::Position view(0.f, 0.f);
-  int count = 0;
 
-  for(auto iter = stage_->subjects_.begin(); iter != stage_->subjects_.end();)
-  {
-    if(Actor subject = iter->Lock())
-    {
-      game::Position position = subject.Position();
-      view.first += position.first;
-      view.second += position.second;
-      ++count;
-      ++iter;
-    }
-    else
-    {
-      iter = stage_->subjects_.erase(iter);
-    }
+  for(Actor actor : stage_->subjects_)
+  {    
+    game::Position position = actor.Position();
+    view.first += position.first;
+    view.second += position.second;
   }
 
-  if(count)
+  if(auto count = stage_->subjects_.size())
   {
     window_.View(view.first / count, view.second / count, stage_->zoom_);
   }

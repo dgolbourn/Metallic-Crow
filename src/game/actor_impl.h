@@ -3,14 +3,15 @@
 #include "timer.h"
 #include "game_body.h"
 #include "feature.h"
+#include "scene.h"
 namespace game
 {
 class Actor::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, int& plane, boost::filesystem::path const& path);
-  auto Init(Scene& scene, dynamics::World& world, int plane) -> void;
-  auto Render() -> void;
+  Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, boost::filesystem::path const& path);
+  auto Init(dynamics::World& world) -> void;
+  auto Render() const -> void;
   auto Pause() -> void;
   auto Resume() -> void;
   auto Body(std::string const& expression, bool left_facing) -> void;

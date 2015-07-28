@@ -17,6 +17,7 @@ auto Script::Impl::ActorInit() -> void
   lua_.Add(function::Bind(&Impl::ActorModulation, shared_from_this()), "actor_modulation", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ActorDilation, shared_from_this()), "actor_dilation", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ActorRotation, shared_from_this()), "actor_rotation", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ActorPlane, shared_from_this()), "actor_plane", 0, "metallic_crow");
 }
 
 auto Script::Impl::ActorLoad() -> void
@@ -31,7 +32,18 @@ auto Script::Impl::ActorLoad() -> void
   {
     {
       lua::Guard guard = lua_.Get(-1);
-      actor = Actor(lua_, window_, stage->scene_, stage->group_, queue_, stage->world_, path_);
+      actor = Actor(lua_, window_, stage->group_, queue_, stage->world_, path_);
+      {
+        lua::Guard guard = lua_.Field("game_body");
+        if(lua_.Check())
+        {
+          lua::Guard guard = lua_.Field("plane");
+          if(lua_.Check())
+          {
+            stage->scene_.left.insert(Scene::left_value_type(lua_.At<float>(-1), actor));
+          }
+        }
+      }
     }
   
     if(!Pause(stage))
@@ -50,6 +62,8 @@ auto Script::Impl::ActorFree() -> void
   if(actor.first && actor.second)
   {
     actor.first->actors_.erase(actor.second);
+    actor.first->scene_.right.erase(actor.second);
+    actor.first->subjects_.erase(actor.second);
   }
 }
 
@@ -197,6 +211,19 @@ auto Script::Impl::ActorRotation() -> void
   if(actor)
   {
     actor.Rotation(lua_.At<double>(-1));
+  }
+}
+
+auto Script::Impl::ActorPlane() -> void
+{
+  std::pair<StagePtr, Actor> actor;
+  {
+    lua::Guard guard = lua_.Get(-2);
+    actor = StageDataGet<Actor>();
+  }
+  if(actor.first && actor.second)
+  {
+    actor.first->scene_.right.replace_data(actor.first->scene_.right.find(actor.second), lua_.At<float>(-1));
   }
 }
 }

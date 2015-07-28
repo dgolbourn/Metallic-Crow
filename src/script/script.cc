@@ -99,7 +99,10 @@ auto Script::Impl::Render() -> void
   if(stage_)
   {
     View();
-    stage_->scene_.Render();
+    for(auto actor : stage_->scene_.left)
+    {
+      actor.second.Render();
+    }
     stage_->choice_.Render();
     stage_->subtitle_.Render();
   }

@@ -1,14 +1,16 @@
 #ifndef SCENE_H_
 #define SCENE_H_
 #include <memory>
-#include "command.h"
+#include "actor.h"
 namespace game
 {
 class Scene
 {
 public:
   Scene();
-  auto Add(event::Command const& layer, int plane) -> void;
+  auto Add(Actor const& actor, float plane) -> void;
+  auto Update(Actor const& actor, float plane) -> void;
+  auto Remove(Actor const& actor) -> void;
   auto Render() -> void;
 private:
   class Impl;

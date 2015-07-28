@@ -3,7 +3,6 @@
 #include <memory>
 #include <string>
 #include "window.h"
-#include "scene.h"
 #include "position.h"
 #include "weak_ptr.h"
 #include "queue.h"
@@ -17,7 +16,7 @@ class Actor
 {
 public:
   Actor() = default;
-  Actor(lua::Stack& lua, display::Window& window, Scene& scene, collision::Group& collision, event::Queue& queue, dynamics::World& world, boost::filesystem::path const& path);
+  Actor(lua::Stack& lua, display::Window& window, collision::Group& collision, event::Queue& queue, dynamics::World& world, boost::filesystem::path const& path);
   auto Position(game::Position const& position) -> void;
   auto Position() const -> game::Position;
   auto Velocity(game::Position const& velocity) -> void;
@@ -37,6 +36,7 @@ public:
   auto Dilation(double dilation) -> void;
   auto Rotation(double angle) -> void;
   auto Rotation() const -> double;
+  auto Render() const -> void;
   explicit operator bool() const;
   bool operator==(Actor const& other) const;
 private:
@@ -51,6 +51,17 @@ public:
 }
 
 namespace std 
+{
+template<> struct hash<game::Actor> 
+{
+  size_t operator()(game::Actor const& actor) const 
+  { 
+    return game::Actor::Hash(actor); 
+  }
+};
+}
+
+namespace boost 
 {
 template<> struct hash<game::Actor> 
 {

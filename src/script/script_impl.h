@@ -5,7 +5,6 @@
 #include "timer.h"
 #include "lua_stack.h"
 #include "choice.h"
-#include "scene.h"
 #include <memory>
 #include <map>
 #include <unordered_set>
@@ -21,15 +20,18 @@
 #include "sound.h"
 #include "timer.h"
 #include "lua_data.h"
+#include "boost/bimap/bimap.hpp"
+#include "boost/bimap/multiset_of.hpp" 
+#include "boost/bimap/unordered_set_of.hpp" 
 namespace game
 {
-typedef std::set<Actor::WeakPtr> WeakActorSet;
 typedef std::unordered_set<Joint> JointSet;
 typedef std::unordered_set<Actor> ActorSet;
 typedef std::unordered_set<event::Timer> TimerSet;
 typedef std::unordered_set<audio::Sound> SoundSet;
 typedef std::unordered_set<audio::Music> MusicSet;
 typedef std::array<bool, 2> Paused;
+typedef boost::bimaps::bimap<boost::bimaps::multiset_of<float>, boost::bimaps::unordered_set_of<Actor>> Scene;
 
 struct Stage
 {
@@ -40,7 +42,7 @@ struct Stage
   SoundSet sounds_;
   MusicSet music_;
   audio::Music current_music_;
-  WeakActorSet subjects_;
+  ActorSet subjects_;
   float zoom_;
   double angle_;
 
@@ -94,6 +96,7 @@ public:
   auto ActorModulation() -> void;
   auto ActorDilation() -> void;
   auto ActorRotation() -> void;
+  auto ActorPlane() -> void;
 
   template<class Data> auto StageDataGet() -> std::pair<StagePtr, Data>
   {

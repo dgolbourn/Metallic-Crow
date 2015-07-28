@@ -29,7 +29,6 @@ source_group ("Source Files\\audio" FILES ${AUDIO_SOURCES})
 include_directories ("${PROJECT_SOURCE_DIR}/src/configuration")
 
 set (CONFIGURATION_SOURCES
-	"${PROJECT_SOURCE_DIR}/src/configuration/lua_data.h"
 	"${PROJECT_SOURCE_DIR}/src/configuration/lua_exception.h"
 	"${PROJECT_SOURCE_DIR}/src/configuration/lua_stack.cc"
 	"${PROJECT_SOURCE_DIR}/src/configuration/lua_stack.h"
@@ -181,8 +180,6 @@ set (GAME_SOURCES
 	"${PROJECT_SOURCE_DIR}/src/game/game_joint.cc"
 	"${PROJECT_SOURCE_DIR}/src/game/game_joint.h"
 	"${PROJECT_SOURCE_DIR}/src/game/position.h"
-	"${PROJECT_SOURCE_DIR}/src/game/scene.cc"
-	"${PROJECT_SOURCE_DIR}/src/game/scene.h"
 	"${PROJECT_SOURCE_DIR}/src/game/subtitle.cc"
 	"${PROJECT_SOURCE_DIR}/src/game/subtitle.h")
 

@@ -28,6 +28,8 @@ public:
   auto Position(game::Position const& position, double angle) -> void;
   auto Rotation(double angle) -> void;
   auto Rotation() const -> double;
+  auto Scale(float scale) -> void;
+  auto Scale() const -> float;
   explicit operator bool() const;
 private:
   class Impl;

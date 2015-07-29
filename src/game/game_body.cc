@@ -96,7 +96,9 @@ public:
   auto Rotation(double angle) -> void;
   auto Rotation() const -> double;
   auto UpdateFrame() -> void;
- 
+  auto Scale(float scale) -> void;
+  auto Scale() const -> float;
+
   Frames::Map expressions_;
   Frames::Map::iterator current_frames_;
   std::vector<Frame>::iterator current_frame_;
@@ -107,9 +109,10 @@ public:
   double angle_;
   double sin_;
   double cos_;
+  float scale_;
 };
 
-Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command) : angle_(0.), sin_(0.), cos_(1.)
+Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command) : angle_(0.), sin_(0.), cos_(1.), scale_(1.f)
 {
   {
     lua::Guard guard = lua.Field("modulation");
@@ -374,6 +377,14 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
     }
   }
 
+  {
+    lua::Guard guard = lua.Field("scale");
+    if(lua.Check()) 
+    {
+      lua.Pop(scale_);
+    }
+  }
+
   state_ = Frames::Key(begin_expression, begin_facing);
   current_frames_ = expressions_.find(state_);
   current_frame_ = current_frames_->second.frames_.begin();
@@ -388,8 +399,10 @@ auto Body::Impl::UpdateFrame() -> void
   {
     ::Renderable& texture = *render.second;
     game::Position rotated = Rotate(cos_, sin_, texture.box_);
-    texture.current_box_.x(rotated.first + position_.first);
-    texture.current_box_.y(rotated.second + position_.second);
+    texture.current_box_.x(scale_ * rotated.first + position_.first);
+    texture.current_box_.y(scale_ * rotated.second + position_.second);
+    texture.current_box_.w(scale_ * texture.box_.w());
+    texture.current_box_.h(scale_ * texture.box_.h());
     texture.current_angle_ = texture.angle_ + angle_;
   }
 }
@@ -491,8 +504,10 @@ auto Body::Impl::Position(game::Position const& position) -> void
   {
     ::Renderable& texture = *render.second;
     game::Position rotated = Rotate(cos_, sin_, texture.box_);
-    texture.current_box_.x(rotated.first + position_.first);
-    texture.current_box_.y(rotated.second + position_.second);
+    texture.current_box_.x(scale_ * rotated.first + position_.first);
+    texture.current_box_.y(scale_ * rotated.second + position_.second);
+    texture.current_box_.w(scale_ * texture.box_.w());
+    texture.current_box_.h(scale_ * texture.box_.h());
   }
 }
 
@@ -527,6 +542,26 @@ auto Body::Impl::Rotation() const -> double
 {
   return angle_;
 }
+
+auto Body::Impl::Scale(float scale) -> void
+{
+  scale_ = scale;
+  for(auto& render : current_frame_->scene_)
+  {
+    ::Renderable& texture = *render.second;
+    game::Position rotated = Rotate(cos_, sin_, texture.box_);
+    texture.current_box_.x(scale_ * rotated.first + position_.first);
+    texture.current_box_.y(scale_ * rotated.second + position_.second);
+    texture.current_box_.w(scale_ * texture.box_.w());
+    texture.current_box_.h(scale_ * texture.box_.h());
+  }
+}
+
+auto Body::Impl::Scale() const -> float
+{
+  return scale_;
+}
+
 
 Body::Body(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command) : impl_(std::make_shared<Impl>(lua, window, path, eyes_command, mouth_command))
 {
@@ -595,6 +630,16 @@ auto Body::Rotation(double angle) -> void
 auto Body::Rotation() const -> double
 {
   return impl_->Rotation();
+}
+
+auto Body::Scale(float scale) -> void
+{
+  impl_->Scale(scale);
+}
+
+auto Body::Scale() const -> float
+{
+  return impl_->Scale();
 }
 
 Body::operator bool() const

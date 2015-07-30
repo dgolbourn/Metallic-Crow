@@ -3,7 +3,6 @@
 #include "timer.h"
 #include "game_body.h"
 #include "feature.h"
-#include "scene.h"
 namespace game
 {
 class Actor::Impl final : public std::enable_shared_from_this<Impl>
@@ -35,6 +34,8 @@ public:
   auto Dilation(double dilation) -> void;
   auto Rotation() const -> double;
   auto Rotation(double angle) -> void;
+  auto Scale(float scale) -> void;
+  auto Scale() const -> float;
 
   game::Position position_;
   double angle_;

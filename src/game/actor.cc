@@ -371,6 +371,24 @@ auto Actor::Impl::Rotation(double angle) -> void
   }
 }
 
+auto Actor::Impl::Scale(float scale) -> void
+{
+  if(game_body_)
+  {
+    game_body_.Scale(scale);
+  }
+}
+
+auto Actor::Impl::Scale() const -> float
+{
+  float scale = 0.f;
+  if(game_body_)
+  {
+    scale = game_body_.Scale();
+  }
+  return scale;
+}
+
 auto Actor::Position(game::Position const& position) -> void
 {
   impl_->Position(position);
@@ -469,6 +487,16 @@ auto Actor::Rotation(double angle) -> void
 auto Actor::Rotation() const -> double
 {
   return impl_->Rotation();
+}
+
+auto Actor::Scale(float scale) -> void
+{
+  impl_->Scale(scale);
+}
+
+auto Actor::Scale() const -> float
+{
+  return impl_->Scale();
 }
 
 auto Actor::Render() const -> void

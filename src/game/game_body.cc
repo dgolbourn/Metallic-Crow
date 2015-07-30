@@ -4,7 +4,6 @@
 #include <vector>
 #include <list>
 #include "boost/functional/hash.hpp"
-#include "scene.h"
 #include "SDL_stdinc.h"
 namespace
 {
@@ -171,7 +170,7 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
 
           if(eyes_command)
           {
-            RenderPtr render = std::make_unique<::Feature>();
+            RenderPtr render = std::make_shared<::Feature>();
 
             {
               lua::Guard guard = lua.Field("left_facing");
@@ -215,7 +214,7 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
 
           if(mouth_command)
           {
-            RenderPtr render = std::make_unique<::Feature>();
+            RenderPtr render = std::make_shared<::Feature>();
 
             {
               lua::Guard guard = lua.Field("left_facing");
@@ -268,7 +267,7 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
             {
               lua::Guard guard = lua.Field(index);
 
-              RenderPtr render = std::make_unique<::Texture>();
+              RenderPtr render = std::make_shared<::Texture>();
 
               {
                 lua::Guard guard = lua.Field("render_box");

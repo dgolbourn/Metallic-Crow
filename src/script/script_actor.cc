@@ -18,6 +18,7 @@ auto Script::Impl::ActorInit() -> void
   lua_.Add(function::Bind(&Impl::ActorDilation, shared_from_this()), "actor_dilation", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ActorRotation, shared_from_this()), "actor_rotation", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ActorPlane, shared_from_this()), "actor_plane", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ActorScale, shared_from_this()), "actor_scale", 0, "metallic_crow");
 }
 
 auto Script::Impl::ActorLoad() -> void
@@ -211,6 +212,19 @@ auto Script::Impl::ActorRotation() -> void
   if(actor)
   {
     actor.Rotation(lua_.At<double>(-1));
+  }
+}
+
+auto Script::Impl::ActorScale() -> void
+{
+  Actor actor;
+  {
+    lua::Guard guard = lua_.Get(-2);
+    actor = DataGet<Actor>();
+  }
+  if(actor)
+  {
+    actor.Scale(lua_.At<float>(-1));
   }
 }
 

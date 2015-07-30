@@ -223,6 +223,10 @@ Chage the actor's colour.
 
 Rotate the actor
 
+.. function:: actor_scale(actor, scale)
+
+Scale the actor
+
 View
 ====
 

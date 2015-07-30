@@ -97,6 +97,7 @@ public:
   auto ActorDilation() -> void;
   auto ActorRotation() -> void;
   auto ActorPlane() -> void;
+  auto ActorScale() -> void;
 
   template<class Data> auto StageDataGet() -> std::pair<StagePtr, Data>
   {

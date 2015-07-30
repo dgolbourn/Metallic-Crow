@@ -36,6 +36,8 @@ public:
   auto Dilation(double dilation) -> void;
   auto Rotation(double angle) -> void;
   auto Rotation() const -> double;
+  auto Scale(float scale) -> void;
+  auto Scale() const -> float;
   auto Render() const -> void;
   explicit operator bool() const;
   bool operator==(Actor const& other) const;

@@ -56,11 +56,12 @@ auto Script::Impl::StageLoad() -> void
 {
   StagePtr stage = std::make_shared<Stage>();
   
-  stage->collision_ = collision::Collision(queue_);
+  collision::Group group(queue_);
+  stage->collision_ = group;
 
   {
     lua::Guard guard = lua_.Field("world");
-    stage->world_ = dynamics::World(lua_, stage->collision_, queue_);
+    stage->world_ = dynamics::World(lua_, group, queue_);
   }
 
   stage->paused_[0] = paused_;
@@ -70,7 +71,24 @@ auto Script::Impl::StageLoad() -> void
 
   {
     lua::Guard guard = lua_.Field("collision");
-    stage->group_ = collision::Group(lua_, stage->collision_);
+    for(int index = 1, end = lua_.Size(); index <= end; ++index) 
+    { 
+      lua::Guard guard = lua_.Field(index); 
+  
+      std::string group_a; 
+      { 
+        lua::Guard guard = lua_.Field(1); 
+        lua_.Pop(group_a); 
+      } 
+ 
+      std::string group_b; 
+      { 
+        lua::Guard guard = lua_.Field(2); 
+        lua_.Pop(group_b); 
+      } 
+ 
+      group.Link(group_a, group_b);
+    } 
   }
 
   Choice choice;

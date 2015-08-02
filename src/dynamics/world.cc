@@ -132,7 +132,7 @@ auto WorldImpl::End(event::Command const& command) -> void
   end_.Add(command);
 }
 
-WorldImpl::WorldImpl(lua::Stack& lua, collision::Collision& collision) : world_(b2Vec2(0, 0)), collision_(collision), paused_(true)
+WorldImpl::WorldImpl(lua::Stack& lua, collision::Group& collision) : world_(b2Vec2(0, 0)), collision_(collision), paused_(true)
 {
   {
     lua::Guard guard = lua.Field("scale");
@@ -234,7 +234,7 @@ auto WorldImpl::Pixels(float32 metres) const -> float
   return static_cast<float>(metres * scale_);
 }
 
-World::World(lua::Stack& lua, collision::Collision& collision, event::Queue& queue) : impl_(std::make_shared<WorldImpl>(lua, collision))
+World::World(lua::Stack& lua, collision::Group& collision, event::Queue& queue) : impl_(std::make_shared<WorldImpl>(lua, collision))
 {
   impl_->Init(queue);
 }

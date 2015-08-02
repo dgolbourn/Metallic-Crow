@@ -3,7 +3,7 @@
 #include "Box2D/Box2D.h"
 #include "command.h"
 #include "signal.h"
-#include "collision.h"
+#include "collision_group.h"
 #include "queue.h"
 #include "timer.h"
 #include <memory>
@@ -18,7 +18,7 @@ typedef std::map<BodyImplPair, int> BodyImplCount;
 class WorldImpl final : public b2DestructionListener, public b2ContactFilter, public b2ContactListener, public std::enable_shared_from_this<WorldImpl>
 {
 public:
-  WorldImpl(lua::Stack& lua, collision::Collision& collision);
+  WorldImpl(lua::Stack& lua, collision::Group& collision);
   auto Init(event::Queue& queue) -> void;
   auto Update() -> void;
   auto Pause() -> void;
@@ -36,7 +36,7 @@ public:
   auto Pixels(float32 metres) const -> float;
   float32 f_;
   float32 dt_;
-  collision::Collision collision_;
+  collision::Group collision_;
   event::Signal begin_;
   event::Signal end_;
   b2World world_;

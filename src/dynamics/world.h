@@ -4,7 +4,7 @@
 #include "lua_stack.h"
 #include "weak_ptr.h"
 #include "command.h"
-#include "collision.h"
+#include "collision_group.h"
 #include "queue.h"
 namespace dynamics
 {
@@ -12,7 +12,7 @@ class World
 {
 public:
   World() = default;
-  World(lua::Stack& lua, collision::Collision& collision, event::Queue& queue);
+  World(lua::Stack& lua, collision::Group& collision, event::Queue& queue);
   explicit operator bool() const;
   auto Begin(event::Command const& command) -> void;
   auto End(event::Command const& command) -> void;

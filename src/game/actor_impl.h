@@ -9,6 +9,7 @@ class Actor::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
   Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, boost::filesystem::path const& path);
+  ~Impl();
   auto Init(dynamics::World& world) -> void;
   auto Render() const -> void;
   auto Pause() -> void;
@@ -36,6 +37,8 @@ public:
   auto Rotation(double angle) -> void;
   auto Scale(float scale) -> void;
   auto Scale() const -> float;
+  auto Link(std::string const& group) -> void;
+  auto Unlink(std::string const& group) -> void;
 
   game::Position position_;
   double angle_;
@@ -52,6 +55,7 @@ public:
   double dilation_;
   event::Timer animation_;
   game::Body game_body_;
+  collision::Group collision_;
 };
 }
 #endif

@@ -19,6 +19,8 @@ auto Script::Impl::ActorInit() -> void
   lua_.Add(function::Bind(&Impl::ActorRotation, shared_from_this()), "actor_rotation", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ActorPlane, shared_from_this()), "actor_plane", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ActorScale, shared_from_this()), "actor_scale", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ActorLink, shared_from_this()), "actor_link", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ActorUnlink, shared_from_this()), "actor_unlink", 0, "metallic_crow");
 }
 
 auto Script::Impl::ActorLoad() -> void
@@ -33,7 +35,7 @@ auto Script::Impl::ActorLoad() -> void
   {
     {
       lua::Guard guard = lua_.Get(-1);
-      actor = Actor(lua_, window_, stage->group_, queue_, stage->world_, path_);
+      actor = Actor(lua_, window_, stage->collision_, queue_, stage->world_, path_);
       {
         lua::Guard guard = lua_.Field("game_body");
         if(lua_.Check())
@@ -238,6 +240,32 @@ auto Script::Impl::ActorPlane() -> void
   if(actor.first && actor.second)
   {
     actor.first->scene_.right.replace_data(actor.first->scene_.right.find(actor.second), lua_.At<float>(-1));
+  }
+}
+
+auto Script::Impl::ActorLink() -> void
+{
+  Actor actor;
+  {
+    lua::Guard guard = lua_.Get(-2);
+    actor = DataGet<Actor>();
+  }
+  if(actor)
+  {
+    actor.Link(lua_.At<std::string>(-1));
+  }
+}
+
+auto Script::Impl::ActorUnlink() -> void
+{
+  Actor actor;
+  {
+    lua::Guard guard = lua_.Get(-2);
+    actor = DataGet<Actor>();
+  }
+  if(actor)
+  {
+    actor.Unlink(lua_.At<std::string>(-1));
   }
 }
 }

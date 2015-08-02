@@ -114,8 +114,6 @@ set (DYNAMICS_SOURCES
 	"${PROJECT_SOURCE_DIR}/src/dynamics/body_impl.h"
 	"${PROJECT_SOURCE_DIR}/src/dynamics/box_search.cc"
 	"${PROJECT_SOURCE_DIR}/src/dynamics/box_search.h"
-	"${PROJECT_SOURCE_DIR}/src/dynamics/collision.cc"
-	"${PROJECT_SOURCE_DIR}/src/dynamics/collision.h"
 	"${PROJECT_SOURCE_DIR}/src/dynamics/collision_group.cc"
 	"${PROJECT_SOURCE_DIR}/src/dynamics/collision_group.h"
 	"${PROJECT_SOURCE_DIR}/src/dynamics/joint.cc"

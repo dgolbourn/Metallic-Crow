@@ -39,6 +39,8 @@ public:
   auto Scale(float scale) -> void;
   auto Scale() const -> float;
   auto Render() const -> void;
+  auto Link(std::string const& group) -> void;
+  auto Unlink(std::string const& group) -> void;
   explicit operator bool() const;
   bool operator==(Actor const& other) const;
 private:

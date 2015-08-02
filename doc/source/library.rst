@@ -137,12 +137,19 @@ Collisions are events that occur when two actors touch.
 
 .. function:: collision_begin(stage, group_a, group_b, command)
 
-Register ``command`` to be called when an actor associated with ``group_a`` beings a collision with an actor in ``group_b``
+Register ``command`` to be called when an actor associated with ``group_a`` beings a collision with an actor in ``group_b``.  The two groups must first be linked with ``collision_link``.
 
 .. function:: collision_end(stage, group_a, group_b, command)
 
-Register ``command`` to be called when an actor associated with ``group_a`` ends its collision with an actor in ``group_b``
+Register ``command`` to be called when an actor associated with ``group_a`` ends its collision with an actor in ``group_b``.  The two groups must first be linked with ``collision_link``.
 
+.. function:: collision_link(stage, group_a, group_b)
+
+Allow actors in ``group_a`` and ``group_b`` to collide.
+
+.. function:: collision_unlink(stage, group_a, group_b)
+
+Cancel actors in ``group_a`` and ``group_b`` to colliding and remove all registered commands.
 
 Choice
 ======
@@ -226,6 +233,14 @@ Rotate the actor
 .. function:: actor_scale(actor, scale)
 
 Scale the actor
+
+.. function:: actor_link(actor, group)
+
+Add actor to the collision group
+
+.. function:: actor_unlink(actor, group)
+
+Remove actor from the collision group
 
 View
 ====

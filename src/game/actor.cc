@@ -23,7 +23,7 @@ dynamics::Body MakeBody(lua::Stack& lua, dynamics::World& world, collision::Grou
       lua::Guard guard = lua.Field(index);
       lua.Pop(name);
 
-      collision.Add(name, body);
+      collision.Link(name, body);
     }
   }
   return body;
@@ -32,6 +32,11 @@ dynamics::Body MakeBody(lua::Stack& lua, dynamics::World& world, collision::Grou
 
 namespace game
 {
+Actor::Impl::~Impl()
+{
+  collision_.Unlink(dynamics_body_);
+}
+
 auto Actor::Impl::Pause() -> void
 {
   if(animation_)
@@ -227,13 +232,13 @@ auto Actor::Impl::Blink() -> void
   eyes_.Expression(open_);
 }
 
-Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, boost::filesystem::path const& path) : force_(0.f, 0.f), open_(true), angle_(0.)
+Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, boost::filesystem::path const& path) : force_(0.f, 0.f), open_(true), angle_(0.), collision_(collision)
 {
   {
     lua::Guard guard = lua.Field("dynamics_body");
     if(lua.Check())
     {
-      dynamics_body_ = MakeBody(lua, world, collision);
+      dynamics_body_ = MakeBody(lua, world, collision_);
     }
   }
 
@@ -389,6 +394,16 @@ auto Actor::Impl::Scale() const -> float
   return scale;
 }
 
+auto Actor::Impl::Link(std::string const& group) -> void
+{
+  collision_.Link(group, dynamics_body_);
+}
+
+auto Actor::Impl::Unlink(std::string const& group) -> void
+{
+  collision_.Unlink(group, dynamics_body_);
+}
+
 auto Actor::Position(game::Position const& position) -> void
 {
   impl_->Position(position);
@@ -518,5 +533,15 @@ size_t Actor::Hash(Actor const& actor)
 bool Actor::operator==(Actor const& other) const
 {
   return impl_ == other.impl_;
+}
+
+auto Actor::Link(std::string const& group) -> void
+{
+  impl_->Link(group);
+}
+
+auto Actor::Unlink(std::string const& group) -> void
+{
+  impl_->Unlink(group);
 }
 }

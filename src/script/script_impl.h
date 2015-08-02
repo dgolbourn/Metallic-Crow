@@ -51,8 +51,7 @@ struct Stage
   Subtitle subtitle_;
 
   dynamics::World world_;
-  collision::Collision collision_;
-  collision::Group group_;
+  collision::Group collision_;
 };
 
 typedef std::weak_ptr<Stage> WeakStagePtr;
@@ -98,6 +97,8 @@ public:
   auto ActorRotation() -> void;
   auto ActorPlane() -> void;
   auto ActorScale() -> void;
+  auto ActorLink() -> void;
+  auto ActorUnlink() -> void;
 
   template<class Data> auto StageDataGet() -> std::pair<StagePtr, Data>
   {
@@ -146,6 +147,8 @@ public:
   auto CollisionInit() -> void;
   auto CollisionBegin() -> void;
   auto CollisionEnd() -> void;
+  auto CollisionLink() -> void;
+  auto CollisionUnlink() -> void;
 
   auto FadeInit() -> void;
   auto FadeUp() -> void;

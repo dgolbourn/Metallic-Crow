@@ -14,8 +14,6 @@ class Window
 public:
   Window() = default;
   Window(lua::Stack& lua);
-  auto Load(boost::filesystem::path const& file) -> void;
-  auto Free(boost::filesystem::path const& file) -> void;
   auto Clear() const -> void;
   auto Show() const -> void;
   auto View(float x, float y, float zoom) -> void;

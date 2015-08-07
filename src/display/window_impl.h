@@ -5,7 +5,6 @@
 #include <string>
 #include "font.h"
 #include "bounding_box.h"
-#include <unordered_map>
 #include "SDL_image.h"
 #include "sdl_library.h"
 #include "img_library.h"
@@ -38,8 +37,6 @@ public:
   ttf::Library ttf_;
   SDL_Window* window_;
   SDL_Renderer* renderer_;
-  std::unordered_map<boost::filesystem::path, sdl::Texture::WeakPtr, boost::hash<boost::filesystem::path>> textures_;
-  std::unordered_map<boost::filesystem::path, sdl::Texture, boost::hash<boost::filesystem::path>> cache_;
   SDL_FPoint view_;
   float zoom_;
   float scale_;

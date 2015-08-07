@@ -2,7 +2,6 @@
 #define SDL_TEXTURE_H_
 #include "SDL_render.h"
 #include <memory>
-#include "weak_ptr.h"
 #include "boost/filesystem.hpp"
 namespace sdl
 {
@@ -15,10 +14,8 @@ public:
   explicit operator SDL_Texture*() const;
   auto operator->() const -> SDL_Texture*;
   explicit operator bool() const;
-  typedef memory::WeakPtr<class Texture, SDL_Texture> WeakPtr;
 private:
   std::shared_ptr<SDL_Texture> impl_;
-  friend WeakPtr;
 };
 }
 #endif

@@ -3,15 +3,38 @@
 #include "SDL_mixer.h"
 #include "mix_library.h"
 #include "mix_exception.h"
-#include <unordered_map>
-#include "boost/functional/hash.hpp"
 #include "log.h"
 #include "mix_thread.h"
 #include <mutex>
+#include <boost/flyweight.hpp>
+#include <boost/flyweight/key_value.hpp>
 namespace
 {
-typedef std::shared_ptr<Mix_Music> Stream;
-typedef std::weak_ptr<Mix_Music> WeakStream;
+struct StreamContainer
+{
+  Mix_Music* stream_;
+
+  StreamContainer(boost::filesystem::path const& file)
+  {
+    stream_ = Mix_LoadMUS(file.string().c_str());
+    if(!stream_)
+    {
+      BOOST_THROW_EXCEPTION(mix::Exception() << mix::Exception::What(mix::Error()));
+    }
+  }
+
+  ~StreamContainer()
+  {
+    Mix_FreeMusic(stream_);
+  }
+
+  operator Mix_Music*() const
+  {
+    return stream_;
+  }
+};
+
+typedef boost::flyweight<boost::flyweights::key_value<boost::filesystem::path, StreamContainer>> Stream;
 }
 
 namespace audio
@@ -74,50 +97,10 @@ auto InitHookMusic() -> void
     Mix_HookMusicFinished(MusicFinished);
   }
 }
-
-auto Init(boost::filesystem::path const& file) -> Mix_Music*
-{
-  Mix_Music* music = Mix_LoadMUS(file.string().c_str());
-  if(!music)
-  {
-    BOOST_THROW_EXCEPTION(mix::Exception() << mix::Exception::What(mix::Error()));
-  }
-  return music;
-}
-
-std::unordered_map<boost::filesystem::path, Stream, boost::hash<boost::filesystem::path>> cache;
-
-std::unordered_map<boost::filesystem::path, WeakStream, boost::hash<boost::filesystem::path>> streams;
-
-auto MakeStream(boost::filesystem::path const& file) -> Stream
-{
-  Stream stream;
-  auto fileiter = streams.find(file);
-  if(fileiter != streams.end())
-  {
-    stream = fileiter->second.lock();
-  }
-  if(!stream)
-  {
-    stream = Stream(Init(file), Mix_FreeMusic);
-    streams.emplace(file, stream);
-  }
-  return stream;
-}
 }
 
 namespace audio
 {
-auto Music::Load(boost::filesystem::path const& file) -> void
-{
-  cache.emplace(file, MakeStream(file));
-}
-
-auto Music::Free(boost::filesystem::path const& file) -> void
-{
-  cache.erase(file.string());
-}
-
 auto Music::Impl::Pause() -> void
 {
   std::lock_guard<mix::Mutex> lock(mix::mutex);
@@ -165,11 +148,9 @@ auto Music::Impl::Play(float volume) -> void
   end_ = false;
 }
 
-Music::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat) : repeat_(repeat), play_volume_(1.f), volume_(volume), complete_(false), paused_(true), end_(false)
+Music::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat) : repeat_(repeat), play_volume_(1.f), volume_(volume), complete_(false), paused_(true), end_(false),  stream_(file)
 {
   InitHookMusic();
-
-  stream_ = MakeStream(file);
 }
 
 Music::Impl::~Impl()

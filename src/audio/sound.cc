@@ -1,19 +1,41 @@
 #include "sound.h"
-#include <unordered_map>
 #include "SDL_mixer.h"
 #include "mix_exception.h"
 #include "mix_library.h"
-#include <mutex>
 #include "log.h"
 #include <iostream>
 #include <vector>
-#include "boost/functional/hash.hpp"
 #include "mix_thread.h"
 #include <mutex>
+#include <boost/flyweight.hpp>
+#include <boost/flyweight/key_value.hpp>
 namespace
 {
-typedef std::shared_ptr<Mix_Chunk> Chunk;
-typedef std::weak_ptr<Mix_Chunk> WeakChunk;
+struct ChunkContainer
+{
+  Mix_Chunk* chunk_;
+
+  ChunkContainer(boost::filesystem::path const& file)
+  {
+    chunk_ = Mix_LoadWAV(file.string().c_str());
+    if(!chunk_)
+    {
+      BOOST_THROW_EXCEPTION(mix::Exception() << mix::Exception::What(mix::Error()));
+    }
+  }
+
+  ~ChunkContainer()
+  {
+    Mix_FreeChunk(chunk_);
+  }
+
+  operator Mix_Chunk*() const
+  {
+    return chunk_;
+  }
+};
+
+typedef boost::flyweight<boost::flyweights::key_value<boost::filesystem::path, ChunkContainer>> Chunk;
 }
 
 namespace audio
@@ -40,37 +62,6 @@ public:
 
 namespace
 {
-auto Init(boost::filesystem::path const& file) -> Mix_Chunk*
-{
-  Mix_Chunk* chunk = Mix_LoadWAV(file.string().c_str());
-  if(!chunk)
-  {
-    BOOST_THROW_EXCEPTION(mix::Exception() << mix::Exception::What(mix::Error()));
-  }
-  return chunk;
-}
-
-std::unordered_map<boost::filesystem::path, WeakChunk, boost::hash<boost::filesystem::path>> chunks;
-
-auto MakeChunk(boost::filesystem::path const& file) -> Chunk
-{
-  Chunk chunk;
-  auto fileiter = chunks.find(file);
-  if(fileiter != chunks.end())
-  {
-    chunk = fileiter->second.lock();
-  }
-
-  if(!chunk)
-  {
-    chunk = Chunk(Init(file), Mix_FreeChunk);
-    chunks.emplace(file, chunk);
-  }
-  return chunk;
-}
-
-std::unordered_map<boost::filesystem::path, Chunk, boost::hash<boost::filesystem::path>> cache;
-
 std::vector<audio::Sound::Impl*> sounds;
 
 auto ChannelFinished(int channel) noexcept -> void
@@ -111,16 +102,6 @@ auto InitHookSound() -> void
 
 namespace audio
 {
-auto Sound::Load(boost::filesystem::path const& file) -> void
-{
-  cache.emplace(file, MakeChunk(file));
-}
-
-auto Sound::Free(boost::filesystem::path const& file) -> void
-{
-  cache.erase(file);
-}
-
 auto Sound::Impl::Play(float volume) -> void
 {
   std::lock_guard<mix::Mutex> lock(mix::mutex);
@@ -150,11 +131,9 @@ auto Sound::Impl::Play(float volume) -> void
   end_ = false;
 }
 
-Sound::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat) : channel_(-1), repeat_(repeat), play_volume_(1.f), volume_(volume), paused_(true), end_(false)
+Sound::Impl::Impl(boost::filesystem::path const& file, float volume, bool repeat) : channel_(-1), repeat_(repeat), play_volume_(1.f), volume_(volume), paused_(true), end_(false), chunk_(file)
 {
   InitHookSound();
-
-  chunk_ = MakeChunk(file);
 }
 
 Sound::Impl::~Impl()

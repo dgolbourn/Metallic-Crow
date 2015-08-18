@@ -227,12 +227,8 @@ BodyImpl::BodyImpl(lua::Stack& lua, World& world)
     {
       lua::Guard guard = lua.Field(index);
 
-      std::string type;
-      {
-        lua::Guard guard = lua.Field("type");
-        lua.Pop(type);
-      }
-
+      std::string type = lua.Field<std::string>("type");
+    
       Shape shape;
       if(type == "box")
       {
@@ -264,11 +260,7 @@ BodyImpl::BodyImpl(lua::Stack& lua, World& world)
     }
   }
 
-  float32 drag;
-  {
-    lua::Guard guard = lua.Field("drag");
-    lua.Pop(drag);
-  }
+  float32 drag = lua.Field<float>("drag");
 
   double x, y;
   {
@@ -307,25 +299,7 @@ BodyImpl::BodyImpl(lua::Stack& lua, World& world)
   body_ = world.impl_->world_.CreateBody(&body_def);
   body_->SetUserData(this);
 
-  float32 mass;
-  {
-    lua::Guard guard = lua.Field("mass");
-    lua.Pop(mass);
-  }
-
-  float32 restitution;
-  {
-    lua::Guard guard = lua.Field("restitution");
-    lua.Pop(restitution);
-  }
-
-  float32 friction;
-  {
-    lua::Guard guard = lua.Field("friction");
-    lua.Pop(friction);
-  }
-
-  b2FixtureDef fixture = FixtureDefinition(area, mass, friction, restitution);
+  b2FixtureDef fixture = FixtureDefinition(area, lua.Field<float>("mass"), lua.Field<float>("friction"), lua.Field<float>("restitution"));
 
   for(auto& shape : shapes)
   {

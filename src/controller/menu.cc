@@ -77,13 +77,7 @@ Menu::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
     clip = display::BoundingBox(lua);
   }
 
-  std::string file;
-  {
-    lua::Guard guard = lua.Field("page");
-    lua.Pop(file);
-  }
-
-  background_.texture_ = display::Texture(display::Texture(path_ / file, window), clip);
+  background_.texture_ = display::Texture(display::Texture(path_ / lua.Field<std::string>("page"), window), clip);
 
   {
     lua::Guard guard = lua.Field("render_box");

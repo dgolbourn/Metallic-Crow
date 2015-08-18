@@ -8,11 +8,7 @@ auto MakeAnimation(lua::Stack& lua, Window& window, boost::filesystem::path cons
   {
     lua::Guard guard = lua.Field(index);
     
-    std::string page;
-    {
-      lua::Guard guard = lua.Field("page");
-      lua.Pop(page);
-    }
+    std::string page = lua.Field<std::string>("page");
 
     {
       lua::Guard guard = lua.Field("clip");

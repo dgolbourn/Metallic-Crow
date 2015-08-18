@@ -42,7 +42,7 @@ typedef std::shared_ptr<Renderable> RenderPtr;
 
 struct Frame
 {
-  std::multimap<int, RenderPtr> scene_; 
+  std::multimap<float, RenderPtr> scene_; 
   double period_;
 };
 
@@ -125,36 +125,16 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
     {
       lua::Guard guard = lua.Field(index);
 
-      std::string name;
-      {
-        lua::Guard guard = lua.Field("name");
-        lua.Pop(name);
-      }
+      std::string name = lua.Field<std::string>("name");
+    
+      bool facing = lua.Field<bool>("left_facing");
+      
+      bool interruptable = lua.Field<bool>("interruptable");
 
-      bool facing;
-      {
-        lua::Guard guard = lua.Field("left_facing");
-        lua.Pop(facing);
-      }
-
-      bool interruptable;
-      {
-        lua::Guard guard = lua.Field("interruptable");
-        lua.Pop(interruptable);
-      }
-
-      std::string next_expression;
-      {
-        lua::Guard guard = lua.Field("next_name");
-        lua.Pop(next_expression);
-      }
-
-      bool next_facing;
-      {
-        lua::Guard guard = lua.Field("next_left_facing");
-        lua.Pop(next_facing);
-      }
-
+      std::string next_expression = lua.Field<std::string>("next_name");
+      
+      bool next_facing = lua.Field<bool>("next_left_facing");
+    
       Frames& frames = expressions_[Frames::Key(name, facing)];
       frames.iterruptable_ = (interruptable != 0);
 
@@ -172,26 +152,14 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
           {
             RenderPtr render = std::make_shared<::Feature>();
 
-            {
-              lua::Guard guard = lua.Field("left_facing");
-              lua.Pop(render->facing_);
-            }
-
-            {
-              lua::Guard guard = lua.Field("eyes_parallax");
-              lua.Pop(render->parallax_);
-            }
-
+            render->facing_ = lua.Field<bool>("left_facing");
+           
+            render->parallax_ = lua.Field<float>("eyes_parallax");
+            
             {
               lua::Guard guard = lua.Field("eyes_box");
               render->box_ = display::BoundingBox(lua);
               render->current_box_ = display::BoundingBox(lua);
-            }
-
-            int plane;
-            {
-              lua::Guard guard = lua.Field("eyes_plane");
-              lua.Pop(plane);
             }
 
             {
@@ -209,33 +177,21 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
 
             static_cast<::Feature*>(render.get())->feature_ = eyes_command;
 
-            frame.scene_.emplace(plane, std::move(render));
+            frame.scene_.emplace(lua.Field<float>("eyes_plane"), std::move(render));
           }
 
           if(mouth_command)
           {
             RenderPtr render = std::make_shared<::Feature>();
 
-            {
-              lua::Guard guard = lua.Field("left_facing");
-              lua.Pop(render->facing_);
-            }
-
-            {
-              lua::Guard guard = lua.Field("mouth_parallax");
-              lua.Pop(render->parallax_);
-            }
-
+            render->facing_ = lua.Field<bool>("left_facing");
+            
+            render->parallax_ = lua.Field<float>("mouth_parallax");
+            
             {
               lua::Guard guard = lua.Field("mouth_box");
               render->current_box_ = display::BoundingBox(lua);
               render->box_ = display::BoundingBox(lua);
-            }
-
-            int plane;
-            {
-              lua::Guard guard = lua.Field("mouth_plane");
-              lua.Pop(plane);
             }
 
             {
@@ -253,13 +209,10 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
 
             static_cast<::Feature*>(render.get())->feature_ = mouth_command;
 
-            frame.scene_.emplace(plane, std::move(render));
+            frame.scene_.emplace(lua.Field<float>("mouth_plane"), std::move(render));
           }
 
-          {
-            lua::Guard guard = lua.Field("period");
-            lua.Pop(frame.period_);
-          }
+          frame.period_ = lua.Field<double>("period");
 
           {
             lua::Guard guard = lua.Field("textures");
@@ -275,27 +228,12 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
                 render->box_ = display::BoundingBox(lua);
               }
 
-              {
-                lua::Guard guard = lua.Field("parallax");
-                lua.Pop(render->parallax_);
-              }
-
-              std::string page;
-              {
-                lua::Guard guard = lua.Field("page");
-                lua.Pop(page);
-              }
-
+              render->parallax_ = lua.Field<float>("parallax");
+             
               display::BoundingBox clip;
               {
                 lua::Guard guard = lua.Field("clip");
                 clip = display::BoundingBox(lua);
-              }
-
-              int plane;
-              {
-                lua::Guard guard = lua.Field("plane");
-                lua.Pop(plane);
               }
 
               {
@@ -321,8 +259,8 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
  
               render->modulation_ = modulation_;
 
-              static_cast<::Texture*>(render.get())->texture_ = display::Texture(display::Texture(path / page, window), clip);
-              frame.scene_.emplace(plane, std::move(render));
+              static_cast<::Texture*>(render.get())->texture_ = display::Texture(display::Texture(path / lua.Field<std::string>("page"), window), clip);
+              frame.scene_.emplace(lua.Field<float>("plane"), std::move(render));
             }
           }
         }
@@ -339,18 +277,10 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
     }
   }
 
-  bool begin_facing;
-  {
-    lua::Guard guard = lua.Field("left_facing");
-    lua.Pop(begin_facing);
-  }
+  bool begin_facing = lua.Field<bool>("left_facing");
 
-  std::string begin_expression;
-  {
-    lua::Guard guard = lua.Field("expression");
-    lua.Pop(begin_expression);
-  }
-
+  std::string begin_expression = lua.Field<std::string>("expression");
+  
   {
     lua::Guard guard = lua.Field("position");
 

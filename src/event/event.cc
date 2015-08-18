@@ -36,10 +36,7 @@ typedef std::map<Sint32, ControllerTemp> ControllerTempMap;
 
 auto GetScanCodeField(lua::Stack& lua, std::string const& field) -> SDL_Scancode 
 {
-  int temp;
-  lua::Guard guard = lua.Field(field);
-  lua.Pop(temp);
-  return SDL_Scancode(temp);
+  return static_cast<SDL_Scancode>(lua.Field<int>(field));
 }
 }
 
@@ -189,23 +186,9 @@ Event::Impl::Impl(lua::Stack& lua) : sdl_(SDL_INIT_EVENTS | SDL_INIT_GAMECONTROL
       }
     }
 
-    double max;
-    {
-      lua::Guard guard = lua.Field("update_max");
-      lua.Pop(max);
-    }
-
-    double min;
-    {
-      lua::Guard guard = lua.Field("update_min");
-      lua.Pop(min);
-    }
-
-    double threshold;
-    {
-      lua::Guard guard = lua.Field("update_threshold");
-      lua.Pop(threshold);
-    }
+    double max = lua.Field<double>("update_max");
+    double min = lua.Field<double>("update_min");
+    double threshold = lua.Field<double>("update_threshold");
 
     update_offset_ = -static_cast<float>(min);
     update_scale_ = static_cast<float>(1. / (max - min));

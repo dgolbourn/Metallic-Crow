@@ -120,23 +120,11 @@ WindowImpl::WindowImpl(lua::Stack& lua) : sdl_(SDL_INIT_VIDEO), img_(IMG_INIT_PN
       flags |= SDL_WINDOW_BORDERLESS | SDL_WINDOW_MAXIMIZED;
     }
 
-    std::string name;
-    {
-      lua::Guard guard = lua.Field("name");
-      lua.Pop(name);
-    }
+    std::string name = lua.Field<std::string>("name");
+   
+    int width = lua.Field<int>("width");
 
-    int width;
-    {
-      lua::Guard guard = lua.Field("width");
-      lua.Pop(width);
-    }
-
-    int height;
-    {
-      lua::Guard guard = lua.Field("height");
-      lua.Pop(height);
-    }
+    int height = lua.Field<int>("height");
 
     window_ = SDL_CreateWindow(name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, flags);
     if(!window_)

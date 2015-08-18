@@ -48,6 +48,13 @@ public:
     Pop(value);
     return value;
   }
+  template<class T> auto Field(std::string field) -> T
+  {
+    Guard guard = Field(field);
+    T value;
+    Pop(value);
+    return value;
+  }
 private:
   std::shared_ptr<class StackImpl> impl_;
 };

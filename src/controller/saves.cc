@@ -53,21 +53,9 @@ Saves::Impl::Impl(boost::filesystem::path const& file) : file_(file), slot_(0), 
   {
     lua::Guard guard = lua.Field(i + 1);
     auto& saves = saves_[i];
-
-    {
-      lua::Guard guard = lua.Field("progress");
-      lua.Pop(std::get<0>(saves));
-    }
-
-    {
-      lua::Guard guard = lua.Field("current");
-      lua.Pop(std::get<1>(saves));
-    }
-
-    {
-      lua::Guard guard = lua.Field("last_played");
-      lua.Pop(std::get<2>(saves));
-    }
+    std::get<0>(saves) = lua.Field<int>("progress");
+    std::get<1>(saves) = lua.Field<int>("current");
+    std::get<2>(saves) = lua.Field<std::string>("last_played");
   }
 }
 

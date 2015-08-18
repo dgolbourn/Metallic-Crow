@@ -14,10 +14,7 @@ auto Spring(lua::Stack& lua, b2Body* body_a, b2Body* body_b, dynamics::WorldImpl
   JointDefinition def(new b2DistanceJointDef);
   b2DistanceJointDef& joint = *static_cast<b2DistanceJointDef*>(def.get());
 
-  {
-    lua::Guard guard = lua.Field("length");
-    lua.Pop(joint.length);
-  }
+  joint.length = lua.Field<float>("length");
 
   lua::Guard guard = lua.Field("damping");
   if(lua.Check())
@@ -37,11 +34,8 @@ auto Rope(lua::Stack& lua, b2Body* body_a, b2Body* body_b) -> JointDefinition
   JointDefinition def(new b2RopeJointDef);
   b2RopeJointDef& joint = *static_cast<b2RopeJointDef*>(def.get());
 
-  {
-    lua::Guard guard = lua.Field("length");
-    lua.Pop(joint.maxLength);
-  }
-
+  joint.maxLength = lua.Field<float>("length");
+    
   joint.bodyA = body_a;
   joint.bodyB = body_b;
 
@@ -85,11 +79,7 @@ public:
 
 JointImpl::JointImpl(lua::Stack& lua, Body& body_a, Body& body_b, World& world) : joint_(nullptr), world_(world)
 {
-  std::string type;
-  {
-    lua::Guard guard = lua.Field("type");
-    lua.Pop(type);
-  }
+  std::string type = lua.Field<std::string>("type");
 
   JointDefinition def;
   if(type == "spring")

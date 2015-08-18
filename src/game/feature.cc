@@ -31,37 +31,19 @@ Feature::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem:
     {
       lua::Guard guard = lua.Field(index);
 
-      std::string expression;
-      {
-        lua::Guard guard = lua.Field("expression");
-        lua.Pop(expression);
-      }
+      std::string expression = lua.Field<std::string>("expression");
 
-      int expession_index;
-      {
-        lua::Guard guard = lua.Field("index");
-        lua.Pop(expession_index);
-      }
-
-      bool facing;
-      {
-        lua::Guard guard = lua.Field("left_facing");
-        lua.Pop(facing);
-      }
-
-      std::string page;
-      {
-        lua::Guard guard = lua.Field("page");
-        lua.Pop(page);
-      }
-
+      int expession_index = lua.Field<int>("index");
+    
+      bool facing = lua.Field<bool>("left_facing");
+    
       display::BoundingBox clip;
       {
         lua::Guard guard = lua.Field("clip");
         clip = display::BoundingBox(lua);
       }
 
-      display::Texture texture(display::Texture(path / page, window), clip);
+      display::Texture texture(display::Texture(path / lua.Field<std::string>("page"), window), clip);
       if(facing)
       {
         textures_[Key(expression, expession_index)].first = texture;
@@ -73,19 +55,7 @@ Feature::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem:
     }
   }
 
-  std::string begin_expression;
-  {
-    lua::Guard guard = lua.Field("begin_expression");
-    lua.Pop(begin_expression);
-  }
-
-  int begin_index;
-  {
-    lua::Guard guard = lua.Field("begin_index");
-    lua.Pop(begin_index);
-  }
-
-  state_ = Key(begin_expression, begin_index);
+  state_ = std::make_pair(lua.Field<std::string>("begin_expression"), lua.Field<int>("begin_index"));
   current_ = textures_.find(state_);
 }
 

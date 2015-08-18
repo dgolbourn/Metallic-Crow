@@ -248,7 +248,14 @@ Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue,
     {
       {
         lua::Guard guard = lua.Field("dilation");
-        lua.Pop(dilation_);
+        if(lua.Check())
+        {
+          lua.Pop(dilation_);
+        }
+        else
+        {
+          dilation_ = 1.;
+        }
       }
 
       {

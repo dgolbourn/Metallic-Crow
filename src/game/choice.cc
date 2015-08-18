@@ -62,10 +62,7 @@ public:
 
 Choice::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : window_(window), paused_(true), count_(0), queue_(queue)
 {
-  {
-    lua::Guard guard = lua.Field("interval");
-    lua.Pop(interval_);
-  }
+  interval_ = lua.Field<double>("interval");
 
   {
     lua::Guard guard = lua.Field("font");

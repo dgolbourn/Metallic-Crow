@@ -167,27 +167,8 @@ Music::Music(boost::filesystem::path const& file, float volume, bool repeat) : i
 {
 }
 
-Music::Music(lua::Stack& lua, boost::filesystem::path const& path)
+Music::Music(lua::Stack& lua, boost::filesystem::path const& path) : Music(path / lua.Field<std::string>("file"), lua.Field<float>("volume"), lua.Field<bool>("repeat"))
 {
-  float volume;
-  {
-    lua::Guard guard = lua.Field("volume");
-    lua.Pop(volume);
-  }
-
-  std::string file;
-  {
-    lua::Guard guard = lua.Field("file");
-    lua.Pop(file);
-  }
-
-  bool repeat;
-  {
-    lua::Guard guard = lua.Field("repeat");
-    lua.Pop(repeat);
-  }
-
-  impl_ = std::make_shared<Impl>(path / file, volume, repeat);
 }
 
 auto Music::operator()(float volume) -> bool

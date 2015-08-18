@@ -134,11 +134,8 @@ auto WorldImpl::End(event::Command const& command) -> void
 
 WorldImpl::WorldImpl(lua::Stack& lua, collision::Group& collision) : world_(b2Vec2(0, 0)), collision_(collision), paused_(true)
 {
-  {
-    lua::Guard guard = lua.Field("scale");
-    lua.Pop(scale_);
-  }
-
+  scale_ = lua.Field<float>("scale");
+ 
   {
     lua::Guard guard = lua.Field("ambient");
 
@@ -158,12 +155,7 @@ WorldImpl::WorldImpl(lua::Stack& lua, collision::Group& collision) : world_(b2Ve
     }
   }
 
-  double rate;
-  {
-    lua::Guard guard = lua.Field("frame_rate");
-    lua.Pop(rate);
-  }
-
+  double rate = lua.Field<double>("frame_rate");
   f_ = static_cast<float32>(rate);
   double interval = 1. / rate;
 

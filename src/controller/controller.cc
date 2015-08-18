@@ -28,19 +28,8 @@ auto Chapters(lua::Stack& lua, Strings& names, Paths& files, boost::filesystem::
   for(int index = 1, end = lua.Size(); index <= end; ++index)
   {
     lua::Guard guard = lua.Field(index);
-
-    std::string name;
-    {
-      lua::Guard guard = lua.Field("name");
-      lua.Pop(name);
-    }
-
-    std::string file;
-    {
-      lua::Guard guard = lua.Field("file");
-      lua.Pop(file);
-    }
-
+    std::string name = lua.Field<std::string>("name");
+    std::string file = lua.Field<std::string>("file");
     names.emplace_back(name);
     files.emplace_back(path / file);
   }
@@ -183,13 +172,7 @@ Controller::Impl::Impl(lua::Stack& lua, event::Queue& queue, boost::filesystem::
   }
 
   pause_menu_({"Continue", "Main Menu"});
-
-  std::string pause;
-  {
-    lua::Guard guard = lua.Field("pause_menu_script");
-    lua.Pop(pause);
-  }
-  pause_script_ = Script(path_ / pause, window_, queue_, path_, volume_);
+  pause_script_ = Script(path_ / lua.Field<std::string>("pause_menu_script"), window_, queue_, path_, volume_);
 
   {
     lua::Guard guard = lua.Field("menu");
@@ -198,19 +181,9 @@ Controller::Impl::Impl(lua::Stack& lua, event::Queue& queue, boost::filesystem::
 
   start_menu_({"Play", "Chapters", "Load", "Quit"});
   
-  std::string start;
-  {
-    lua::Guard guard = lua.Field("start_menu_script");
-    lua.Pop(start);
-  }
-  start_script_ = Script(path_ / start, window_, queue_, path_, volume_);
+  start_script_ = Script(path_ / lua.Field<std::string>("start_menu_script"), window_, queue_, path_, volume_);
 
-  std::string saves;
-  {
-    lua::Guard guard = lua.Field("saves");
-    lua.Pop(saves);
-  }
-  saves_ = Saves(path_ / saves);
+  saves_ = Saves(path_ / lua.Field<std::string>("saves"));
   
   slot_ = saves_.LastPlayed();
   chapter_ = saves_.Current(slot_);
@@ -234,10 +207,7 @@ Controller::Impl::Impl(lua::Stack& lua, event::Queue& queue, boost::filesystem::
 
   LoadOptions(load_menu_, saves_, chapter_names_);
 
-  {
-    lua::Guard guard = lua.Field("volume");
-    lua.Pop(volume_);
-  }
+  volume_ = lua.Field<float>("volume");
 
   {
     lua::Guard guard = lua.Field("sound_navigate");

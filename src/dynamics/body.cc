@@ -17,30 +17,6 @@ typedef std::pair<Shape, float32> ShapePair;
 
 auto Box(dynamics::WorldImpl const& world, lua::Stack& lua) -> ShapePair
 {
-  double x;
-  {
-    lua::Guard guard = lua.Field(1);
-    lua.Pop(x);
-  }
-
-  double y;
-  {
-    lua::Guard guard = lua.Field(2);
-    lua.Pop(y);
-  }
-
-  double w;
-  {
-    lua::Guard guard = lua.Field(3);
-    lua.Pop(w);
-  }
-
-  double h;
-  {
-    lua::Guard guard = lua.Field(4);
-    lua.Pop(h);
-  }
-
   double angle = 0.;
   {
     lua::Guard guard = lua.Field("angle");
@@ -50,13 +26,13 @@ auto Box(dynamics::WorldImpl const& world, lua::Stack& lua) -> ShapePair
     }
   }
 
-  float32 width = world.Metres(w);
-  float32 height = world.Metres(h);
+  float32 width = world.Metres(lua.Field<double>(3));
+  float32 height = world.Metres(lua.Field<double>(4));
 
   ShapePair shape;
   shape.first = Shape(new b2PolygonShape);
   b2PolygonShape& box = *dynamic_cast<b2PolygonShape*>(shape.first.get());
-  box.SetAsBox(.5f * width, .5f * height, b2Vec2(world.Metres(x), world.Metres(y)), Radians(angle));
+  box.SetAsBox(.5f * width, .5f * height, b2Vec2(world.Metres(lua.Field<double>(1)), world.Metres(lua.Field<double>(2))), Radians(angle));
 
   shape.second = width * height;
   return shape;
@@ -64,30 +40,11 @@ auto Box(dynamics::WorldImpl const& world, lua::Stack& lua) -> ShapePair
 
 auto Circle(dynamics::WorldImpl const& world, lua::Stack& lua) -> ShapePair
 {
-  double x;
-  {
-    lua::Guard guard = lua.Field(1);
-    lua.Pop(x);
-  }
-
-  double y;
-  {
-    lua::Guard guard = lua.Field(2);
-    lua.Pop(y);
-  }
-
-  double radius;
-  {
-    lua::Guard guard = lua.Field(3);
-    lua.Pop(radius);
-  }
-
   ShapePair shape;
   shape.first = Shape(new b2CircleShape);
   b2CircleShape& circle = *dynamic_cast<b2CircleShape*>(shape.first.get());
-  circle.m_p.Set(world.Metres(x), world.Metres(y));
-  circle.m_radius = world.Metres(radius);
-
+  circle.m_p.Set(world.Metres(lua.Field<double>(1)), world.Metres(lua.Field<double>(2)));
+  circle.m_radius = world.Metres(lua.Field<double>(3));
   shape.second = circle.m_radius * circle.m_radius * b2_pi;
   return shape;
 }
@@ -98,20 +55,7 @@ auto Chain(dynamics::WorldImpl const& world, lua::Stack& lua) -> ShapePair
   for(int index = 1, end = lua.Size(); index <= end; ++index)
   {
     lua::Guard guard = lua.Field(index);
-   
-    double x;
-    {
-      lua::Guard guard = lua.Field(1);
-      lua.Pop(x);
-    }
-
-    double y;
-    {
-      lua::Guard guard = lua.Field(2);
-      lua.Pop(y);
-    }
-
-    vertices.emplace_back(world.Metres(x), world.Metres(y));
+    vertices.emplace_back(world.Metres(lua.Field<double>(1)), world.Metres(lua.Field<double>(2)));
   }
 
   ShapePair shape;
@@ -138,20 +82,8 @@ auto BodyDefinition(dynamics::WorldImpl const& world, lua::Stack& lua, float32 d
   lua::Guard guard = lua.Field("velocity");
   if(lua.Check())
   {
-    double u;
-    {
-      lua::Guard guard = lua.Field(1);
-      lua.Pop(u);
-    }
-
-    double v;
-    {
-      lua::Guard guard = lua.Field(2);
-      lua.Pop(v);
-    }
-
     body_def.type = b2_dynamicBody;
-    body_def.linearVelocity.Set(world.Metres(u), world.Metres(v));
+    body_def.linearVelocity.Set(world.Metres(lua.Field<double>(1)), world.Metres(lua.Field<double>(2)));
   }
   else
   {
@@ -265,15 +197,8 @@ BodyImpl::BodyImpl(lua::Stack& lua, World& world)
   double x, y;
   {
     lua::Guard guard = lua.Field("position");
-    {
-      lua::Guard guard = lua.Field(1);
-      lua.Pop(x);
-    }
-
-    {
-      lua::Guard guard = lua.Field(2);
-      lua.Pop(y);
-    }
+    x = lua.Field<double>(1);
+    y = lua.Field<double>(2);
   }
 
   bool rotation = false;

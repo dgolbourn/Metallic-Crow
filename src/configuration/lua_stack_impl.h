@@ -1,14 +1,14 @@
 #ifndef LUA_STACK_IMPL_H_
 #define LUA_STACK_IMPL_H_
 #include "lua.hpp"
-#include <map>
+#include <unordered_map>
 #include "boost/filesystem.hpp"
 #include <memory>
 #include "command.h"
 #include <forward_list>
 namespace lua
 {
-typedef std::map<std::string, event::Command> CommandMap;
+typedef std::unordered_map<std::string, event::Command> CommandMap;
 
 class Guard;
 

@@ -65,27 +65,8 @@ Modulation::Modulation(float r, float g, float b, float a) : impl_(std::make_sha
 {
 }
 
-Modulation::Impl::Impl(lua::Stack& lua)
+Modulation::Impl::Impl(lua::Stack& lua) : Impl(lua.Field<float>(1), lua.Field<float>(2), lua.Field<float>(3), lua.Field<float>(4))
 {
-  {
-    lua::Guard guard = lua.Field(1);
-    lua.Pop(r_);
-  }
-
-  {
-    lua::Guard guard = lua.Field(2);
-    lua.Pop(g_);
-  }
-
-  {
-    lua::Guard guard = lua.Field(3);
-    lua.Pop(b_);
-  }
-
-  {
-    lua::Guard guard = lua.Field(4);
-    lua.Pop(a_);
-  }
 }
 
 Modulation::Modulation(lua::Stack& lua)

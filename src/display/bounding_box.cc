@@ -70,27 +70,8 @@ BoundingBox::Impl::Impl(float x, float y, float w, float h) : rect_({x, y, w, h}
 {
 }
 
-BoundingBox::Impl::Impl(lua::Stack& lua)
+BoundingBox::Impl::Impl(lua::Stack& lua) : Impl(lua.Field<float>(1), lua.Field<float>(2), lua.Field<float>(3), lua.Field<float>(4))
 {
-  {
-    lua::Guard guard = lua.Field(1);
-    lua.Pop(rect_.x);
-  }
-
-  {
-    lua::Guard guard = lua.Field(2);
-    lua.Pop(rect_.y);
-  }
-
-  {
-    lua::Guard guard = lua.Field(3);
-    lua.Pop(rect_.w);
-  }
-
-  {
-    lua::Guard guard = lua.Field(4);
-    lua.Pop(rect_.h);
-  }
 }
 
 BoundingBox::BoundingBox(lua::Stack& lua)

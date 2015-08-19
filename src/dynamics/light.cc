@@ -154,26 +154,7 @@ Light::Light(lua::Stack& lua) : emit(false), transmit(false), diffuse(false), il
     if(lua.Check())
     {
       emit = true;
-
-      float32 x;
-      {
-        lua::Guard guard = lua.Field(1);
-        lua.Pop(x);
-      }
-
-      float32 y;
-      {
-        lua::Guard guard = lua.Field(2);
-        lua.Pop(y);
-      }
-
-      float32 z;
-      {
-        lua::Guard guard = lua.Field(3);
-        lua.Pop(z);
-      }
-
-      emission.Set(x, y, z);
+      emission.Set(lua.Field<float32>(1), lua.Field<float32>(2), lua.Field<float32>(3));
     }
   }
 
@@ -182,25 +163,7 @@ Light::Light(lua::Stack& lua) : emit(false), transmit(false), diffuse(false), il
     if(lua.Check())
     {
       transmit = true;
-
-      float32 x;
-      {
-        lua::Guard guard = lua.Field(1);
-        lua.Pop(x);
-      }
-
-      float32 y;
-      {
-        lua::Guard guard = lua.Field(2);
-        lua.Pop(y);
-      }
-
-      float32 z;
-      {
-        lua::Guard guard = lua.Field(3);
-        lua.Pop(z);
-      }
-      transmission.Set(x, y, z);
+      transmission.Set(lua.Field<float32>(1), lua.Field<float32>(2), lua.Field<float32>(3));
     }
   }
 
@@ -209,26 +172,7 @@ Light::Light(lua::Stack& lua) : emit(false), transmit(false), diffuse(false), il
     if(lua.Check())
     {
       diffuse = true;
-
-      float32 x;
-      {
-        lua::Guard guard = lua.Field(1);
-        lua.Pop(x);
-      }
-
-      float32 y;
-      {
-        lua::Guard guard = lua.Field(2);
-        lua.Pop(y);
-      }
-
-      float32 z;
-      {
-        lua::Guard guard = lua.Field(3);
-        lua.Pop(z);
-      }
-
-      diffusion.Set(x, y, z);
+      diffusion.Set(lua.Field<float32>(1), lua.Field<float32>(2), lua.Field<float32>(3));
     }
   }
 
@@ -237,25 +181,7 @@ Light::Light(lua::Stack& lua) : emit(false), transmit(false), diffuse(false), il
     illuminate = lua.Check();
     if(illuminate)
     {
-      float32 x;
-      {
-        lua::Guard guard = lua.Field(1);
-        lua.Pop(x);
-      }
-
-      float32 y;
-      {
-        lua::Guard guard = lua.Field(2);
-        lua.Pop(y);
-      }
-
-      float32 z;
-      {
-        lua::Guard guard = lua.Field(3);
-        lua.Pop(z);
-      }
-
-      intrinsic.Set(x, y, z);
+      intrinsic.Set(lua.Field<float32>(1), lua.Field<float32>(2), lua.Field<float32>(3));
     }
   }
 
@@ -265,25 +191,7 @@ Light::Light(lua::Stack& lua) : emit(false), transmit(false), diffuse(false), il
     illuminate = lua.Check();
     if(illuminate)
     {
-      float32 x;
-      {
-        lua::Guard guard = lua.Field(1);
-        lua.Pop(x);
-      }
-
-      float32 y;
-      {
-        lua::Guard guard = lua.Field(2);
-        lua.Pop(y);
-      }
-
-      float32 z;
-      {
-        lua::Guard guard = lua.Field(3);
-        lua.Pop(z);
-      }
-
-      absorption.Set(x, y, z);
+      absorption.Set(lua.Field<float32>(1), lua.Field<float32>(2), lua.Field<float32>(3));
     }
   }
 }

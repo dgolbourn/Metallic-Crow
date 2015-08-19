@@ -74,21 +74,8 @@ auto Script::Impl::StageLoad() -> void
     for(int index = 1, end = lua_.Size(); index <= end; ++index) 
     { 
       lua::Guard guard = lua_.Field(index); 
-  
-      std::string group_a; 
-      { 
-        lua::Guard guard = lua_.Field(1); 
-        lua_.Pop(group_a); 
-      } 
- 
-      std::string group_b; 
-      { 
-        lua::Guard guard = lua_.Field(2); 
-        lua_.Pop(group_b); 
-      } 
- 
-      group.Link(group_a, group_b);
-    } 
+      group.Link(lua_.Field<std::string>(1), lua_.Field<std::string>(2));
+    }
   }
 
   Choice choice;

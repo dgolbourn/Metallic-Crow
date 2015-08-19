@@ -138,21 +138,7 @@ WorldImpl::WorldImpl(lua::Stack& lua, collision::Group& collision) : world_(b2Ve
  
   {
     lua::Guard guard = lua.Field("ambient");
-
-    {
-      lua::Guard guard = lua.Field(1);
-      lua.Pop(ambient_.x);
-    }
-
-    {
-      lua::Guard guard = lua.Field(2);
-      lua.Pop(ambient_.y);
-    }
-
-    {
-      lua::Guard guard =lua.Field(3);
-      lua.Pop(ambient_.z);
-    }
+    ambient_ = {lua.Field<float32>(1), lua.Field<float32>(2), lua.Field<float32>(3)};
   }
 
   double rate = lua.Field<double>("frame_rate");
@@ -166,20 +152,7 @@ WorldImpl::WorldImpl(lua::Stack& lua, collision::Group& collision) : world_(b2Ve
 
   {
     lua::Guard guard = lua.Field("gravity");
-
-    double f;
-    {
-      lua::Guard guard = lua.Field(1);
-      lua.Pop(f);
-    }
-
-    double g;
-    {
-      lua::Guard guard = lua.Field(2);
-      lua.Pop(g);
-    }
-
-    world_.SetGravity(b2Vec2(Metres(f), Metres(g)));
+    world_.SetGravity(b2Vec2(Metres(lua.Field<double>(1)), Metres(lua.Field<double>(2))));
   }
 
   world_.SetAutoClearForces(false);

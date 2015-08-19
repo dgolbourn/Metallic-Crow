@@ -283,16 +283,7 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
   
   {
     lua::Guard guard = lua.Field("position");
-
-    {
-      lua::Guard guard = lua.Field(1);
-      lua.Pop(position_.first);
-    }
-
-    {
-      lua::Guard guard = lua.Field(2);
-      lua.Pop(position_.second);
-    }
+    position_ = std::make_pair(lua.Field<float>(1), lua.Field<float>(2));
   }
 
   {

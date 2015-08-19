@@ -95,16 +95,7 @@ Choice::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue
     for(int i = 0; i < 4; ++i)
     {
       lua::Guard guard = lua.Field(index[i]);
-      
-      {
-        lua::Guard guard = lua.Field(1);
-        lua.Pop(text_vectors_[i].first);
-      }
-
-      {
-        lua::Guard guard = lua.Field(2);
-        lua.Pop(text_vectors_[i].second);
-      }
+      text_vectors_[i] = std::make_pair(lua.Field<float>(1), lua.Field<float>(2));
     }
   }
 

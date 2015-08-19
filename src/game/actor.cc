@@ -19,11 +19,7 @@ dynamics::Body MakeBody(lua::Stack& lua, dynamics::World& world, collision::Grou
     lua::Guard guard = lua.Field("names");
     for(int index = 1, end = lua.Size(); index <= end; ++index)
     {
-      std::string name;
-      lua::Guard guard = lua.Field(index);
-      lua.Pop(name);
-
-      collision.Link(name, body);
+      collision.Link(lua.Field<std::string>(index), body);
     }
   }
   return body;

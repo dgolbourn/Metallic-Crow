@@ -3,7 +3,7 @@
 #include "SDL_sysrender.h"
 #include "flood_fill.h"
 #include <memory>
-namespace sdl
+namespace display
 {
 class Painter
 {

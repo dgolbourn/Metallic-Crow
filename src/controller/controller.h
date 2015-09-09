@@ -6,13 +6,14 @@
 #include "command.h"
 #include "weak_ptr.h"
 #include "boost/filesystem.hpp"
+#include "timeslice.h"
 namespace game
 {
 class Controller
 {
 public:
   Controller() = default;
-  Controller(lua::Stack& lua, event::Queue& queue, boost::filesystem::path const& path);
+  Controller(lua::Stack& lua, event::Queue& queue, event::Timeslice& loader, boost::filesystem::path const& path);
   auto Control(float x, float y) -> void;
   auto ChoiceUp() -> void;
   auto ChoiceDown() -> void;

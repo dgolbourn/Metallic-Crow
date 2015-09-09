@@ -10,13 +10,14 @@
 #include "world.h"
 #include "boost/filesystem.hpp"
 #include "lua_stack.h"
+#include "timeslice.h"
 namespace game
 {
 class Actor
 {
 public:
   Actor() = default;
-  Actor(lua::Stack& lua, display::Window& window, collision::Group& collision, event::Queue& queue, dynamics::World& world, boost::filesystem::path const& path);
+  Actor(lua::Stack& lua, display::Window& window, collision::Group& collision, event::Queue& queue, dynamics::World& world, boost::filesystem::path const& path, event::Timeslice& loader);
   auto Position(game::Position const& position) -> void;
   auto Position() const -> game::Position;
   auto Velocity(game::Position const& velocity) -> void;

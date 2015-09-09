@@ -35,7 +35,7 @@ auto Fade::Impl::Fade(double period, float end) -> void
 {
   if(period > 0.)
   {
-    steps_ = std::abs(sdl::Colour(current_) - sdl::Colour(end));
+    steps_ = std::abs(display::Colour(current_) - display::Colour(end));
 
     if(steps_)
     {

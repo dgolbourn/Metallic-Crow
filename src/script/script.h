@@ -6,13 +6,14 @@
 #include "weak_ptr.h"
 #include "queue.h"
 #include "boost/filesystem.hpp"
+#include "timeslice.h"
 namespace game
 {
 class Script
 {
 public:
   Script() = default;
-  Script(boost::filesystem::path const& file, display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume);
+  Script(boost::filesystem::path const& file, display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume, event::Timeslice& loader);
   auto Pause() -> void;
   auto Resume() -> void;
   auto Render() -> void;

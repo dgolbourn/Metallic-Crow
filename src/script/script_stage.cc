@@ -81,7 +81,7 @@ auto Script::Impl::StageLoad() -> void
   Choice choice;
   {
     lua::Guard guard = lua_.Field("choice");
-    choice = Choice(lua_, window_, queue_, path_);
+    choice = Choice(lua_, window_, queue_, path_, loader_);
   }
 
   choice.Up(function::Bind(&Impl::Call, shared_from_this(), "choice_up"));

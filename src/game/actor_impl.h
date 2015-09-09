@@ -8,7 +8,7 @@ namespace game
 class Actor::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, boost::filesystem::path const& path);
+  Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, boost::filesystem::path const& path, event::Timeslice& loader);
   ~Impl();
   auto Init(dynamics::World& world) -> void;
   auto Render() const -> void;

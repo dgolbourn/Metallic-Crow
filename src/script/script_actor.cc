@@ -35,7 +35,7 @@ auto Script::Impl::ActorLoad() -> void
   {
     {
       lua::Guard guard = lua_.Get(-1);
-      actor = Actor(lua_, window_, stage->collision_, queue_, stage->world_, path_);
+      actor = Actor(lua_, window_, stage->collision_, queue_, stage->world_, path_, loader_);
       {
         lua::Guard guard = lua_.Field("game_body");
         if(lua_.Check())

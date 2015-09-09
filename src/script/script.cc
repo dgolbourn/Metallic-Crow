@@ -9,7 +9,7 @@ double step_time = 0.1;
 
 namespace game
 {
-Script::Impl::Impl(display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume) : window_(window), queue_(queue), paused_(true), fade_(queue, window), begun_(false), path_(path), lua_(path), volume_(volume)
+Script::Impl::Impl(display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume, event::Timeslice& loader) : window_(window), queue_(queue), paused_(true), fade_(queue, window), begun_(false), path_(path), lua_(path), volume_(volume), loader_(loader)
 {
 }
 
@@ -210,7 +210,7 @@ Script::operator bool() const
   return bool(impl_);
 }
 
-Script::Script(boost::filesystem::path const& file, display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume) : impl_(std::make_shared<Impl>(window, queue, path, volume))
+Script::Script(boost::filesystem::path const& file, display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume, event::Timeslice& loader) : impl_(std::make_shared<Impl>(window, queue, path, volume, loader))
 {
   impl_->Init(file);
 }

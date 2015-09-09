@@ -1,14 +1,13 @@
 #include "colour.h"
 #include <cmath>
-#include <algorithm>
-namespace sdl
+namespace display
 {
 auto Colour(float colour) -> Uint8
 {
   colour *= 255.f;
   colour = std::round(colour);
-  colour = std::min(colour, 255.f);
-  colour = std::max(colour, 0.f);
+  colour = std::fmin(colour, 255.f);
+  colour = std::fmax(colour, 0.f);
   return static_cast<Uint8>(colour);
 }
 }

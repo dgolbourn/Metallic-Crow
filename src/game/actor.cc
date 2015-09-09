@@ -228,7 +228,7 @@ auto Actor::Impl::Blink() -> void
   eyes_.Expression(open_);
 }
 
-Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, boost::filesystem::path const& path) : force_(0.f, 0.f), open_(true), angle_(0.), collision_(collision)
+Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, boost::filesystem::path const& path, event::Timeslice& loader) : force_(0.f, 0.f), open_(true), angle_(0.), collision_(collision)
 {
   {
     lua::Guard guard = lua.Field("dynamics_body");
@@ -258,7 +258,7 @@ Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue,
         lua::Guard guard = lua.Field("eyes");
         if(lua.Check())
         {
-          eyes_ = game::Feature(lua, window, path);
+          eyes_ = game::Feature(lua, window, path, loader);
           
           lua::Guard guard = lua.Field("blink");
           if(lua.Check())
@@ -278,11 +278,11 @@ Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue,
         lua::Guard guard = lua.Field("mouth");
         if(lua.Check())
         {
-          mouth_ = game::Feature(lua, window, path);
+          mouth_ = game::Feature(lua, window, path, loader);
         }
       }
 
-      game_body_ = game::Body(lua, window, path, eyes_, mouth_);
+      game_body_ = game::Body(lua, window, path, eyes_, mouth_, loader);
     
       animation_ = event::Timer(dilation_ * game_body_.Period(), -1);
       queue.Add(function::Bind(&event::Timer::operator(), animation_));
@@ -522,9 +522,9 @@ auto Actor::Render() const -> void
   impl_->Render();
 }
 
-Actor::Actor(lua::Stack& lua, display::Window& window, collision::Group& collision, event::Queue& queue, dynamics::World& world, boost::filesystem::path const& path)
+Actor::Actor(lua::Stack& lua, display::Window& window, collision::Group& collision, event::Queue& queue, dynamics::World& world, boost::filesystem::path const& path, event::Timeslice& loader)
 {
-  impl_ = std::make_shared<Impl>(lua, window, queue, world, collision, path);
+  impl_ = std::make_shared<Impl>(lua, window, queue, world, collision, path, loader);
   impl_->Init(world);
 }
 

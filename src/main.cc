@@ -4,6 +4,7 @@
 #include "event.h"
 #include "controller.h"
 #include "lua_stack.h"
+#include "timeslice.h"
 namespace
 {
 bool run = true;
@@ -24,6 +25,7 @@ auto main(int argc, char* argv[]) -> int
       event::Event event;
       event::Queue queue;
       game::Controller controller;
+      event::Timeslice loader;
 
       {
         lua::Stack lua(args->path);
@@ -36,7 +38,13 @@ auto main(int argc, char* argv[]) -> int
 
         {
           lua::Guard guard = lua.Get("game");
-          controller = game::Controller(lua, queue, args->path);
+          {
+            lua::Guard guard = lua.Field("cache");
+            loader = event::Timeslice(lua);
+            loader.Resume();
+            queue.Add(function::Bind(&event::Timeslice::operator(), loader));
+          }
+          controller = game::Controller(lua, queue, loader, args->path);
         }
       }
 

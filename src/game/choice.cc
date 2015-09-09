@@ -9,7 +9,7 @@
 namespace
 {
 typedef std::array<display::Animation, 5> Animations;
-typedef std::array<display::Animation::const_iterator, 5> Iterators;
+typedef std::array<display::Animation::iterator, 5> Iterators;
 typedef std::array<event::Signal, 5> Signals;
 typedef std::array<bool, 5> Choices;
 typedef std::array<display::BoundingBox, 5> Boxes;
@@ -24,8 +24,8 @@ namespace game
 class Choice::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path);
-  auto Render() const -> void;
+  Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path, event::Timeslice& loader);
+  auto Render() -> void;
   auto Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right, double timer) -> void;
   template<int T> auto Event() -> void;
   template<int T> auto Event(event::Command const& command) -> void;
@@ -60,7 +60,7 @@ public:
   double interval_;
 };
 
-Choice::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : window_(window), paused_(true), count_(0), queue_(queue)
+Choice::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path, event::Timeslice& loader) : window_(window), paused_(true), count_(0), queue_(queue)
 {
   interval_ = lua.Field<double>("interval");
 
@@ -76,8 +76,8 @@ Choice::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue
     for(int i = 0; i < 5; ++i)
     {
       lua::Guard guard = lua.Field(index[i]);
-      icons_[i] = display::MakeAnimation(lua, window_, path);
-      current_icons_[i] = icons_[i].cbegin();
+      icons_[i] = display::MakeAnimation(lua, window_, path, loader);
+      current_icons_[i] = icons_[i].begin();
     }
   }
 
@@ -156,15 +156,15 @@ auto Choice::Impl::Reset() -> void
   fade_timer_ = event::Timer();
   for(int i = 0; i < 5; ++i)
   {
-    current_icons_[i] = icons_[i].cbegin();
+    current_icons_[i] = icons_[i].begin();
   }
 }
 
-auto Choice::Impl::Render() const -> void
+auto Choice::Impl::Render() -> void
 {
   for(int i = 0; i < 5; ++i)
   {
-    if(choices_[i] && (current_icons_[i] != icons_[i].cend()))
+    if(choices_[i] && (current_icons_[i] != icons_[i].end()))
     {
       (*current_icons_[i])(display::BoundingBox(), icon_boxes_[i], 0.f, false, 0., current_fade_modulation_);
     }
@@ -189,7 +189,7 @@ auto Choice::Impl::Choice(std::string const& up, std::string const& down, std::s
     choices_[i] = (*text[i] != "");
     if(choices_[i])
     {
-      text_[i] = display::Texture(*text[i], font_, window_);
+      text_[i] = display::Texture(*text[i], font_, window_, display::BoundingBox());
       
       display::Shape shape = text_[i].Shape();
       
@@ -376,7 +376,7 @@ auto Choice::Resume() -> void
   impl_->Resume();
 }
 
-auto Choice::Render() const -> void
+auto Choice::Render() -> void
 {
   impl_->Render();
 }
@@ -406,7 +406,7 @@ Choice::operator bool() const
   return bool(impl_);
 }
 
-Choice::Choice(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(lua, window, queue, path))
+Choice::Choice(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path, event::Timeslice& loader) : impl_(std::make_shared<Impl>(lua, window, queue, path, loader))
 {
 }
 }

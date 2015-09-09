@@ -16,13 +16,13 @@ struct Renderable
   display::Modulation modulation_;
   float parallax_;
   bool facing_;
-  virtual auto operator()() const -> void = 0;
+  virtual auto operator()() -> void = 0;
 };
 
 struct Feature final : public Renderable
 {
   game::Feature feature_;
-  auto operator()() const -> void override
+  auto operator()() -> void override
   {
     feature_(current_box_, modulation_, parallax_, current_angle_, facing_);
   }
@@ -32,7 +32,7 @@ struct Texture final : public Renderable
 {
   display::Texture texture_;
   bool tile_;
-  auto operator()() const -> void override
+  auto operator()() -> void override
   {
     texture_(display::BoundingBox(), current_box_, parallax_, tile_, current_angle_, modulation_);
   }
@@ -79,7 +79,7 @@ namespace game
 class Body::Impl
 {
 public:
-  Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes, Feature const& mouth);
+  Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes, Feature const& mouth, event::Timeslice& loader);
   auto Expression(std::string const& expression, bool left_facing) -> double;
   auto Expression(std::string const& expression) -> double;
   auto Expression(bool left_facing) -> double;
@@ -111,7 +111,7 @@ public:
   float scale_;
 };
 
-Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command) : angle_(0.), sin_(0.), cos_(1.), scale_(1.f)
+Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command, event::Timeslice& loader) : angle_(0.), sin_(0.), cos_(1.), scale_(1.f)
 {
   {
     lua::Guard guard = lua.Field("modulation");
@@ -259,7 +259,7 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
  
               render->modulation_ = modulation_;
 
-              static_cast<::Texture*>(render.get())->texture_ = display::Texture(display::Texture(path / lua.Field<std::string>("page"), window), clip);
+              static_cast<::Texture*>(render.get())->texture_ = display::Texture(path / lua.Field<std::string>("page"), window, loader, clip);
               frame.scene_.emplace(lua.Field<float>("plane"), std::move(render));
             }
           }
@@ -483,7 +483,7 @@ auto Body::Impl::Scale() const -> float
 }
 
 
-Body::Body(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command) : impl_(std::make_shared<Impl>(lua, window, path, eyes_command, mouth_command))
+Body::Body(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command, event::Timeslice& loader) : impl_(std::make_shared<Impl>(lua, window, path, eyes_command, mouth_command, loader))
 {
 }
 

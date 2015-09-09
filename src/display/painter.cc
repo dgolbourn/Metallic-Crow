@@ -2,7 +2,7 @@
 #include "render.h"
 #include "rect.h"
 #include <cmath>
-namespace sdl
+namespace display
 {
 class Painter::Impl
 {
@@ -53,7 +53,7 @@ auto Painter::Impl::StartPosition() -> void
       adjust.y = (a + i) * east_.y + (b + j) * north_.y;
       collision.x = collision_.x - adjust.x;
       collision.y = collision_.y - adjust.y;
-      if(Intersection(&collision, &view_))
+      if(sdl::Intersection(&collision, &view_))
       {
         collision_.x = collision.x;
         collision_.y = collision.y;
@@ -114,7 +114,7 @@ auto Painter::Impl::operator()(algorithm::NodeCoordinates const& coords) -> bool
   SDL_FRect collision = collision_;
   collision.x += move.x;
   collision.y += move.y;
-  if(Intersection(&collision, &view_))
+  if(sdl::Intersection(&collision, &view_))
   {
     SDL_FRect destination = destination_;
     destination.x += move.x;

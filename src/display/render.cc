@@ -3,6 +3,7 @@
 #include "flood_fill.h"
 #include "painter.h"
 #include "log.h"
+#include "colour.h"
 namespace
 {
 class Modulator
@@ -58,9 +59,42 @@ public:
     }
   }
 };
+
+class BlendMode
+{
+  SDL_BlendMode blend_mode_;
+  SDL_Texture* texture_;
+public:
+  BlendMode(SDL_Texture* texture, SDL_BlendMode blend_mode) : texture_(texture)
+  {
+    if(SDL_GetTextureBlendMode(texture_, &blend_mode_))
+    {
+      BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
+    }
+    if(SDL_SetTextureBlendMode(texture_, blend_mode))
+    {
+      BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
+    }
+  }
+
+  ~BlendMode()
+  {
+    try
+    {
+      if(SDL_SetTextureBlendMode(texture_, blend_mode_))
+      {
+        BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
+      }
+    }
+    catch(...)
+    {
+      exception::Log("Swallowed exception");
+    }
+  }
+};
 }
 
-namespace sdl
+namespace display
 {
 auto Render(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, SDL_FRect const* original, double angle, SDL_Colour const* modulation) -> void
 {
@@ -77,11 +111,11 @@ auto Render(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source
 
   if(renderer->RenderCopyEx(renderer, texture, source, destination, angle, &centre, SDL_FLIP_NONE))
   {
-    BOOST_THROW_EXCEPTION(Exception() << Exception::What(Error()));
+    BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
   }
 }
 
-auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source_ptr, SDL_FRect const* destination_ptr, SDL_FPoint view, float zoom, float parallax, bool tile, double angle, SDL_Colour const* modulation, float scale, Angle const* view_angle) -> void
+auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source_ptr, SDL_FRect const* destination_ptr, SDL_FPoint const* view, float zoom, float parallax, bool tile, double angle, SDL_Colour const* modulation, float scale, Angle const* view_angle) -> void
 {
   bool render = true;
   SDL_Rect source = {0, 0, texture->w, texture->h};
@@ -134,11 +168,11 @@ auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
       {
         scale *= zoom;
 
-        destination.x -= parallax * (view.x - w2);
+        destination.x -= parallax * (view->x - w2);
         destination.x -= w2;
         destination.x *= scale;
 
-        destination.y -= parallax * (view.y - h2);
+        destination.y -= parallax * (view->y - h2);
         destination.y -= h2;
         destination.y *= scale;
 
@@ -180,6 +214,61 @@ auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
     {
       Render(renderer, texture, &source, &destination, &original, angle, modulation);
     }
+  }
+}
+
+auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation, float zoom, SDL_FPoint const* view, float scale, Angle const* view_angle) -> void
+{
+  SDL_Rect const* source_ptr = nullptr;
+  SDL_Rect source_copy;
+  if(source)
+  {
+    source_copy.x = static_cast<int>(std::round(source.x()));
+    source_copy.y = static_cast<int>(std::round(source.y()));
+    source_copy.w = static_cast<int>(std::round(source.w()));
+    source_copy.h = static_cast<int>(std::round(source.h()));
+    source_ptr = &source_copy;
+  }
+
+  SDL_FRect const* destination_ptr = nullptr;
+  SDL_FRect destination_copy;
+  if(destination)
+  {
+    destination_copy.x = destination.x();
+    destination_copy.y = destination.y();
+    destination_copy.w = destination.w();
+    destination_copy.h = destination.h();
+    destination_ptr = &destination_copy;
+  }
+
+  if(modulation)
+  {
+    SDL_Colour modulation_copy;
+    float r = modulation.r();
+    float g = modulation.g();
+    float b = modulation.b();
+    modulation_copy.r = Colour(r--);
+    modulation_copy.g = Colour(g--);
+    modulation_copy.b = Colour(b--);
+    modulation_copy.a = Colour(modulation.a());
+
+    Render(window, renderer, texture, source_ptr, destination_ptr, view, zoom, parallax, tile, angle, &modulation_copy, scale, view_angle);
+
+    if((r > 0.f) || (g > 0.f) || (b > 0.f))
+    {      
+      BlendMode blend_mode(texture, SDL_BLENDMODE_ADD);
+      do
+      {
+        modulation_copy.r = Colour(r--);
+        modulation_copy.g = Colour(g--);
+        modulation_copy.b = Colour(b--);
+        Render(window, renderer, texture, source_ptr, destination_ptr, view, zoom, parallax, tile, angle, &modulation_copy, scale, view_angle);
+      } while((r > 0.f) || (g > 0.f) || (b > 0.f));
+    }
+  }
+  else
+  {
+    Render(window, renderer, texture, source_ptr, destination_ptr, view, zoom, parallax, tile, angle, nullptr, scale, view_angle);
   }
 }
 }

@@ -24,13 +24,13 @@ namespace game
 class Menu::Impl
 {
 public:
-  Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path);
+  Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, event::Timeslice& loader);
   auto Add(int index, event::Command const& command) -> void;
   auto Previous() -> void;
   auto Next() -> void;
   auto Seek(int index) -> void;
   auto Select() -> void;
-  auto Render() const -> void;
+  auto Render() -> void;
   auto SetUp() -> void;
   auto Choice(Options const& options) -> void;
 
@@ -49,7 +49,7 @@ public:
   display::Modulation active_modulation_;
 };
 
-Menu::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path) : selection_(0), selections_(0), window_(window), path_(path)
+Menu::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, event::Timeslice& loader) : selection_(0), selections_(0), window_(window), path_(path)
 {
   {
     lua::Guard guard = lua.Field("idle_font");
@@ -77,7 +77,7 @@ Menu::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
     clip = display::BoundingBox(lua);
   }
 
-  background_.texture_ = display::Texture(display::Texture(path_ / lua.Field<std::string>("page"), window), clip);
+  background_.texture_ = display::Texture(path_ / lua.Field<std::string>("page"), window, loader, clip);
 
   {
     lua::Guard guard = lua.Field("render_box");
@@ -101,12 +101,12 @@ auto Menu::Impl::Choice(Options const& options) -> void
   for(std::string const& option : options)
   {
     Texture idle;
-    idle.texture_ = display::Texture(option, idle_font_, window_);
+    idle.texture_ = display::Texture(option, idle_font_, window_, display::BoundingBox());
     idle.modulation_ = idle_modulation_;
     idle_text_.push_back(idle);
 
     Texture active;
-    active.texture_ = display::Texture(option, active_font_, window_);
+    active.texture_ = display::Texture(option, active_font_, window_, display::BoundingBox());
     active.modulation_ = active_modulation_;
     active_text_.push_back(active);
   }
@@ -199,7 +199,7 @@ auto Menu::Impl::Select() -> void
   }
 }
 
-auto Menu::Impl::Render() const -> void
+auto Menu::Impl::Render() -> void
 {
   for(auto& texture : textures_)
   {
@@ -232,7 +232,7 @@ auto Menu::Select() -> void
   impl_->Select();
 }
 
-auto Menu::Render() const -> void
+auto Menu::Render() -> void
 {
   impl_->Render();
 }
@@ -242,7 +242,7 @@ auto Menu::operator()(Options const& options) -> void
   impl_->Choice(options);
 }
 
-Menu::Menu(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(lua, window, path))
+Menu::Menu(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, event::Timeslice& loader) : impl_(std::make_shared<Impl>(lua, window, path, loader))
 {
 }
 }

@@ -4,9 +4,10 @@
 #include "lua_stack.h"
 #include <vector>
 #include "boost/filesystem.hpp"
+#include "timeslice.h"
 namespace display
 {
 typedef std::vector<Texture> Animation;
-auto MakeAnimation(lua::Stack& lua, Window& window, boost::filesystem::path const& path) -> Animation;
+auto MakeAnimation(lua::Stack& lua, Window& window, boost::filesystem::path const& path, event::Timeslice& loader) -> Animation;
 }
 #endif

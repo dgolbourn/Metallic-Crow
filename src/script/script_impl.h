@@ -61,7 +61,7 @@ typedef std::unordered_set<StagePtr> StageSet;
 class Script::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume);
+  Impl(display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume, event::Timeslice& loader);
   auto Init(boost::filesystem::path const& file) -> void;
   
   auto Pause() -> void;
@@ -172,6 +172,7 @@ public:
   lua::Stack lua_;
   display::Window window_;
   event::Queue queue_;
+  event::Timeslice loader_;
   StageSet stages_;
   StagePtr stage_;
   bool paused_;

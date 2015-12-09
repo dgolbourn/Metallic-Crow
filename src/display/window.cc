@@ -119,7 +119,7 @@ WindowImpl::WindowImpl(lua::Stack& lua) : sdl_(SDL_INIT_VIDEO), img_(IMG_INIT_PN
     
     int w, h;
     SDL_GetWindowSize(window_, &w, &h);
-    scale_ = static_cast<float>(std::min(w, h)) / 1024.f;
+    scale_ = static_cast<float>(std::min(w, h)) / Scale();
   }
   catch(...)
   {
@@ -190,6 +190,11 @@ auto WindowImpl::Rotation(double angle) -> void
   view_angle_.sin_ = std::sin(angle);
 }
 
+auto WindowImpl::Scale() const -> float
+{
+  return 1024.f;
+}
+
 Window::Window(lua::Stack& lua) : impl_(std::make_shared<WindowImpl>(lua))
 {
 }
@@ -221,6 +226,11 @@ auto Window::Rotation(double angle) -> void
 
 Window::operator bool() const
 {
-  return bool(impl_);
+  return static_cast<bool>(impl_);
+}
+
+auto Window::Scale() const -> float
+{
+  return impl_->Scale();
 }
 }

@@ -238,7 +238,7 @@ template<int T> auto Choice::Impl::Step() -> void
 
 template<int T> auto Choice::Impl::Event() -> void
 {
-  if(choices_[T] && !bool(animation_timer_))
+  if(choices_[T] && !static_cast<bool>(animation_timer_))
   {
     if(icons_[T].size() >= 2)
     {
@@ -403,7 +403,7 @@ auto Choice::Right() -> void
 
 Choice::operator bool() const
 {
-  return bool(impl_);
+  return static_cast<bool>(impl_);
 }
 
 Choice::Choice(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path, event::Timeslice& loader) : impl_(std::make_shared<Impl>(lua, window, queue, path, loader))

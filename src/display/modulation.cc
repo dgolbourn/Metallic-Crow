@@ -58,7 +58,7 @@ auto Modulation::a() const -> float
 
 Modulation::operator bool() const
 {
-  return bool(impl_);
+  return static_cast<bool>(impl_);
 }
 
 Modulation::Modulation(float r, float g, float b, float a) : impl_(std::make_shared<Impl>(r, g, b, a))

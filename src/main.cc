@@ -56,6 +56,7 @@ auto main(int argc, char* argv[]) -> int
       event.Select(function::Bind(&game::Controller::Select, controller));
       event.Back(function::Bind(&game::Controller::Back, controller));
       event.Control(function::Bind(&game::Controller::Control, controller));
+      event.Look(function::Bind(&game::Controller::Look, controller));
       event.ChoiceUp(function::Bind(&game::Controller::ChoiceUp, controller));
       event.ChoiceDown(function::Bind(&game::Controller::ChoiceDown, controller));
       event.ChoiceLeft(function::Bind(&game::Controller::ChoiceLeft, controller));

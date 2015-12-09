@@ -173,7 +173,7 @@ Music::Music(lua::Stack& lua, boost::filesystem::path const& path) : Music(path 
 
 auto Music::operator()(float volume) -> bool
 {
-  bool valid = bool(impl_);
+  bool valid = static_cast<bool>(impl_);
   if(valid)
   {
     impl_->Play(volume);
@@ -192,7 +192,7 @@ auto Music::operator()(float volume) -> bool
 
 Music::operator bool() const
 {
-  bool valid = bool(impl_);
+  bool valid = static_cast<bool>(impl_);
   if(valid)
   {
     std::lock_guard<mix::Mutex> lock(mix::mutex);

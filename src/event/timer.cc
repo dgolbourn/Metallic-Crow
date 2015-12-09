@@ -145,7 +145,7 @@ auto Timer::Reset(double interval, int loops) -> void
 
 Timer::operator bool() const
 {
-  return bool(impl_) && impl_->Valid();
+  return static_cast<bool>(impl_) && impl_->Valid();
 }
 
 size_t Timer::Hash(Timer const& timer)

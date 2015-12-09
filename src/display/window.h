@@ -19,6 +19,7 @@ public:
   auto View(float x, float y, float zoom) -> void;
   auto Rotation(double angle) -> void;
   auto Draw(BoundingBox const& box, Modulation const& modulation) const -> void;
+  auto Scale() const -> float;
   typedef memory::WeakPtr<Window, class WindowImpl> WeakPtr;
   explicit operator bool() const;
 private:

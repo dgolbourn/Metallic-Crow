@@ -100,6 +100,7 @@ public:
   Impl(lua::Stack& lua, event::Queue& queue, event::Timeslice& loader, boost::filesystem::path const& path);
   auto Init() -> void;
   auto Control(float x, float y) -> void;
+  auto Look(float x, float y) -> void;
   auto ChoiceUp() -> void;
   auto ChoiceDown() -> void;
   auto ChoiceLeft() -> void;
@@ -400,6 +401,22 @@ auto Controller::Impl::Control(float x, float y) -> void
   }
 }
 
+auto Controller::Impl::Look(float x, float y) -> void
+{
+  switch(state_)
+  {
+  default:
+  case State::Start:
+  case State::Pause:
+  case State::Chapter:
+  case State::Load:
+    break;
+  case State::Story:
+    story_script_.Look(x, y);
+    break;
+  }
+}
+
 auto Controller::Impl::ChoiceUp() -> void
 {
   switch(state_)
@@ -591,6 +608,11 @@ auto Controller::Control(float x, float y) -> void
   impl_->Control(x, y);
 }
 
+auto Controller::Look(float x, float y) -> void
+{
+  impl_->Look(x, y);
+}
+
 auto Controller::ChoiceUp() -> void
 {
   impl_->ChoiceUp();
@@ -628,6 +650,6 @@ auto Controller::Add(event::Command const& command) -> void
 
 Controller::operator bool() const
 {
-  return bool(impl_);
+  return static_cast<bool>(impl_);
 }
 }

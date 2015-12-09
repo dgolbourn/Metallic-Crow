@@ -22,6 +22,7 @@ public:
   auto ChoiceLeft() -> void;
   auto ChoiceRight() -> void;
   auto Control(float x, float y) -> void;
+  auto Look(float x, float y) -> void;
   auto Add(event::Command const& command) -> void;
   explicit operator bool() const;
 private:

@@ -289,7 +289,7 @@ Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue,
     }
   }
   
-  if(bool(dynamics_body_) && bool(game_body_))
+  if(static_cast<bool>(dynamics_body_) && static_cast<bool>(game_body_))
   {
     modulation_ = game_body_.Modulation();
 
@@ -494,7 +494,7 @@ auto Actor::Dilation(double dilation) -> void
 
 Actor::operator bool() const
 {
-  return bool(impl_);
+  return static_cast<bool>(impl_);
 }
 
 auto Actor::Rotation(double angle) -> void

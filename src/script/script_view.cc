@@ -1,5 +1,6 @@
 #include "script_impl.h"
 #include "bind.h"
+#include <limits>
 namespace game
 {
 auto Script::Impl::ViewInit() -> void
@@ -62,17 +63,29 @@ auto Script::Impl::ViewRotation() -> void
 auto Script::Impl::View() -> void
 {
   game::Position view(0.f, 0.f);
+  game::Position min(std::numeric_limits<float>().max(), std::numeric_limits<float>().max());
+  game::Position max(std::numeric_limits<float>().min(), std::numeric_limits<float>().min());
 
   for(Actor actor : stage_->subjects_)
   {    
     game::Position position = actor.Position();
     view.first += position.first;
     view.second += position.second;
+
+    min.first = std::min(min.first, position.first);
+    min.second = std::min(min.second, position.second);
+    max.first = std::max(max.first, position.first);
+    max.second = std::max(max.first, position.second);
   }
 
   if(auto count = stage_->subjects_.size())
   {
-    window_.View(view.first / count, view.second / count, stage_->zoom_);
+    window_.View(view.first / count, view.second / count, std::min(stage_->zoom_, Scale() * window_.Scale() / std::max(max.first - min.first, max.second - min.second)));
   }
+}
+
+auto Script::Impl::Scale() const -> float
+{
+  return .875f;
 }
 }

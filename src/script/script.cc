@@ -155,6 +155,20 @@ auto Script::Impl::Control(float x, float y) -> void
   }
 }
 
+auto Script::Impl::Look(float x, float y) -> void
+{
+  lua::Guard guard0 = lua_.Get("package");
+  lua::Guard guard1 = lua_.Field("loaded");
+  lua::Guard guard2 = lua_.Field("metallic_crow");
+  lua::Guard guard3 = lua_.Field("look");
+  if(lua_.Check())
+  {
+    lua::Guard guard4 = lua_.Push(x);
+    lua::Guard guard5 = lua_.Push(y);
+    lua_.Call(2, 0);
+  }
+}
+
 auto Script::Impl::Add(event::Command const& command) -> void
 {
   signal_.Add(command);
@@ -200,6 +214,11 @@ auto Script::Control(float x, float y) -> void
   impl_->Control(x, y);
 }
 
+auto Script::Look(float x, float y) -> void
+{
+  impl_->Look(x, y);
+}
+
 auto Script::Add(event::Command const& command) -> void
 {
   impl_->Add(command);
@@ -207,7 +226,7 @@ auto Script::Add(event::Command const& command) -> void
 
 Script::operator bool() const
 {
-  return bool(impl_);
+  return static_cast<bool>(impl_);
 }
 
 Script::Script(boost::filesystem::path const& file, display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume, event::Timeslice& loader) : impl_(std::make_shared<Impl>(window, queue, path, volume, loader))

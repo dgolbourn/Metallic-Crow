@@ -137,6 +137,6 @@ Timeslice::Timeslice(lua::Stack& lua) : impl_(std::make_shared<Impl>(lua))
 
 Timeslice::operator bool() const
 {
-  return bool(impl_);
+  return static_cast<bool>(impl_);
 }
 }

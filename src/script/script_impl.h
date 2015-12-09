@@ -73,6 +73,7 @@ public:
   auto ChoiceLeft() -> void;
   auto ChoiceRight() -> void;
   auto Control(float x, float y) -> void;
+  auto Look(float x, float y) -> void;
   auto Call(std::string const& call) -> void;
   auto View() -> void;
   auto Pause(StagePtr const& stage, bool& paused) -> void;
@@ -168,6 +169,8 @@ public:
   auto MusicFree() -> void;
   auto MusicPlay() -> void;
   auto MusicEnd() -> void;
+
+  auto Scale() const -> float;
 
   lua::Stack lua_;
   display::Window window_;

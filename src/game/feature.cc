@@ -125,7 +125,7 @@ auto Feature::Expression(int index) -> void
 
 auto Feature::operator()(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, double angle, bool facing) const -> bool
 {
-  bool valid = bool(impl_);
+  bool valid = static_cast<bool>(impl_);
   if(valid)
   {
     impl_->Render(render_box, modulation, parallax, angle, facing);
@@ -135,6 +135,6 @@ auto Feature::operator()(display::BoundingBox const& render_box, display::Modula
 
 Feature::operator bool() const
 {
-  return bool(impl_);
+  return static_cast<bool>(impl_);
 }
 }

@@ -19,7 +19,7 @@ auto BoundingBox::operator<(BoundingBox const& other) const -> bool
 
 BoundingBox::operator bool() const
 {
-  return bool(impl_);
+  return static_cast<bool>(impl_);
 }
 
 auto BoundingBox::x(float x) -> void
@@ -84,11 +84,11 @@ BoundingBox::BoundingBox(lua::Stack& lua)
 
 BoundingBox::BoundingBox(BoundingBox const& first, BoundingBox const& second)
 {
-  if(bool(first) || bool(second))
+  if(static_cast<bool>(first) || static_cast<bool>(second))
   {
     impl_ = std::make_shared<Impl>();
 
-    if(bool(first) && bool(second))
+    if(static_cast<bool>(first) && static_cast<bool>(second))
     {
       if(!sdl::Intersection(&first.impl_->rect_, &second.impl_->rect_, &impl_->rect_))
       {

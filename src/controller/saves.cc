@@ -206,7 +206,7 @@ auto Saves::Current(int slot, int current) -> void
 
 Saves::operator bool() const
 {
-  return bool(impl_);
+  return static_cast<bool>(impl_);
 }
 
 auto Saves::Save() -> void

@@ -186,7 +186,7 @@ auto Texture::Impl::Render(BoundingBox const& source, BoundingBox const& destina
 
 auto Texture::Impl::Check() const -> bool
 {
-  return bool(window_.Lock());
+  return static_cast<bool>(window_.Lock());
 }
 
 auto Texture::Impl::Shape() const -> display::Shape
@@ -240,12 +240,12 @@ auto Texture::Impl::Init(boost::filesystem::path const& file, event::Timeslice& 
 
 auto Texture::operator()(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) -> bool
 {
-  return bool(impl_) && impl_->Render(source, destination, parallax, tile, angle, modulation);
+  return static_cast<bool>(impl_) && impl_->Render(source, destination, parallax, tile, angle, modulation);
 }
 
 Texture::operator bool() const
 {
-  return bool(impl_) && impl_->Check();
+  return static_cast<bool>(impl_) && impl_->Check();
 }
 
 auto Texture::Shape() const -> display::Shape

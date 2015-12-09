@@ -15,6 +15,7 @@ public:
   Controller() = default;
   Controller(lua::Stack& lua, event::Queue& queue, event::Timeslice& loader, boost::filesystem::path const& path);
   auto Control(float x, float y) -> void;
+  auto Look(float x, float y) -> void;
   auto ChoiceUp() -> void;
   auto ChoiceDown() -> void;
   auto ChoiceLeft() -> void;

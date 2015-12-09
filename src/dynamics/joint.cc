@@ -131,12 +131,12 @@ JointImpl::~JointImpl()
 
 auto JointImpl::Valid() const -> bool
 {
-  return (joint_ != nullptr) && bool(world_.Lock());
+  return (joint_ != nullptr) && static_cast<bool>(world_.Lock());
 }
 
 Joint::operator bool() const
 {
-  return bool(impl_) && impl_->Valid();
+  return static_cast<bool>(impl_) && impl_->Valid();
 }
 
 Joint::Joint(lua::Stack& lua, Body& body_a, Body& body_b, World& world) : impl_(std::make_shared<JointImpl>(lua, body_a, body_b, world))

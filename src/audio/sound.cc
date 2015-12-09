@@ -197,7 +197,7 @@ auto Sound::End() -> void
 
 auto Sound::operator()(float volume) -> bool
 {
-  bool valid = bool(impl_);
+  bool valid = static_cast<bool>(impl_);
   if(valid)
   {
     impl_->Play(volume);
@@ -207,7 +207,7 @@ auto Sound::operator()(float volume) -> bool
 
 Sound::operator bool() const
 {
-  bool valid = bool(impl_);
+  bool valid = static_cast<bool>(impl_);
   if(valid)
   {
     std::lock_guard<mix::Mutex> lock(mix::mutex);

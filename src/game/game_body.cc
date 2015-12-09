@@ -564,6 +564,6 @@ auto Body::Scale() const -> float
 
 Body::operator bool() const
 {
-  return bool(impl_);
+  return static_cast<bool>(impl_);
 }
 }

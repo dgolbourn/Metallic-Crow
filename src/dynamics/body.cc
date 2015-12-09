@@ -366,7 +366,7 @@ auto Body::operator<(Body const& other) const -> bool
 
 Body::operator bool() const
 {
-  return bool(impl_) && bool(impl_->world_.Lock());
+  return static_cast<bool>(impl_) && static_cast<bool>(impl_->world_.Lock());
 }
 
 auto Body::Position() const -> game::Position

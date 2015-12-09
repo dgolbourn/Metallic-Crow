@@ -13,6 +13,7 @@ public:
   void operator()();
   typedef std::function<bool(float, float)> Command;
   auto Control(Command const& command) -> void;
+  auto Look(Command const& command) -> void;
   auto ChoiceUp(event::Command const& command) -> void;
   auto ChoiceDown(event::Command const& command) -> void;
   auto ChoiceLeft(event::Command const& command) -> void;

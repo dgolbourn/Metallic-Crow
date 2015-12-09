@@ -25,6 +25,7 @@ public:
   auto Draw(BoundingBox const& box, Modulation const& modulation) const -> void;
   auto View(float x, float y, float zoom) -> void;
   auto Rotation(double angle) -> void;
+  auto Scale() const -> float;
   ~WindowImpl();
   sdl::Library sdl_;
   img::Library img_;

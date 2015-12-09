@@ -216,7 +216,7 @@ auto World::End(event::Command const& command) -> void
 
 World::operator bool() const
 {
-  return bool(impl_);
+  return static_cast<bool>(impl_);
 }
 
 auto World::Pause() -> void

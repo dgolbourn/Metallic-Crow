@@ -30,6 +30,6 @@ bool Joint::operator==(Joint const& other) const
 
 Joint::operator bool() const
 {
-  return bool(impl_);
+  return static_cast<bool>(impl_);
 }
 }

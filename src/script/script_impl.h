@@ -49,6 +49,7 @@ struct Stage
   Scene scene_;
   Choice choice_;
   Subtitle subtitle_;
+  Subtitle title_;
 
   dynamics::World world_;
   collision::Group collision_;
@@ -134,6 +135,8 @@ public:
   auto SubtitleInit() -> void;
   auto SubtitleText() -> void;
   auto SubtitleModulation() -> void;
+  auto TitleText() -> void;
+  auto TitleModulation() -> void;
 
   auto TimerInit() -> void;
   auto TimerLoad() -> void;

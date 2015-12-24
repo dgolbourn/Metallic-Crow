@@ -105,6 +105,7 @@ auto Script::Impl::Render() -> void
     }
     stage_->choice_.Render();
     stage_->subtitle_.Render();
+    stage_->title_.Render();
   }
   fade_.Render();
 }

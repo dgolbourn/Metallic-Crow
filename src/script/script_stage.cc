@@ -96,6 +96,11 @@ auto Script::Impl::StageLoad() -> void
     stage->subtitle_ = Subtitle(lua_, window_, path_);
   }
 
+  {
+    lua::Guard guard = lua_.Field("title");
+    stage->title_ = Subtitle(lua_, window_, path_);
+  }
+
   stages_.emplace(stage);
   lua::Push(static_cast<lua_State*>(lua_), WeakStagePtr(stage));
 }

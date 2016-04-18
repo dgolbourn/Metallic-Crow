@@ -29,6 +29,9 @@ public:
   auto End(float32 dt) -> void;
   auto Update(float32 ds) -> void;
   auto Modulation() const -> display::Modulation;
+  auto Emit(float r, float g, float b) -> void;
+  auto Intrinsic(float r, float g, float b) -> void;
+  auto Active() const -> bool;
   static Body MakeBody(b2Body* body);
   World::WeakPtr world_;
   b2Body* body_;

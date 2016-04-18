@@ -64,7 +64,7 @@ auto Script::Impl::View() -> void
 {
   game::Position view(0.f, 0.f);
   game::Position min(std::numeric_limits<float>().max(), std::numeric_limits<float>().max());
-  game::Position max(std::numeric_limits<float>().min(), std::numeric_limits<float>().min());
+  game::Position max(-std::numeric_limits<float>().max(), -std::numeric_limits<float>().max());
 
   for(Actor actor : stage_->subjects_)
   {    
@@ -75,7 +75,7 @@ auto Script::Impl::View() -> void
     min.first = std::min(min.first, position.first);
     min.second = std::min(min.second, position.second);
     max.first = std::max(max.first, position.first);
-    max.second = std::max(max.first, position.second);
+    max.second = std::max(max.second, position.second);
   }
 
   if(auto count = stage_->subjects_.size())
@@ -86,6 +86,6 @@ auto Script::Impl::View() -> void
 
 auto Script::Impl::Scale() const -> float
 {
-  return .875f;
+  return .75f;
 }
 }

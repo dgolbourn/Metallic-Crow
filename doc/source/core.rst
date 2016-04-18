@@ -1,14 +1,16 @@
-.. _library:
+.. _core:
 
 .. highlight:: lua
 
-*******
-Library
-*******
+****
+Core
+****
 
-This section describes the Application Programming Interface of Metallic Crow.  The API is presented as a library in the Lua extension language.  As Lua is designed to support procedural programming, the API is presented in a procedural style.
+This section describes the Core Application Programming Interface of Metallic Crow.  The Core API is presented as a library in the Lua extension language.  As Lua is designed to support procedural programming, the API is presented in a procedural style.
 
 To access these API calls, use ``require "metallic_crow"`` in your Lua script.  All of the functions described below are in the returned library table.
+
+Additionally, there is an auxilliary library -- Metallic Crow Library -- which is presented in a more object-oriented style. MCL is implemented using the core library.
 
 
 Script

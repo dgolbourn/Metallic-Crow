@@ -6,4 +6,6 @@ Metallic Crow is a game engine for 2D sprite-based side-scrolling story games.  
 .. toctree::
    :maxdepth: 1
 
+   core
+
    library

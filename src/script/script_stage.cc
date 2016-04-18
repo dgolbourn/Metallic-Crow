@@ -2,6 +2,7 @@
 #include "bind.h"
 #include <algorithm>
 #include "lua_data.h"
+#include <boost/bimap/support/lambda.hpp>
 namespace game
 {
 auto Script::Impl::StageGet() -> StagePtr
@@ -55,7 +56,7 @@ auto Script::Impl::StageNominate() -> void
 auto Script::Impl::StageLoad() -> void
 {
   StagePtr stage = std::make_shared<Stage>();
-  
+
   collision::Group group(queue_);
   stage->collision_ = group;
 
@@ -63,6 +64,28 @@ auto Script::Impl::StageLoad() -> void
     lua::Guard guard = lua_.Field("world");
     stage->world_ = dynamics::World(lua_, group, queue_);
   }
+  WeakStagePtr stage_ptr = WeakStagePtr(stage);
+  stage->world_.End([=]()
+  {
+    if(StagePtr stage = stage_ptr.lock())
+    {
+      for(auto& active : stage->actives_)
+      {
+        stage->scene_.right.modify_data(stage->scene_.right.find(active), 
+            [&](Order& order)
+            {
+              Position position = active.Position();
+              order[1] = position.second;
+              order[2] = position.first;
+            });
+      }
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  });
 
   stage->paused_[0] = paused_;
   stage->paused_[1] = true;

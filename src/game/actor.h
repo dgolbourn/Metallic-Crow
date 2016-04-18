@@ -42,6 +42,9 @@ public:
   auto Render() const -> void;
   auto Link(std::string const& group) -> void;
   auto Unlink(std::string const& group) -> void;
+  auto Emit(float r, float g, float b) -> void;
+  auto Intrinsic(float r, float g, float b) -> void;
+  auto Active() const -> bool;
   explicit operator bool() const;
   bool operator==(Actor const& other) const;
 private:

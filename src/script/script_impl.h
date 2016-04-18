@@ -31,7 +31,9 @@ typedef std::unordered_set<event::Timer> TimerSet;
 typedef std::unordered_set<audio::Sound> SoundSet;
 typedef std::unordered_set<audio::Music> MusicSet;
 typedef std::array<bool, 2> Paused;
-typedef boost::bimaps::bimap<boost::bimaps::multiset_of<float>, boost::bimaps::unordered_set_of<Actor>> Scene;
+typedef std::array<float, 3> Order;
+
+typedef boost::bimaps::bimap<boost::bimaps::multiset_of<Order>, boost::bimaps::unordered_set_of<Actor>> Scene;
 
 struct Stage
 {
@@ -43,6 +45,7 @@ struct Stage
   MusicSet music_;
   audio::Music current_music_;
   ActorSet subjects_;
+  ActorSet actives_;
   float zoom_;
   double angle_;
 
@@ -101,6 +104,8 @@ public:
   auto ActorScale() -> void;
   auto ActorLink() -> void;
   auto ActorUnlink() -> void;
+  auto ActorEmit() -> void;
+  auto ActorIntrinsic() -> void;
 
   template<class Data> auto StageDataGet() -> std::pair<StagePtr, Data>
   {

@@ -39,6 +39,9 @@ public:
   auto Scale() const -> float;
   auto Link(std::string const& group) -> void;
   auto Unlink(std::string const& group) -> void;
+  auto Emit(float r, float g, float b) -> void;
+  auto Intrinsic(float r, float g, float b) -> void;
+  auto Active() const -> bool;
 
   game::Position position_;
   double angle_;

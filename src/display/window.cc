@@ -62,8 +62,25 @@ WindowImpl::WindowImpl(lua::Stack& lua) : sdl_(SDL_INIT_VIDEO), img_(IMG_INIT_PN
 {
   try
   {
-    SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "2");
+    std::string vsync = "1";
+    {
+      lua::Guard guard = lua.Field("vsync");
+      if(lua.Check())
+      {
+        lua.Pop(vsync);
+      }
+    }
+    SDL_SetHint(SDL_HINT_RENDER_VSYNC, vsync.c_str());
+
+    std::string quality = "best";
+    {
+      lua::Guard guard = lua.Field("quality");
+      if(lua.Check())
+      {
+        lua.Pop(quality);
+      }
+    }
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, quality.c_str());
 
     std::string mode;
     {

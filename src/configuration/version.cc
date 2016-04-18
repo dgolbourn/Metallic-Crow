@@ -13,7 +13,7 @@ namespace config
 auto Version() -> std::string
 {
   static const int major = 0;
-  static const int minor = 4;
+  static const int minor = 5;
   static const int patch = 0;
   static const std::string pre("");
   static const std::string build("");

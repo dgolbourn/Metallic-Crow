@@ -9,18 +9,27 @@ namespace
 {
 typedef std::unique_ptr<b2JointDef> JointDefinition;
 
-auto Spring(lua::Stack& lua, b2Body* body_a, b2Body* body_b, dynamics::WorldImpl const& world) -> JointDefinition 
+auto Spring(lua::Stack& lua, b2Body* body_a, b2Body* body_b, dynamics::WorldImpl const& world) -> JointDefinition
 {
   JointDefinition def(new b2DistanceJointDef);
   b2DistanceJointDef& joint = *static_cast<b2DistanceJointDef*>(def.get());
 
-  joint.length = lua.Field<float>("length");
+  joint.length = world.Metres(lua.Field<float>("length"));
 
-  lua::Guard guard = lua.Field("damping");
-  if(lua.Check())
   {
-    lua.Pop(joint.dampingRatio);
-    joint.frequencyHz = 0.25f * world.f_;
+    lua::Guard guard = lua.Field("damping");
+    if(lua.Check())
+    {
+      lua.Pop(joint.dampingRatio);
+    }
+  }
+
+  {
+    lua::Guard guard = lua.Field("frequency");
+    if(lua.Check())
+    {
+      lua.Pop(joint.frequencyHz);
+    }
   }
 
   joint.bodyA = body_a;
@@ -29,20 +38,22 @@ auto Spring(lua::Stack& lua, b2Body* body_a, b2Body* body_b, dynamics::WorldImpl
   return def;
 }
 
-auto Rope(lua::Stack& lua, b2Body* body_a, b2Body* body_b) -> JointDefinition
+auto Rope(lua::Stack& lua, b2Body* body_a, b2Body* body_b, dynamics::WorldImpl const& world) -> JointDefinition
 {
   JointDefinition def(new b2RopeJointDef);
   b2RopeJointDef& joint = *static_cast<b2RopeJointDef*>(def.get());
 
-  joint.maxLength = lua.Field<float>("length");
+  joint.maxLength = world.Metres(lua.Field<float>("length"));
     
   joint.bodyA = body_a;
+  joint.localAnchorA.Set(0.f, 0.f);
   joint.bodyB = body_b;
+  joint.localAnchorB.Set(0.f, 0.f);
 
   return def;
 }
 
-auto Weld(lua::Stack& lua, b2Body* body_a, b2Body* body_b, dynamics::WorldImpl const& world) -> JointDefinition
+auto Weld(lua::Stack& lua, b2Body* body_a, b2Body* body_b) -> JointDefinition
 {
   b2Body* a = body_a;
   b2Body* b = body_b;
@@ -54,11 +65,20 @@ auto Weld(lua::Stack& lua, b2Body* body_a, b2Body* body_b, dynamics::WorldImpl c
   b2WeldJointDef& joint = *static_cast<b2WeldJointDef*>(def.get());
   joint.Initialize(a, b, anchor);
 
-  lua::Guard guard = lua.Field("damping");
-  if(lua.Check())
   {
-    lua.Pop(joint.dampingRatio);
-    joint.frequencyHz = 0.25f * world.f_;
+    lua::Guard guard = lua.Field("damping");
+    if(lua.Check())
+    {
+      lua.Pop(joint.dampingRatio);
+    }
+  }
+
+  {
+    lua::Guard guard = lua.Field("frequency");
+    if(lua.Check())
+    {
+      lua.Pop(joint.frequencyHz);
+    }
   }
   
   return def;
@@ -90,12 +110,12 @@ JointImpl::JointImpl(lua::Stack& lua, Body& body_a, Body& body_b, World& world) 
   else if(type == "rope")
   {
     lua::Guard  guard = lua.Field("joint");
-    def = Rope(lua, body_a.impl_->body_, body_b.impl_->body_);
+    def = Rope(lua, body_a.impl_->body_, body_b.impl_->body_, *world.impl_.get());
   }
   else if(type == "weld")
   {
     lua::Guard guard = lua.Field("joint");
-    def = Weld(lua, body_a.impl_->body_, body_b.impl_->body_, *world.impl_.get());
+    def = Weld(lua, body_a.impl_->body_, body_b.impl_->body_);
   }
   else
   {

@@ -59,15 +59,15 @@ auto Actor::Impl::Resume() -> void
 
 auto Actor::Impl::Modulation(float r, float g, float b, float a) -> void
 {
-  modulation_.r(r);
-  modulation_.g(g);
-  modulation_.b(b);
-  modulation_.a(a);
-
   if(game_body_)
-  {
+  {    
     if(dynamics_body_)
     {
+      modulation_.r(r);
+      modulation_.g(g);
+      modulation_.b(b);
+      modulation_.a(a);
+
       display::Modulation modulation = dynamics_body_.Modulation();
       game_body_.Modulation(modulation.r() * r, modulation.g() * g, modulation.b() * b, modulation.a() * a);
     }
@@ -170,6 +170,22 @@ auto Actor::Impl::Body(std::string const& expression, bool left_facing) -> void
   if(game_body_)
   {
     animation_.Reset(dilation_ * game_body_.Expression(expression, left_facing), -1);
+  }
+}
+
+auto Actor::Impl::Emit(float r, float g, float b) -> void
+{
+  if(dynamics_body_)
+  {
+    dynamics_body_.Emit(r, g, b);
+  }
+}
+
+auto Actor::Impl::Intrinsic(float r, float g, float b) -> void
+{
+  if(dynamics_body_)
+  {
+    dynamics_body_.Intrinsic(r, g, b);
   }
 }
 
@@ -407,6 +423,11 @@ auto Actor::Impl::Unlink(std::string const& group) -> void
   collision_.Unlink(group, dynamics_body_);
 }
 
+auto Actor::Impl::Active() const -> bool
+{
+  return game_body_ && dynamics_body_ && dynamics_body_.Active();
+}
+
 auto Actor::Position(game::Position const& position) -> void
 {
   impl_->Position(position);
@@ -546,5 +567,20 @@ auto Actor::Link(std::string const& group) -> void
 auto Actor::Unlink(std::string const& group) -> void
 {
   impl_->Unlink(group);
+}
+
+auto Actor::Emit(float r, float g, float b) -> void
+{
+  impl_->Emit(r, g, b);
+}
+
+auto Actor::Intrinsic(float r, float g, float b) -> void
+{
+  impl_->Intrinsic(r, g, b);
+}
+
+auto Actor::Active() const -> bool
+{
+  return impl_->Active();
 }
 }

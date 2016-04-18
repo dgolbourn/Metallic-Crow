@@ -21,6 +21,8 @@ auto Script::Impl::ActorInit() -> void
   lua_.Add(function::Bind(&Impl::ActorScale, shared_from_this()), "actor_scale", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ActorLink, shared_from_this()), "actor_link", 0, "metallic_crow");
   lua_.Add(function::Bind(&Impl::ActorUnlink, shared_from_this()), "actor_unlink", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ActorEmit, shared_from_this()), "actor_emit", 0, "metallic_crow");
+  lua_.Add(function::Bind(&Impl::ActorIntrinsic, shared_from_this()), "actor_intrinsic", 0, "metallic_crow");
 }
 
 auto Script::Impl::ActorLoad() -> void
@@ -43,7 +45,9 @@ auto Script::Impl::ActorLoad() -> void
           lua::Guard guard = lua_.Field("plane");
           if(lua_.Check())
           {
-            stage->scene_.left.insert(Scene::left_value_type(lua_.At<float>(-1), actor));
+            Position position = actor.Position();
+            Order order = {lua_.At<float>(-1), position.second, position.first};
+            stage->scene_.left.insert(Scene::left_value_type(order, actor));
           }
         }
       }
@@ -55,6 +59,10 @@ auto Script::Impl::ActorLoad() -> void
     }
 
     stage->actors_.emplace(actor);
+    if(actor.Active())
+    {
+      stage->actives_.emplace(actor);
+    }
   }
   lua::Push(static_cast<lua_State*>(lua_), std::pair<WeakStagePtr, Actor::WeakPtr>(stage, actor));
 }
@@ -67,6 +75,7 @@ auto Script::Impl::ActorFree() -> void
     actor.first->actors_.erase(actor.second);
     actor.first->scene_.right.erase(actor.second);
     actor.first->subjects_.erase(actor.second);
+    actor.first->actives_.erase(actor.second);
   }
 }
 
@@ -128,14 +137,21 @@ auto Script::Impl::ActorMouth() -> void
 
 auto Script::Impl::ActorPosition() -> void
 {
-  Actor actor;
+  std::pair<StagePtr, Actor> actor;
   {
     lua::Guard guard = lua_.Get(-3);
-    actor = DataGet<Actor>();
+    actor = StageDataGet<Actor>();
   }
-  if(actor)
+  if(actor.first && actor.second)
   {
-    actor.Position(std::make_pair(lua_.At<float>(-2), lua_.At<float>(-1)));
+    Position position = std::make_pair(lua_.At<float>(-2), lua_.At<float>(-1));
+    actor.second.Position(position);
+    actor.first->scene_.right.modify_data(actor.first->scene_.right.find(actor.second), 
+        [&](Order& order)
+        {
+          order[1] = position.second;
+          order[2] = position.first;
+        });
   }
 }
 
@@ -191,6 +207,32 @@ auto Script::Impl::ActorModulation() -> void
   }
 }
 
+auto Script::Impl::ActorIntrinsic() -> void
+{
+  Actor actor;
+  {
+    lua::Guard guard = lua_.Get(-4);
+    actor = DataGet<Actor>();
+  }
+  if(actor)
+  {
+    actor.Intrinsic(lua_.At<float>(-3), lua_.At<float>(-2), lua_.At<float>(-1));
+  }
+}
+
+auto Script::Impl::ActorEmit() -> void
+{
+  Actor actor;
+  {
+    lua::Guard guard = lua_.Get(-4);
+    actor = DataGet<Actor>();
+  }
+  if(actor)
+  {
+    actor.Emit(lua_.At<float>(-3), lua_.At<float>(-2), lua_.At<float>(-1));
+  }
+}
+
 auto Script::Impl::ActorDilation() -> void
 {
   Actor actor;
@@ -239,7 +281,11 @@ auto Script::Impl::ActorPlane() -> void
   }
   if(actor.first && actor.second)
   {
-    actor.first->scene_.right.replace_data(actor.first->scene_.right.find(actor.second), lua_.At<float>(-1));
+    actor.first->scene_.right.modify_data(actor.first->scene_.right.find(actor.second), 
+        [&](Order& order)
+        {
+          order[0] = lua_.At<float>(-1);
+        });
   }
 }
 

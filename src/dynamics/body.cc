@@ -338,9 +338,24 @@ auto BodyImpl::Update(float32 ds) -> void
   }
 }
 
+auto BodyImpl::Active() const -> bool
+{
+  return body_->GetType() != b2_staticBody;
+}
+
 auto BodyImpl::Modulation() const -> display::Modulation
 {
   return display::Modulation(light_.illumination.x, light_.illumination.y, light_.illumination.z, 1.f);
+}
+
+auto BodyImpl::Emit(float r, float g, float b) -> void
+{
+  light_.emission.Set(r, g, b);
+}
+
+auto BodyImpl::Intrinsic(float r, float g, float b) -> void
+{
+  light_.intrinsic.Set(r, g, b);
 }
 
 BodyImpl::~BodyImpl()
@@ -412,6 +427,21 @@ auto Body::Impulse(float x, float y) -> void
 auto Body::Modulation() const -> display::Modulation
 {
   return impl_->Modulation();
+}
+
+auto Body::Emit(float r, float g, float b) -> void
+{
+  impl_->Emit(r, g, b);
+}
+
+auto Body::Intrinsic(float r, float g, float b) -> void
+{
+  impl_->Intrinsic(r, g, b);
+}
+
+auto Body::Active() const -> bool
+{
+  return impl_->Active();
 }
 
 Body::Body(lua::Stack& lua, World& world) : impl_(std::make_shared<BodyImpl>(lua, world))

@@ -24,6 +24,9 @@ public:
   auto Force(float x, float y) -> void;
   auto Impulse(float x, float y) -> void;
   auto Modulation() const -> display::Modulation;
+  auto Emit(float r, float g, float b) -> void;
+  auto Intrinsic(float r, float g, float b) -> void;
+  auto Active() const -> bool;
   typedef memory::WeakPtr<Body, class BodyImpl> WeakPtr;
 private:
   std::shared_ptr<class BodyImpl> impl_;

@@ -115,7 +115,7 @@ auto Render(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source
   }
 }
 
-auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source_ptr, SDL_FRect const* destination_ptr, SDL_FPoint const* view, float zoom, float parallax, bool tile, double angle, SDL_Colour const* modulation, float scale, Angle const* view_angle) -> void
+auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source_ptr, SDL_FRect const* destination_ptr, SDL_FPoint const* view, float zoom, float parallax, bool horizontal, bool vertical, double angle, SDL_Colour const* modulation, float scale, Angle const* view_angle) -> void
 {
   bool render = true;
   SDL_Rect source = {0, 0, texture->w, texture->h};
@@ -168,12 +168,10 @@ auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
       {
         scale *= zoom;
 
-        destination.x -= parallax * (view->x - w2);
-        destination.x -= w2;
+        destination.x -= parallax * view->x;
         destination.x *= scale;
 
-        destination.y -= parallax * (view->y - h2);
-        destination.y -= h2;
+        destination.y -= parallax * view->y;
         destination.y *= scale;
 
         destination.w *= scale;
@@ -196,7 +194,8 @@ auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
       destination.w = wf;
       destination.h = hf;
       angle = 0.f;
-      tile = false;
+      horizontal = false;
+      vertical = false;
     }
 
     SDL_FRect original = destination;
@@ -206,9 +205,9 @@ auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
     destination.w *= clip.w;
     destination.h *= clip.h;
 
-    if(tile)
+    if(horizontal || vertical)
     {
-      algorithm::FloodFill<Painter>((Painter(window, renderer, texture, &source, &destination, &original, angle, modulation)));
+      algorithm::FloodFill<Painter>((Painter(window, renderer, texture, &source, &destination, &original, angle, modulation, horizontal, vertical)), horizontal, vertical);
     }
     else
     {
@@ -217,7 +216,7 @@ auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SD
   }
 }
 
-auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation, float zoom, SDL_FPoint const* view, float scale, Angle const* view_angle) -> void
+auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, BoundingBox const& source, BoundingBox const& destination, float parallax, bool horizontal, bool vertical, double angle, Modulation const& modulation, float zoom, SDL_FPoint const* view, float scale, Angle const* view_angle) -> void
 {
   SDL_Rect const* source_ptr = nullptr;
   SDL_Rect source_copy;
@@ -252,7 +251,7 @@ auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, Bo
     modulation_copy.b = Colour(b--);
     modulation_copy.a = Colour(modulation.a());
 
-    Render(window, renderer, texture, source_ptr, destination_ptr, view, zoom, parallax, tile, angle, &modulation_copy, scale, view_angle);
+    Render(window, renderer, texture, source_ptr, destination_ptr, view, zoom, parallax, horizontal, vertical, angle, &modulation_copy, scale, view_angle);
 
     if((r > 0.f) || (g > 0.f) || (b > 0.f))
     {      
@@ -262,13 +261,13 @@ auto Render(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, Bo
         modulation_copy.r = Colour(r--);
         modulation_copy.g = Colour(g--);
         modulation_copy.b = Colour(b--);
-        Render(window, renderer, texture, source_ptr, destination_ptr, view, zoom, parallax, tile, angle, &modulation_copy, scale, view_angle);
+        Render(window, renderer, texture, source_ptr, destination_ptr, view, zoom, parallax, horizontal, vertical, angle, &modulation_copy, scale, view_angle);
       } while((r > 0.f) || (g > 0.f) || (b > 0.f));
     }
   }
   else
   {
-    Render(window, renderer, texture, source_ptr, destination_ptr, view, zoom, parallax, tile, angle, nullptr, scale, view_angle);
+    Render(window, renderer, texture, source_ptr, destination_ptr, view, zoom, parallax, horizontal, vertical, angle, nullptr, scale, view_angle);
   }
 }
 }

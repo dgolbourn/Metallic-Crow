@@ -144,17 +144,20 @@ class Texture::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
   Impl() = default;
-  auto Init(boost::filesystem::path const& file, event::Timeslice& loader, Window& window, BoundingBox const& clip) -> void;
+  Impl(boost::filesystem::path const& file, Window& window, BoundingBox const& clip);
   Impl(std::string const& text, sdl::Font const& font, float width, Window& window, BoundingBox const& clip);
   Impl(std::string const& text, sdl::Font const& font, Window& window, BoundingBox const& clip);
-  auto Render(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) -> bool;
+  auto Render(BoundingBox const& source, BoundingBox const& destination, float parallax, bool horizontal, bool vertical, double angle, Modulation const& modulation) -> bool;
   auto Check() const -> bool;
   display::Shape Shape() const;
   Window::WeakPtr window_;
   std::shared_ptr<SDL_Texture> texture_;
   BoundingBox clip_;
-  boost::filesystem::path file_;
 };
+
+Texture::Impl::Impl(boost::filesystem::path const& file, Window& window, BoundingBox const& clip) : window_(window), texture_(MakeTexture(window.impl_->renderer_, file)), clip_(Clip(BoundingBox(), clip, texture_))
+{
+}
 
 Texture::Impl::Impl(std::string const& text, sdl::Font const& font, float width, Window& window, BoundingBox const& clip) : window_(window), texture_(MakeTexture(window.impl_->renderer_, static_cast<SDL_Surface*>(sdl::Surface(text, font, static_cast<Uint32>(width))))), clip_(Clip(BoundingBox(), clip, texture_))
 {
@@ -164,21 +167,13 @@ Texture::Impl::Impl(std::string const& text, sdl::Font const& font, Window& wind
 {
 }
 
-auto Texture::Impl::Render(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) -> bool
+auto Texture::Impl::Render(BoundingBox const& source, BoundingBox const& destination, float parallax, bool horizontal, bool vertical, double angle, Modulation const& modulation) -> bool
 {
   bool locked = false;
   if(auto window = window_.Lock())
   {
-    if(!texture_)
-    {
-      texture_ = MakeTexture(window.impl_->renderer_, file_);
-      clip_ = Clip(BoundingBox(), clip_, texture_);
-      file_ = boost::filesystem::path();
-    }
-    
     auto& impl = window.impl_;
-    display::Render(impl->window_, impl->renderer_, texture_.get(), Clip(clip_, source, texture_), destination, parallax, tile, angle, modulation, impl->zoom_, &impl->view_, impl->scale_, &impl->view_angle_);
-    
+    display::Render(impl->window_, impl->renderer_, texture_.get(), Clip(clip_, source, texture_), destination, parallax, horizontal, vertical, angle, modulation, impl->zoom_, &impl->view_, impl->scale_, &impl->view_angle_);
     locked = true;
   }
   return locked;
@@ -202,45 +197,9 @@ auto Texture::Impl::Shape() const -> display::Shape
   return display::Shape();
 }
 
-auto Texture::Impl::Init(boost::filesystem::path const& file, event::Timeslice& loader, Window& window, BoundingBox const& clip) -> void
+auto Texture::operator()(BoundingBox const& source, BoundingBox const& destination, float parallax, bool horizontal, bool vertical, double angle, Modulation const& modulation) -> bool
 {
-  auto iter = cache.find(boost::make_tuple(window.impl_->renderer_, file));
-  if(iter != cache.end())
-  {
-    texture_ = iter->texture_.lock();
-  }
-
-  window_ = Window::WeakPtr(window);
-  clip_ = Clip(BoundingBox(), clip, texture_);
-
-  if(!texture_)
-  {
-    file_ = file;
-    std::weak_ptr<Impl> texture_ptr = shared_from_this();
-    
-    loader.Add([texture_ptr]()
-    {
-      if(std::shared_ptr<Impl> impl = texture_ptr.lock())
-      {
-        if(Window window = impl->window_.Lock())
-        {
-          if(!impl->texture_)
-          {
-            impl->texture_ = MakeTexture(window.impl_->renderer_, impl->file_);
-            impl->clip_ = Clip(BoundingBox(), impl->clip_, impl->texture_);
-            impl->file_ = boost::filesystem::path();
-          }
-        }
-      }
-      return false;
-    });
-    loader();
-  }
-}
-
-auto Texture::operator()(BoundingBox const& source, BoundingBox const& destination, float parallax, bool tile, double angle, Modulation const& modulation) -> bool
-{
-  return static_cast<bool>(impl_) && impl_->Render(source, destination, parallax, tile, angle, modulation);
+  return static_cast<bool>(impl_) && impl_->Render(source, destination, parallax, horizontal, vertical, angle, modulation);
 }
 
 Texture::operator bool() const
@@ -253,9 +212,8 @@ auto Texture::Shape() const -> display::Shape
   return impl_->Shape();
 }
 
-Texture::Texture(boost::filesystem::path const& file, Window& window, event::Timeslice& loader, BoundingBox const& clip) : impl_(std::make_shared<Impl>())
+Texture::Texture(boost::filesystem::path const& file, Window& window, BoundingBox const& clip) : impl_(std::make_shared<Impl>(file, window, clip))
 { 
-  impl_->Init(file, loader, window, clip);
 }
 
 Texture::Texture(std::string const& text, sdl::Font const& font, float width, Window& window, BoundingBox const& clip) : impl_(std::make_shared<Impl>(text, font, width, window, clip))

@@ -6,14 +6,13 @@
 #include <command.h>
 #include <vector>
 #include "boost/filesystem.hpp"
-#include "timeslice.h"
 namespace game
 {
 class Menu
 {
 public:
   Menu() = default;
-  Menu(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, event::Timeslice& loader);
+  Menu(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path);
   auto Add(int index, event::Command const& command) -> void;
   auto Previous() -> void;
   auto Next() -> void;

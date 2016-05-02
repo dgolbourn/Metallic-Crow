@@ -31,7 +31,7 @@ Subtitle::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem
 
 auto Subtitle::Impl::Render() -> void
 {
-  text_(display::BoundingBox(), render_box_, 0.f, false, 0., modulation_);
+  text_(display::BoundingBox(), render_box_, 0.f, false, false, 0., modulation_);
 }
 
 auto Subtitle::Impl::Subtitle(std::string const& text) -> void

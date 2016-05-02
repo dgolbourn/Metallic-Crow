@@ -12,7 +12,7 @@ namespace game
 class Feature::Impl
 {
 public:
-  Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, event::Timeslice& loader);
+  Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path);
   auto Expression(std::string const& expression, int index) -> void;
   auto Expression(std::string const& expression) -> void;
   auto Expression(int index) -> void;
@@ -23,7 +23,7 @@ public:
   Key state_;
 };
 
-Feature::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, event::Timeslice& loader)
+Feature::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path)
 {
   {
     lua::Guard guard = lua.Field("expressions");
@@ -43,7 +43,7 @@ Feature::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem:
         clip = display::BoundingBox(lua);
       }
 
-      display::Texture texture(path / lua.Field<std::string>("page"), window, loader, clip);
+      display::Texture texture(path / lua.Field<std::string>("page"), window, clip);
       if(facing)
       {
         textures_[Key(expression, expession_index)].first = texture;
@@ -95,16 +95,16 @@ auto Feature::Impl::Render(display::BoundingBox const& render_box, display::Modu
   {
     if(facing)
     {
-      current_->second.first(display::BoundingBox(), render_box, parallax, false, angle, modulation);
+      current_->second.first(display::BoundingBox(), render_box, parallax, false, false, angle, modulation);
     }
     else
     {
-      current_->second.second(display::BoundingBox(), render_box, parallax, false, angle, modulation);
+      current_->second.second(display::BoundingBox(), render_box, parallax, false, false, angle, modulation);
     }
   }
 }
 
-Feature::Feature(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, event::Timeslice& loader) : impl_(std::make_shared<Impl>(lua, window, path, loader))
+Feature::Feature(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(lua, window, path))
 {
 }
 

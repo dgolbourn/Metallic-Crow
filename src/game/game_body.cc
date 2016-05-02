@@ -31,10 +31,11 @@ struct Feature final : public Renderable
 struct Texture final : public Renderable
 {
   display::Texture texture_;
-  bool tile_;
+  bool horizontal_;
+  bool vertical_;
   auto operator()() -> void override
   {
-    texture_(display::BoundingBox(), current_box_, parallax_, tile_, current_angle_, modulation_);
+    texture_(display::BoundingBox(), current_box_, parallax_, horizontal_, vertical_, current_angle_, modulation_);
   }
 };
 
@@ -79,7 +80,7 @@ namespace game
 class Body::Impl
 {
 public:
-  Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes, Feature const& mouth, event::Timeslice& loader);
+  Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes, Feature const& mouth);
   auto Expression(std::string const& expression, bool left_facing) -> double;
   auto Expression(std::string const& expression) -> double;
   auto Expression(bool left_facing) -> double;
@@ -111,7 +112,7 @@ public:
   float scale_;
 };
 
-Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command, event::Timeslice& loader) : angle_(0.), sin_(0.), cos_(1.), scale_(1.f)
+Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command) : angle_(0.), sin_(0.), cos_(1.), scale_(1.f)
 {
   {
     lua::Guard guard = lua.Field("modulation");
@@ -248,18 +249,28 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
               }
 
               {
-                bool tile = false;
-                lua::Guard guard = lua.Field("tile");
+                bool horizontal = false;
+                lua::Guard guard = lua.Field("horizontal");
                 if(lua.Check())
                 {
-                  lua.Pop(tile);
+                  lua.Pop(horizontal);
                 }
-                static_cast<::Texture*>(render.get())->tile_ = tile;
+                static_cast<::Texture*>(render.get())->horizontal_ = horizontal;
               }
- 
+
+              {
+                bool vertical = false;
+                lua::Guard guard = lua.Field("vertical");
+                if(lua.Check())
+                {
+                  lua.Pop(vertical);
+                }
+                static_cast<::Texture*>(render.get())->vertical_ = vertical;
+              }
+
               render->modulation_ = modulation_;
 
-              static_cast<::Texture*>(render.get())->texture_ = display::Texture(path / lua.Field<std::string>("page"), window, loader, clip);
+              static_cast<::Texture*>(render.get())->texture_ = display::Texture(path / lua.Field<std::string>("page"), window, clip);
               frame.scene_.emplace(lua.Field<float>("plane"), std::move(render));
             }
           }
@@ -483,7 +494,7 @@ auto Body::Impl::Scale() const -> float
 }
 
 
-Body::Body(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command, event::Timeslice& loader) : impl_(std::make_shared<Impl>(lua, window, path, eyes_command, mouth_command, loader))
+Body::Body(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes_command, Feature const& mouth_command) : impl_(std::make_shared<Impl>(lua, window, path, eyes_command, mouth_command))
 {
 }
 

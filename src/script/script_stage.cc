@@ -71,12 +71,13 @@ auto Script::Impl::StageLoad() -> void
     {
       for(auto& active : stage->actives_)
       {
-        stage->scene_.right.modify_data(stage->scene_.right.find(active), 
+        auto iter = stage->scene_.right.find(active);
+        stage->scene_.right.modify_data(iter, 
             [&](Order& order)
             {
               Position position = active.Position();
-              order[1] = position.second;
-              order[2] = position.first;
+              order[1] = position.second + iter->info.second;
+              order[2] = position.first + iter->info.first;
             });
       }
       return true;
@@ -104,7 +105,7 @@ auto Script::Impl::StageLoad() -> void
   Choice choice;
   {
     lua::Guard guard = lua_.Field("choice");
-    choice = Choice(lua_, window_, queue_, path_, loader_);
+    choice = Choice(lua_, window_, queue_, path_);
   }
 
   choice.Up(function::Bind(&Impl::Call, shared_from_this(), "choice_up"));

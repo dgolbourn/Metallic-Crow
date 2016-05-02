@@ -27,7 +27,7 @@ struct LightPoint
 
 typedef std::queue<LightPoint> LightQueue;
 
-const float32 min_illumination = .01f;
+const float32 min_illumination = .001f;
 
 auto LightBox(b2Vec3 const& emission, dynamics::BodyImpl const& body) -> b2AABB
 {
@@ -82,7 +82,7 @@ auto Attenuation(dynamics::BodyImpl& source, dynamics::BodyImpl& target, Attenua
   return attenuation;
 }
 
-const int max_hops = 3;
+const int max_hops = 5;
 }
 
 namespace dynamics

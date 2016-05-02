@@ -338,11 +338,6 @@ auto BodyImpl::Update(float32 ds) -> void
   }
 }
 
-auto BodyImpl::Active() const -> bool
-{
-  return body_->GetType() != b2_staticBody;
-}
-
 auto BodyImpl::Modulation() const -> display::Modulation
 {
   return display::Modulation(light_.illumination.x, light_.illumination.y, light_.illumination.z, 1.f);
@@ -437,11 +432,6 @@ auto Body::Emit(float r, float g, float b) -> void
 auto Body::Intrinsic(float r, float g, float b) -> void
 {
   impl_->Intrinsic(r, g, b);
-}
-
-auto Body::Active() const -> bool
-{
-  return impl_->Active();
 }
 
 Body::Body(lua::Stack& lua, World& world) : impl_(std::make_shared<BodyImpl>(lua, world))

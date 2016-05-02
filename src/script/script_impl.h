@@ -33,7 +33,7 @@ typedef std::unordered_set<audio::Music> MusicSet;
 typedef std::array<bool, 2> Paused;
 typedef std::array<float, 3> Order;
 
-typedef boost::bimaps::bimap<boost::bimaps::multiset_of<Order>, boost::bimaps::unordered_set_of<Actor>> Scene;
+typedef boost::bimaps::bimap<boost::bimaps::multiset_of<Order>, boost::bimaps::unordered_set_of<Actor>, boost::bimaps::unconstrained_set_of_relation, boost::bimaps::with_info<Position>> Scene;
 
 struct Stage
 {
@@ -65,7 +65,7 @@ typedef std::unordered_set<StagePtr> StageSet;
 class Script::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume, event::Timeslice& loader);
+  Impl(display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume);
   auto Init(boost::filesystem::path const& file) -> void;
   
   auto Pause() -> void;
@@ -183,7 +183,6 @@ public:
   lua::Stack lua_;
   display::Window window_;
   event::Queue queue_;
-  event::Timeslice loader_;
   StageSet stages_;
   StagePtr stage_;
   bool paused_;

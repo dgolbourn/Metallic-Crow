@@ -9,7 +9,7 @@ double step_time = 0.1;
 
 namespace game
 {
-Script::Impl::Impl(display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume, event::Timeslice& loader) : window_(window), queue_(queue), paused_(true), fade_(queue, window), begun_(false), path_(path), lua_(path), volume_(volume), loader_(loader)
+Script::Impl::Impl(display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume) : window_(window), queue_(queue), paused_(true), fade_(queue, window), begun_(false), path_(path), lua_(path), volume_(volume)
 {
 }
 
@@ -99,7 +99,7 @@ auto Script::Impl::Render() -> void
   if(stage_)
   {
     View();
-    for(auto actor : stage_->scene_.left)
+    for(auto const& actor : stage_->scene_.left)
     {
       actor.second.Render();
     }
@@ -230,7 +230,7 @@ Script::operator bool() const
   return static_cast<bool>(impl_);
 }
 
-Script::Script(boost::filesystem::path const& file, display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume, event::Timeslice& loader) : impl_(std::make_shared<Impl>(window, queue, path, volume, loader))
+Script::Script(boost::filesystem::path const& file, display::Window& window, event::Queue& queue, boost::filesystem::path const& path, float volume) : impl_(std::make_shared<Impl>(window, queue, path, volume))
 {
   impl_->Init(file);
 }

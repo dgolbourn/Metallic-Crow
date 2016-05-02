@@ -7,11 +7,11 @@ namespace display
 class Painter::Impl
 {
 public:
-  Impl(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, SDL_FRect const* original, double angle, SDL_Colour const* modulation);
+  Impl(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, SDL_FRect const* original, double angle, SDL_Colour const* modulation, bool horizontal, bool vertical);
   auto operator()(algorithm::NodeCoordinates const& coords) -> bool;
   auto MovementVectors() -> void;
   auto CollisionBox() -> void;
-  auto StartPosition() -> void;
+  auto StartPosition(bool horizontal, bool vertical) -> void;
   SDL_Renderer* renderer_;
   SDL_Texture* texture_;
   SDL_Rect const* source_;
@@ -35,7 +35,7 @@ auto Painter::Impl::CollisionBox() -> void
   collision_.y = original_.y + .5f * (original_.h - collision_.h);
 }
 
-auto Painter::Impl::StartPosition() -> void
+auto Painter::Impl::StartPosition(bool horizontal, bool vertical) -> void
 {
   float a = std::round((c_ * original_.x + s_ * original_.y) / original_.w);
   float b = std::round((-s_ * original_.x + c_ * original_.y) / original_.h);
@@ -43,14 +43,16 @@ auto Painter::Impl::StartPosition() -> void
   collision.w = collision_.w;
   collision.h = collision_.h;
   static float const sign[] = {0.f, 1.f, -1.f};
-  for(float i : sign)
+  for(float j : sign)
   {
     bool break_flag = false;
-    for(float j : sign)
+    for(float i : sign)
     {
       SDL_FPoint adjust;
-      adjust.x = (a + i) * east_.x + (b + j) * north_.x;
-      adjust.y = (a + i) * east_.y + (b + j) * north_.y;
+      float east = horizontal * (a + i);
+      float north = vertical * (b + j);
+      adjust.x = east * east_.x + north * north_.x;
+      adjust.y = east * east_.y + north * north_.y;
       collision.x = collision_.x - adjust.x;
       collision.y = collision_.y - adjust.y;
       if(sdl::Intersection(&collision, &view_))
@@ -83,7 +85,7 @@ auto Painter::Impl::MovementVectors() -> void
   north_.y = c_ * original_.h;
 }
 
-Painter::Impl::Impl(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, SDL_FRect const* original, double angle, SDL_Colour const* modulation)
+Painter::Impl::Impl(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, SDL_FRect const* original, double angle, SDL_Colour const* modulation, bool horizontal, bool vertical)
 {
   renderer_ = renderer;
   texture_ = texture;
@@ -100,7 +102,7 @@ Painter::Impl::Impl(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* tex
   view_.y = 0.f;
   MovementVectors();
   CollisionBox();
-  StartPosition();
+  StartPosition(horizontal, vertical);
 }
 
 auto Painter::Impl::operator()(algorithm::NodeCoordinates const& coords) -> bool
@@ -133,7 +135,7 @@ auto Painter::operator()(algorithm::NodeCoordinates const& coords) -> bool
   return (*impl_)(coords);
 }
 
-Painter::Painter(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, SDL_FRect const* original, double angle, SDL_Colour const* modulation) : impl_(std::make_shared<Impl>(window, renderer, texture, source, destination, original, angle, modulation))
+Painter::Painter(SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect const* source, SDL_FRect const* destination, SDL_FRect const* original, double angle, SDL_Colour const* modulation, bool horizontal, bool vertical) : impl_(std::make_shared<Impl>(window, renderer, texture, source, destination, original, angle, modulation, horizontal, vertical))
 {
 }
 }

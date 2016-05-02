@@ -24,7 +24,7 @@ namespace game
 class Choice::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path, event::Timeslice& loader);
+  Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path);
   auto Render() -> void;
   auto Choice(std::string const& up, std::string const& down, std::string const& left, std::string const& right, double timer) -> void;
   template<int T> auto Event() -> void;
@@ -60,7 +60,7 @@ public:
   double interval_;
 };
 
-Choice::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path, event::Timeslice& loader) : window_(window), paused_(true), count_(0), queue_(queue)
+Choice::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : window_(window), paused_(true), count_(0), queue_(queue)
 {
   interval_ = lua.Field<double>("interval");
 
@@ -76,7 +76,7 @@ Choice::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue
     for(int i = 0; i < 5; ++i)
     {
       lua::Guard guard = lua.Field(index[i]);
-      icons_[i] = display::MakeAnimation(lua, window_, path, loader);
+      icons_[i] = display::MakeAnimation(lua, window_, path);
       current_icons_[i] = icons_[i].begin();
     }
   }
@@ -166,7 +166,7 @@ auto Choice::Impl::Render() -> void
   {
     if(choices_[i] && (current_icons_[i] != icons_[i].end()))
     {
-      (*current_icons_[i])(display::BoundingBox(), icon_boxes_[i], 0.f, false, 0., current_fade_modulation_);
+      (*current_icons_[i])(display::BoundingBox(), icon_boxes_[i], 0.f, false, false, 0., current_fade_modulation_);
     }
   }
 
@@ -174,7 +174,7 @@ auto Choice::Impl::Render() -> void
   {
     if(choices_[i])
     {
-      text_[i](display::BoundingBox(), text_boxes_[i], 0.f, false, 0., current_modulation_[i]);
+      text_[i](display::BoundingBox(), text_boxes_[i], 0.f, false, false, 0., current_modulation_[i]);
     }
   }
 }
@@ -406,7 +406,7 @@ Choice::operator bool() const
   return static_cast<bool>(impl_);
 }
 
-Choice::Choice(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path, event::Timeslice& loader) : impl_(std::make_shared<Impl>(lua, window, queue, path, loader))
+Choice::Choice(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(lua, window, queue, path))
 {
 }
 }

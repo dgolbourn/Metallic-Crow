@@ -1,7 +1,7 @@
 #include "animation.h"
 namespace display
 {
-auto MakeAnimation(lua::Stack& lua, Window& window, boost::filesystem::path const& path, event::Timeslice& loader) -> Animation
+auto MakeAnimation(lua::Stack& lua, Window& window, boost::filesystem::path const& path) -> Animation
 {
   Animation animation;
   for(int index = 1, end = lua.Size(); index <= end; ++index)
@@ -12,7 +12,7 @@ auto MakeAnimation(lua::Stack& lua, Window& window, boost::filesystem::path cons
 
     {
       lua::Guard guard = lua.Field("clip");
-      animation.emplace_back(path / page, window, loader, BoundingBox(lua));
+      animation.emplace_back(path / page, window, BoundingBox(lua));
     }
   }
   return animation;

@@ -37,7 +37,20 @@ auto Script::Impl::ActorLoad() -> void
   {
     {
       lua::Guard guard = lua_.Get(-1);
-      actor = Actor(lua_, window_, stage->collision_, queue_, stage->world_, path_, loader_);
+      actor = Actor(lua_, window_, stage->collision_, queue_, stage->world_, path_);
+
+      Position order_position;
+      {
+        lua::Guard guard = lua_.Field("order_position");
+        if(lua_.Check())
+        {
+          Position position = actor.Position();
+          order_position.first = lua_.Field<float>(1) - position.first;
+          order_position.second = lua_.Field<float>(2) - position.second;
+        }
+      }
+
+      bool visible = false;
       {
         lua::Guard guard = lua_.Field("game_body");
         if(lua_.Check())
@@ -46,8 +59,25 @@ auto Script::Impl::ActorLoad() -> void
           if(lua_.Check())
           {
             Position position = actor.Position();
-            Order order = {lua_.At<float>(-1), position.second, position.first};
-            stage->scene_.left.insert(Scene::left_value_type(order, actor));
+            Order order = {lua_.At<float>(-1), position.second + order_position.second, position.first + order_position.first};
+            stage->scene_.left.insert(Scene::left_value_type(order, actor, order_position));
+            visible = true;
+          }
+        }
+      }
+      if(visible)
+      {
+        lua::Guard guard = lua_.Field("dynamics_body");
+        if(lua_.Check())
+        {
+          lua::Guard guard = lua_.Field("body");
+          if(lua_.Check())
+          {
+            lua::Guard guard = lua_.Field("velocity");
+            if(lua_.Check())
+            {
+               stage->actives_.emplace(actor);
+            }
           }
         }
       }
@@ -59,10 +89,6 @@ auto Script::Impl::ActorLoad() -> void
     }
 
     stage->actors_.emplace(actor);
-    if(actor.Active())
-    {
-      stage->actives_.emplace(actor);
-    }
   }
   lua::Push(static_cast<lua_State*>(lua_), std::pair<WeakStagePtr, Actor::WeakPtr>(stage, actor));
 }
@@ -146,11 +172,12 @@ auto Script::Impl::ActorPosition() -> void
   {
     Position position = std::make_pair(lua_.At<float>(-2), lua_.At<float>(-1));
     actor.second.Position(position);
-    actor.first->scene_.right.modify_data(actor.first->scene_.right.find(actor.second), 
+    auto iter = actor.first->scene_.right.find(actor.second);
+    actor.first->scene_.right.modify_data(iter, 
         [&](Order& order)
         {
-          order[1] = position.second;
-          order[2] = position.first;
+          order[1] = position.second + iter->info.second;
+          order[2] = position.first + iter->info.first;
         });
   }
 }

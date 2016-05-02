@@ -244,7 +244,7 @@ auto Actor::Impl::Blink() -> void
   eyes_.Expression(open_);
 }
 
-Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, boost::filesystem::path const& path, event::Timeslice& loader) : force_(0.f, 0.f), open_(true), angle_(0.), collision_(collision)
+Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue, dynamics::World& world, collision::Group& collision, boost::filesystem::path const& path) : force_(0.f, 0.f), open_(true), angle_(0.), collision_(collision)
 {
   {
     lua::Guard guard = lua.Field("dynamics_body");
@@ -274,7 +274,7 @@ Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue,
         lua::Guard guard = lua.Field("eyes");
         if(lua.Check())
         {
-          eyes_ = game::Feature(lua, window, path, loader);
+          eyes_ = game::Feature(lua, window, path);
           
           lua::Guard guard = lua.Field("blink");
           if(lua.Check())
@@ -294,11 +294,11 @@ Actor::Impl::Impl(lua::Stack& lua, display::Window& window, event::Queue& queue,
         lua::Guard guard = lua.Field("mouth");
         if(lua.Check())
         {
-          mouth_ = game::Feature(lua, window, path, loader);
+          mouth_ = game::Feature(lua, window, path);
         }
       }
 
-      game_body_ = game::Body(lua, window, path, eyes_, mouth_, loader);
+      game_body_ = game::Body(lua, window, path, eyes_, mouth_);
     
       animation_ = event::Timer(dilation_ * game_body_.Period(), -1);
       queue.Add(function::Bind(&event::Timer::operator(), animation_));
@@ -423,11 +423,6 @@ auto Actor::Impl::Unlink(std::string const& group) -> void
   collision_.Unlink(group, dynamics_body_);
 }
 
-auto Actor::Impl::Active() const -> bool
-{
-  return game_body_ && dynamics_body_ && dynamics_body_.Active();
-}
-
 auto Actor::Position(game::Position const& position) -> void
 {
   impl_->Position(position);
@@ -543,9 +538,9 @@ auto Actor::Render() const -> void
   impl_->Render();
 }
 
-Actor::Actor(lua::Stack& lua, display::Window& window, collision::Group& collision, event::Queue& queue, dynamics::World& world, boost::filesystem::path const& path, event::Timeslice& loader)
+Actor::Actor(lua::Stack& lua, display::Window& window, collision::Group& collision, event::Queue& queue, dynamics::World& world, boost::filesystem::path const& path)
 {
-  impl_ = std::make_shared<Impl>(lua, window, queue, world, collision, path, loader);
+  impl_ = std::make_shared<Impl>(lua, window, queue, world, collision, path);
   impl_->Init(world);
 }
 
@@ -577,10 +572,5 @@ auto Actor::Emit(float r, float g, float b) -> void
 auto Actor::Intrinsic(float r, float g, float b) -> void
 {
   impl_->Intrinsic(r, g, b);
-}
-
-auto Actor::Active() const -> bool
-{
-  return impl_->Active();
 }
 }

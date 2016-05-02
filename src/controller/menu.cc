@@ -24,7 +24,7 @@ namespace game
 class Menu::Impl
 {
 public:
-  Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, event::Timeslice& loader);
+  Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path);
   auto Add(int index, event::Command const& command) -> void;
   auto Previous() -> void;
   auto Next() -> void;
@@ -49,7 +49,7 @@ public:
   display::Modulation active_modulation_;
 };
 
-Menu::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, event::Timeslice& loader) : selection_(0), selections_(0), window_(window), path_(path)
+Menu::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path) : selection_(0), selections_(0), window_(window), path_(path)
 {
   {
     lua::Guard guard = lua.Field("idle_font");
@@ -77,7 +77,7 @@ Menu::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
     clip = display::BoundingBox(lua);
   }
 
-  background_.texture_ = display::Texture(path_ / lua.Field<std::string>("page"), window, loader, clip);
+  background_.texture_ = display::Texture(path_ / lua.Field<std::string>("page"), window, clip);
 
   {
     lua::Guard guard = lua.Field("render_box");
@@ -203,7 +203,7 @@ auto Menu::Impl::Render() -> void
 {
   for(auto& texture : textures_)
   {
-    texture.texture_(display::BoundingBox(), texture.render_box_, 0.f, false, 0., texture.modulation_);
+    texture.texture_(display::BoundingBox(), texture.render_box_, 0.f, false, false, 0., texture.modulation_);
   }
 }
 
@@ -242,7 +242,7 @@ auto Menu::operator()(Options const& options) -> void
   impl_->Choice(options);
 }
 
-Menu::Menu(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, event::Timeslice& loader) : impl_(std::make_shared<Impl>(lua, window, path, loader))
+Menu::Menu(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(lua, window, path))
 {
 }
 }

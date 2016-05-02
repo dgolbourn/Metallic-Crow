@@ -97,7 +97,7 @@ namespace game
 class Controller::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
-  Impl(lua::Stack& lua, event::Queue& queue, event::Timeslice& loader, boost::filesystem::path const& path);
+  Impl(lua::Stack& lua, event::Queue& queue, boost::filesystem::path const& path);
   auto Init() -> void;
   auto Control(float x, float y) -> void;
   auto Look(float x, float y) -> void;
@@ -120,7 +120,6 @@ public:
   auto ChapterEnd() -> void;
 
   event::Queue queue_;
-  event::Timeslice loader_;
   display::Window window_;
   Menu pause_menu_;
   Menu start_menu_;
@@ -161,7 +160,7 @@ auto Controller::Impl::Chapter(int chapter) -> void
   state_ = State::Start;
 }
 
-Controller::Impl::Impl(lua::Stack& lua, event::Queue& queue, event::Timeslice& loader, boost::filesystem::path const& path) : state_(State::Start), queue_(queue), path_(path), sign_(0), loader_(loader)
+Controller::Impl::Impl(lua::Stack& lua, event::Queue& queue, boost::filesystem::path const& path) : state_(State::Start), queue_(queue), path_(path), sign_(0)
 {
   {
     lua::Guard guard = lua.Field("window");
@@ -170,20 +169,20 @@ Controller::Impl::Impl(lua::Stack& lua, event::Queue& queue, event::Timeslice& l
 
   {
     lua::Guard guard = lua.Field("menu");
-    pause_menu_ = Menu(lua, window_, path_, loader_);
+    pause_menu_ = Menu(lua, window_, path_);
   }
 
   pause_menu_({"Continue", "Main Menu"});
-  pause_script_ = Script(path_ / lua.Field<std::string>("pause_menu_script"), window_, queue_, path_, volume_, loader);
+  pause_script_ = Script(path_ / lua.Field<std::string>("pause_menu_script"), window_, queue_, path_, volume_);
 
   {
     lua::Guard guard = lua.Field("menu");
-    start_menu_ = Menu(lua, window_, path_, loader_);
+    start_menu_ = Menu(lua, window_, path_);
   }
 
   start_menu_({"Play", "Chapters", "Load", "Quit"});
   
-  start_script_ = Script(path_ / lua.Field<std::string>("start_menu_script"), window_, queue_, path_, volume_, loader_);
+  start_script_ = Script(path_ / lua.Field<std::string>("start_menu_script"), window_, queue_, path_, volume_);
 
   saves_ = Saves(path_ / lua.Field<std::string>("saves"));
   
@@ -197,14 +196,14 @@ Controller::Impl::Impl(lua::Stack& lua, event::Queue& queue, event::Timeslice& l
 
   {
     lua::Guard guard = lua.Field("menu");
-    chapter_menu_ = Menu(lua, window_, path_, loader_);
+    chapter_menu_ = Menu(lua, window_, path_);
   }
 
   ChapterOptions(chapter_menu_, saves_.Progress(slot_), chapter_names_);
 
   {
     lua::Guard guard = lua.Field("menu");
-    load_menu_ = Menu(lua, window_, path_, loader_);
+    load_menu_ = Menu(lua, window_, path_);
   }
 
   LoadOptions(load_menu_, saves_, chapter_names_);
@@ -269,7 +268,7 @@ auto Controller::Impl::ChapterEnd() -> void
   }
   else
   {
-    story_script_ = Script(chapter_files_[chapter_], window_, queue_, path_, volume_, loader_);
+    story_script_ = Script(chapter_files_[chapter_], window_, queue_, path_, volume_);
     story_script_.Add(function::Bind(&Impl::ChapterEnd, shared_from_this()));
     story_script_.Resume();
   }
@@ -303,7 +302,7 @@ auto Controller::Impl::StartPlay() -> void
   }
   saves_.Play(slot_);
   saves_.Save();
-  story_script_ = Script(chapter_files_[chapter_], window_, queue_, path_, volume_, loader_);
+  story_script_ = Script(chapter_files_[chapter_], window_, queue_, path_, volume_);
   story_script_.Add(function::Bind(&Impl::ChapterEnd, shared_from_this()));
   story_script_.Resume();
 }
@@ -598,7 +597,7 @@ auto Controller::Impl::Render() -> void
   }
 }
 
-Controller::Controller(lua::Stack& lua, event::Queue& queue, event::Timeslice& loader, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(lua, queue, loader, path))
+Controller::Controller(lua::Stack& lua, event::Queue& queue, boost::filesystem::path const& path) : impl_(std::make_shared<Impl>(lua, queue, path))
 {
   impl_->Init();
 }

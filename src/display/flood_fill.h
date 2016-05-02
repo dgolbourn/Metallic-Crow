@@ -14,25 +14,33 @@ private:
   Node node_;
   NodeSet set_;
   NodeCoordinates coords_;
-  
+  bool horizontal_;
+  bool vertical_;
+
   auto Fill() -> void
   {
     if(set_.insert(coords_).second)
     {
       if(node_(coords_))
       {
-        coords_.first -= 1; Fill();
-        coords_.first += 2; Fill();
-        coords_.first -= 1;
-        coords_.second += 1; Fill();
-        coords_.second -= 2; Fill();
-        coords_.second += 1;
+        if(horizontal_)
+        {
+          coords_.first -= 1; Fill();
+          coords_.first += 2; Fill();
+          coords_.first -= 1;
+        }
+        if(vertical_)
+        {
+          coords_.second += 1; Fill();
+          coords_.second -= 2; Fill();
+          coords_.second += 1;
+        }
       }
     }
   }
 
 public:
-  FloodFill::FloodFill(Node&& node) : node_(std::move(node)), coords_(0, 0)
+  FloodFill::FloodFill(Node&& node, bool horizontal, bool vertical) : node_(std::move(node)), coords_(0, 0), horizontal_(horizontal), vertical_(vertical)
   {
     Fill();
   }

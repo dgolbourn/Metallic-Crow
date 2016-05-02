@@ -5,14 +5,13 @@
 #include <memory>
 #include "queue.h"
 #include "weak_ptr.h"
-#include "timeslice.h"
 namespace game
 {
 class Choice
 {
 public:
   Choice() = default;
-  Choice(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path, event::Timeslice& loader);
+  Choice(lua::Stack& lua, display::Window& window, event::Queue& queue, boost::filesystem::path const& path);
   auto operator()(std::string const& up, std::string const& down, std::string const& left, std::string const& right, double timer) -> void;
   auto Up(event::Command const& command) -> void;
   auto Down(event::Command const& command) -> void;

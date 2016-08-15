@@ -100,7 +100,7 @@ auto BodyDefinition(dynamics::WorldImpl const& world, lua::Stack& lua, float32 d
   return body_def;
 }
 
-auto FixtureDefinition(float32 area, float32 mass, float32 friction, float32 restitution) -> b2FixtureDef
+auto FixtureDefinition(float32 area, float32 mass, float32 friction, float32 restitution, bool sensor) -> b2FixtureDef
 {
   b2FixtureDef fixture;
   float32 density = 0.f;
@@ -117,7 +117,7 @@ auto FixtureDefinition(float32 area, float32 mass, float32 friction, float32 res
   }
   else
   {
-    fixture.isSensor = false;
+    fixture.isSensor = sensor;
     fixture.friction = friction;
     fixture.restitution = restitution;
   }
@@ -224,7 +224,43 @@ BodyImpl::BodyImpl(lua::Stack& lua, World& world)
   body_ = world.impl_->world_.CreateBody(&body_def);
   body_->SetUserData(this);
 
-  b2FixtureDef fixture = FixtureDefinition(area, lua.Field<float>("mass"), lua.Field<float>("friction"), lua.Field<float>("restitution"));
+  bool sensor = false;
+  {
+    lua::Guard guard = lua.Field("sensor");
+    if(lua.Check())
+    {
+      lua.Pop(sensor);
+    }
+  }
+
+  float mass = 0.f;
+  {
+    lua::Guard guard = lua.Field("mass");
+    if(lua.Check())
+    {
+      lua.Pop(mass);
+    }
+  }
+
+  float friction = 0.f;
+  {
+    lua::Guard guard = lua.Field("friction");
+    if(lua.Check())
+    {
+      lua.Pop(friction);
+    }
+  }
+
+  float restitution = 0.f;
+  {
+    lua::Guard guard = lua.Field("restitution");
+    if(lua.Check())
+    {
+      lua.Pop(restitution);
+    }
+  }
+
+  b2FixtureDef fixture = FixtureDefinition(area, mass, friction, restitution, sensor);
 
   for(auto& shape : shapes)
   {

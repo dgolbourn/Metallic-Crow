@@ -10,6 +10,7 @@ class Exception : virtual public exception::Exception
 {
 public:
   typedef boost::error_info<class What, std::string> What;
+  char const* what() const noexcept {return "SDL Exception";}
 };
 }
 #endif

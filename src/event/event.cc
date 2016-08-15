@@ -62,6 +62,8 @@ public:
   auto ChoiceDown(event::Command const& command) -> void;
   auto ChoiceLeft(event::Command const& command) -> void;
   auto ChoiceRight(event::Command const& command) -> void;
+  auto ActionLeft(event::Command const& command) -> void;
+  auto ActionRight(event::Command const& command) -> void;
   auto Select(event::Command const& command) -> void;
   auto Back(event::Command const& command) -> void;
   auto Quit(event::Command const& command) -> void;
@@ -76,6 +78,8 @@ public:
   Signal quit_;
   Signal back_;
   Signal select_;
+  Signal action_left_;
+  Signal action_right_;
   SDL_Scancode key_move_up_;
   SDL_Scancode key_move_down_;
   SDL_Scancode key_move_left_;
@@ -91,6 +95,8 @@ public:
   SDL_Scancode key_quit_;
   SDL_Scancode key_back_;
   SDL_Scancode key_select_;
+  SDL_Scancode key_action_left_;
+  SDL_Scancode key_action_right_;
   ControllerStateMap controllers_;
   float update_offset_;
   float update_scale_;
@@ -163,6 +169,16 @@ auto Event::Impl::ChoiceRight(event::Command const& command) -> void
   choice_right_.Add(command);
 }
 
+auto Event::Impl::ActionLeft(event::Command const& command) -> void
+{
+  action_left_.Add(command);
+}
+
+auto Event::Impl::ActionRight(event::Command const& command) -> void
+{
+  action_right_.Add(command);
+}
+
 auto Event::Impl::Select(event::Command const& command) -> void
 {
   select_.Add(command);
@@ -194,6 +210,8 @@ Event::Impl::Impl(lua::Stack& lua) : sdl_(SDL_INIT_EVENTS | SDL_INIT_GAMECONTROL
     key_choice_down_ = GetScanCodeField(lua, "choice_down");
     key_choice_left_ = GetScanCodeField(lua, "choice_left");
     key_choice_right_ = GetScanCodeField(lua, "choice_right");
+    key_action_left_ = GetScanCodeField(lua, "action_left");
+    key_action_right_ = GetScanCodeField(lua, "action_right");
     key_select_ = GetScanCodeField(lua, "select");
     key_back_ = GetScanCodeField(lua, "back");
 
@@ -244,6 +262,8 @@ auto Event::Impl::Check() -> void
   bool key_quit = false;
   bool key_back = false;
   bool key_select = false;
+  bool key_action_left = false;
+  bool key_action_right = false;
 
   SDL_Event event;
   while(SDL_PollEvent(&event))
@@ -312,6 +332,14 @@ auto Event::Impl::Check() -> void
         else if(code == key_choice_right_)
         {
           key_choice_right = true;
+        }       
+        else if(code == key_action_left_)
+        {
+          key_action_left = true;
+        }
+        else if(code == key_action_right_)
+        {
+          key_action_right = true;
         }
         else if(code == key_select_)
         {
@@ -366,6 +394,14 @@ auto Event::Impl::Check() -> void
         {
           key_look_state_right_ = false;
           key_look = true;
+        }       
+        else if(code == key_action_left_)
+        {
+          key_action_left = true;
+        }
+        else if(code == key_action_right_)
+        {
+          key_action_right = true;
         }
       }
       break;
@@ -414,6 +450,25 @@ auto Event::Impl::Check() -> void
         break;
       case SDL_CONTROLLER_BUTTON_START:
         key_select = true;
+        break;
+      case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+        key_action_left = true;
+        break;
+      case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+        key_action_right = true;
+        break;
+      default:
+        break;
+      }
+      break;
+    case SDL_CONTROLLERBUTTONUP:
+      switch(event.cbutton.button)
+      {
+      case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+        key_action_left = true;
+        break;
+      case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+        key_action_right = true;
         break;
       default:
         break;
@@ -494,6 +549,14 @@ auto Event::Impl::Check() -> void
   else if(key_choice_right)
   {
     choice_right_();
+  }
+  else if(key_action_left)
+  {
+    action_left_();
+  }
+  else if(key_action_right)
+  {
+    action_right_();
   }
   else if(key_select)
   {
@@ -805,6 +868,16 @@ auto Event::ChoiceLeft(event::Command const& command) -> void
 auto Event::ChoiceRight(event::Command const& command) -> void
 {
   impl_->ChoiceRight(command);
+}
+
+auto Event::ActionLeft(event::Command const& command) -> void
+{
+  impl_->ActionLeft(command);
+}
+
+auto Event::ActionRight(event::Command const& command) -> void
+{
+  impl_->ActionRight(command);
 }
 
 auto Event::Select(event::Command const& command) -> void

@@ -18,6 +18,8 @@ public:
   auto ChoiceDown(event::Command const& command) -> void;
   auto ChoiceLeft(event::Command const& command) -> void;
   auto ChoiceRight(event::Command const& command) -> void;
+  auto ActionLeft(event::Command const& command) -> void;
+  auto ActionRight(event::Command const& command) -> void;
   auto Select(event::Command const& command) -> void;
   auto Back(event::Command const& command) -> void;
   auto Quit(event::Command const& command) -> void;

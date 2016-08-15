@@ -53,6 +53,8 @@ auto main(int argc, char* argv[]) -> int
       event.ChoiceDown(function::Bind(&game::Controller::ChoiceDown, controller));
       event.ChoiceLeft(function::Bind(&game::Controller::ChoiceLeft, controller));
       event.ChoiceRight(function::Bind(&game::Controller::ChoiceRight, controller));
+      event.ActionLeft(function::Bind(&game::Controller::ActionLeft, controller));
+      event.ActionRight(function::Bind(&game::Controller::ActionRight, controller));
 
       while(run)
       {

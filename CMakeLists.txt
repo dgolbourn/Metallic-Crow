@@ -35,6 +35,7 @@ set (CONFIGURATION_SOURCES
     "${PROJECT_SOURCE_DIR}/src/configuration/lua_stack_impl.h"
     "${PROJECT_SOURCE_DIR}/src/configuration/lua_command.cc"
     "${PROJECT_SOURCE_DIR}/src/configuration/lua_command.h"
+	"${PROJECT_SOURCE_DIR}/src/configuration/lua_data.h"
     "${PROJECT_SOURCE_DIR}/src/configuration/lua_guard.cc"
     "${PROJECT_SOURCE_DIR}/src/configuration/lua_guard.h"
     "${PROJECT_SOURCE_DIR}/src/configuration/parse.cc"
@@ -139,9 +140,7 @@ set (EVENT_SOURCES
     "${PROJECT_SOURCE_DIR}/src/event/sync.cc"
     "${PROJECT_SOURCE_DIR}/src/event/sync.h"
     "${PROJECT_SOURCE_DIR}/src/event/timer.cc"
-    "${PROJECT_SOURCE_DIR}/src/event/timer.h"
-    "${PROJECT_SOURCE_DIR}/src/event/timeslice.cc"
-    "${PROJECT_SOURCE_DIR}/src/event/timeslice.h")
+    "${PROJECT_SOURCE_DIR}/src/event/timer.h")
 
 source_group ("Source Files\\event" FILES ${EVENT_SOURCES})
 

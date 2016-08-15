@@ -19,6 +19,8 @@ public:
   auto ChoiceDown() -> void;
   auto ChoiceLeft() -> void;
   auto ChoiceRight() -> void;
+  auto ActionLeft() -> void;
+  auto ActionRight() -> void;
   auto Select() -> void;
   auto Back() -> void;
   auto Add(event::Command const& command) -> void;

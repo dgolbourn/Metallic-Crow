@@ -142,6 +142,16 @@ auto Script::Impl::ChoiceRight() -> void
   }
 }
 
+auto Script::Impl::ActionLeft() -> void
+{
+  Call("action_left");
+}
+
+auto Script::Impl::ActionRight() -> void
+{
+  Call("action_right");
+}
+
 auto Script::Impl::Control(float x, float y) -> void
 {
   lua::Guard guard0 = lua_.Get("package");
@@ -208,6 +218,16 @@ auto Script::ChoiceLeft() -> void
 auto Script::ChoiceRight() -> void
 {
   impl_->ChoiceRight();
+}
+
+auto Script::ActionLeft() -> void
+{
+  impl_->ActionLeft();
+}
+
+auto Script::ActionRight() -> void
+{
+  impl_->ActionRight();
 }
 
 auto Script::Control(float x, float y) -> void

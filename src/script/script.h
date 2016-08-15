@@ -20,6 +20,8 @@ public:
   auto ChoiceDown() -> void;
   auto ChoiceLeft() -> void;
   auto ChoiceRight() -> void;
+  auto ActionLeft() -> void;
+  auto ActionRight() -> void;
   auto Control(float x, float y) -> void;
   auto Look(float x, float y) -> void;
   auto Add(event::Command const& command) -> void;

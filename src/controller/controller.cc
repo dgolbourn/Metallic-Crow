@@ -105,12 +105,15 @@ public:
   auto ChoiceDown() -> void;
   auto ChoiceLeft() -> void;
   auto ChoiceRight() -> void;
+  auto ActionLeft() -> void;
+  auto ActionRight() -> void;
   auto Select() -> void;
   auto Back() -> void;
   auto Render() -> void;
   auto Add(event::Command const& command) -> void;
   auto PauseContinue() -> void;
   auto PauseMainMenu() -> void;
+  auto PauseQuit() -> void;
   auto StartPlay() -> void;
   auto StartChooseChapter() -> void;
   auto StartLoad() -> void;
@@ -172,7 +175,7 @@ Controller::Impl::Impl(lua::Stack& lua, event::Queue& queue, boost::filesystem::
     pause_menu_ = Menu(lua, window_, path_);
   }
 
-  pause_menu_({"Continue", "Main Menu"});
+  pause_menu_({"Continue", "Quit to Menu", "Quit to Desktop"});
   pause_script_ = Script(path_ / lua.Field<std::string>("pause_menu_script"), window_, queue_, path_, volume_);
 
   {
@@ -180,7 +183,7 @@ Controller::Impl::Impl(lua::Stack& lua, event::Queue& queue, boost::filesystem::
     start_menu_ = Menu(lua, window_, path_);
   }
 
-  start_menu_({"Play", "Chapters", "Load", "Quit"});
+  start_menu_({"Play", "Chapters", "Load", "Quit to Desktop"});
   
   start_script_ = Script(path_ / lua.Field<std::string>("start_menu_script"), window_, queue_, path_, volume_);
 
@@ -236,6 +239,7 @@ auto Controller::Impl::Init() -> void
 
   pause_menu_.Add(0, function::Bind(&Impl::PauseContinue, shared_from_this()));
   pause_menu_.Add(1, function::Bind(&Impl::PauseMainMenu, shared_from_this()));
+  pause_menu_.Add(2, function::Bind(&Impl::PauseQuit, shared_from_this()));
 
   start_menu_.Add(0, function::Bind(&Impl::StartPlay, shared_from_this()));
   start_menu_.Add(1, function::Bind(&Impl::StartChooseChapter, shared_from_this()));
@@ -287,6 +291,12 @@ auto Controller::Impl::PauseMainMenu() -> void
   state_ = State::Start;
   pause_script_.Pause();
   start_script_.Resume();
+}
+
+auto Controller::Impl::PauseQuit() -> void
+{
+  saves_.Stop();
+  signal_();
 }
 
 auto Controller::Impl::StartPlay() -> void
@@ -476,6 +486,38 @@ auto Controller::Impl::ChoiceLeft() -> void
   }
 }
 
+auto Controller::Impl::ActionLeft() -> void
+{
+  switch(state_)
+  {
+  default:
+  case State::Start:
+  case State::Pause:
+  case State::Chapter:
+  case State::Load:
+    break;
+  case State::Story:
+    story_script_.ActionLeft();
+    break;
+  }
+}
+
+auto Controller::Impl::ActionRight() -> void
+{
+  switch(state_)
+  {
+  default:
+  case State::Start:
+  case State::Pause:
+  case State::Chapter:
+  case State::Load:
+    break;
+  case State::Story:
+    story_script_.ActionRight();
+    break;
+  }
+}
+
 auto Controller::Impl::ChoiceRight() -> void
 {
   switch(state_)
@@ -630,6 +672,16 @@ auto Controller::ChoiceLeft() -> void
 auto Controller::ChoiceRight() -> void
 {
   impl_->ChoiceRight();
+}
+
+auto Controller::ActionLeft() -> void
+{
+  impl_->ActionLeft();
+}
+
+auto Controller::ActionRight() -> void
+{
+  impl_->ActionRight();
 }
 
 auto Controller::Select() -> void

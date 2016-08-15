@@ -7,6 +7,8 @@ namespace exception
 {
 class Exception : virtual public std::exception, virtual public boost::exception
 {
+public:
+    typedef boost::error_info<class Cause, std::exception_ptr> Cause;
 };
 }
 #endif

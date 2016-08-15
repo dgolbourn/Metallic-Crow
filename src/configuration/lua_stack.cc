@@ -8,6 +8,31 @@
 #include "lua_data.h"
 namespace
 {
+auto Trace(lua_State* state) -> std::string
+{
+  lua_Debug ar;
+  int level = 0; 
+  std::stringstream stream;
+  while(lua_getstack(state, level, &ar))
+  {
+    if(0 == lua_getinfo(state, "Sln", &ar))
+    {
+      BOOST_THROW_EXCEPTION(lua::Exception());
+    }
+    if(level > 0)
+    {
+      stream << "\n";
+    }
+    stream << ar.short_src << "(" << ar.currentline << ")";
+    if(ar.name)
+    {
+      stream << ":" << ar.name;
+    }
+    ++level;
+  }
+  return stream.str();
+}
+
 auto Path(lua_State* state, boost::filesystem::path const& path) -> void
 {
   std::stringstream stream;
@@ -38,7 +63,8 @@ auto PopException(lua_State* state) -> void
   if(exception)
   {
     lua_pop(state, 1);
-    std::rethrow_exception(exception);
+    BOOST_THROW_EXCEPTION(lua::Exception()
+      << exception::Exception::Cause(exception));
   }
 }
 
@@ -64,12 +90,12 @@ auto InitState(boost::filesystem::path const& path) -> lua_State*
   lua_State* state = luaL_newstate();
   if(state == nullptr)
   {
-    BOOST_THROW_EXCEPTION(lua::Exception());
+    BOOST_THROW_EXCEPTION(lua::Exception() << lua::Exception::Trace(Trace(state)));
   }
 
   if(lua_checkstack(state, 256) == 0)
   {
-    BOOST_THROW_EXCEPTION(lua::Exception());
+    BOOST_THROW_EXCEPTION(lua::Exception() << lua::Exception::Trace(Trace(state)));
   }
 
   luaL_openlibs(state);
@@ -116,18 +142,29 @@ auto Event(lua_State* state) noexcept -> int
     }
 
     auto iter = ptr->map_.find(name);
-    if(iter != ptr->map_.end())
+    if(iter == ptr->map_.end())
     {
-      if(!iter->second())
-      {
-        ptr->map_.erase(iter);
-      }
+      BOOST_THROW_EXCEPTION(lua::Exception());
+    }
+    if(!iter->second())
+    {
+      ptr->map_.erase(iter);
     }
     return out;
   }
   catch(...)
   {
-    lua::Push(state, std::current_exception());
+    std::exception_ptr ptr = std::current_exception();
+    try {
+       BOOST_THROW_EXCEPTION(lua::Exception()
+              << lua::Exception::Trace(Trace(state))
+              << exception::Exception::Cause(ptr));
+    }
+    catch(...) 
+    {
+       ptr = std::current_exception();
+    }
+    lua::Push(state, std::move(ptr));
   }
   return lua_error(state);
 }
@@ -169,7 +206,7 @@ auto StackImpl::Load(boost::filesystem::path const& file) -> void
     }
     else
     {
-      BOOST_THROW_EXCEPTION(Exception());
+      BOOST_THROW_EXCEPTION(Exception() << Exception::Trace(::Trace(state_)));
     }
   }
 }
@@ -205,7 +242,7 @@ auto StackImpl::Call(int in, int out) -> void
     }
     else
     {
-      BOOST_THROW_EXCEPTION(Exception());
+      BOOST_THROW_EXCEPTION(Exception() << lua::Exception::Trace(::Trace(state_)));
     }
   }
 }
@@ -217,7 +254,7 @@ auto StackImpl::Pop(event::Command& out) -> void
   if(!lua_isfunction(state_, -1))
   {
     lua_pop(state_, 1);
-    BOOST_THROW_EXCEPTION(Exception());
+    BOOST_THROW_EXCEPTION(Exception() << lua::Exception::Trace(::Trace(state_)));
   }
   
   lua_pushvalue(state_, -1);
@@ -234,7 +271,7 @@ auto StackImpl::Pop(int& out) -> void
   lua_pop(state_, 1);
   if(!ret)
   {
-    BOOST_THROW_EXCEPTION(Exception());
+    BOOST_THROW_EXCEPTION(Exception() << lua::Exception::Trace(::Trace(state_)));
   }
 }
 
@@ -247,7 +284,7 @@ auto StackImpl::Pop(float& out) -> void
   lua_pop(state_, 1);
   if(!ret)
   {
-    BOOST_THROW_EXCEPTION(Exception());
+    BOOST_THROW_EXCEPTION(Exception() << lua::Exception::Trace(::Trace(state_)));
   }
 }
 
@@ -260,7 +297,7 @@ auto StackImpl::Pop(double& out) -> void
   lua_pop(state_, 1);
   if(!ret)
   {
-    BOOST_THROW_EXCEPTION(Exception());
+    BOOST_THROW_EXCEPTION(Exception() << lua::Exception::Trace(::Trace(state_)));
   }
 }
 
@@ -271,7 +308,7 @@ auto StackImpl::Pop(std::string& out) -> void
   if(!lua_isstring(state_, -1))
   {
     lua_pop(state_, 1);
-    BOOST_THROW_EXCEPTION(Exception());
+    BOOST_THROW_EXCEPTION(Exception() << lua::Exception::Trace(::Trace(state_)));
   }
   out = std::string(lua_tostring(state_, -1));
   lua_pop(state_, 1);
@@ -290,7 +327,7 @@ auto StackImpl::Pop(bool& out) -> void
   if(!lua_isboolean(state_, -1))
   {
     lua_pop(state_, 1);
-    BOOST_THROW_EXCEPTION(Exception());
+    BOOST_THROW_EXCEPTION(Exception() << lua::Exception::Trace(::Trace(state_)));
   }
   if(lua_toboolean(state_, -1))
   {
@@ -312,7 +349,7 @@ auto StackImpl::Add(event::Command const& command, std::string const& name, int 
   PushToLibrary(state_, name, library);
   if(!map_.emplace(name, command).second)
   {
-    BOOST_THROW_EXCEPTION(Exception());
+    BOOST_THROW_EXCEPTION(Exception() << lua::Exception::Trace(::Trace(state_)));
   }
 }
 

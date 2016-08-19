@@ -18,7 +18,8 @@ public:
   auto Next() -> void;
   auto Select() -> void;
   auto Render() -> void;
-  typedef std::vector<std::string> Options;
+  typedef std::pair<std::string, bool> Option;
+  typedef std::vector<Option> Options;
   auto operator()(Options const& options) -> void;
   auto operator[](int index) -> void;
 private:

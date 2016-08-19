@@ -22,6 +22,7 @@ public:
   auto Stop() -> void;
   auto Save() -> void;
   auto Current(int slot, int current) -> void;
+  auto Delete(int slot) -> void;
   explicit operator bool() const;
 private:
   class Impl;

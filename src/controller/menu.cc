@@ -15,7 +15,7 @@ struct Texture
   display::Modulation modulation_;
 };
 
-typedef std::deque<Texture> Textures;
+typedef std::vector<Texture> Textures;
 typedef std::map<int, event::Signal> Signals;
 }
 
@@ -37,16 +37,19 @@ public:
   Texture background_;
   Textures idle_text_;
   Textures active_text_;
+  Textures pinned_text_;
   Textures textures_;
   Signals signals_;
   int selection_;
   int selections_;
   sdl::Font idle_font_;
   sdl::Font active_font_;
+  sdl::Font pinned_font_;
   display::Window window_;
   boost::filesystem::path path_;
   display::Modulation idle_modulation_;
   display::Modulation active_modulation_;
+  display::Modulation pinned_modulation_;
 };
 
 Menu::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path) : selection_(0), selections_(0), window_(window), path_(path)
@@ -62,6 +65,11 @@ Menu::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
   }
 
   {
+    lua::Guard guard = lua.Field("pinned_font");
+    pinned_font_ = sdl::Font(lua, path);
+  }
+
+  {
     lua::Guard guard = lua.Field("active_font_modulation");
     active_modulation_ = display::Modulation(lua);
   }
@@ -69,6 +77,11 @@ Menu::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
   {
     lua::Guard guard = lua.Field("idle_font_modulation");
     idle_modulation_ = display::Modulation(lua);
+  }
+
+  {
+    lua::Guard guard = lua.Field("pinned_font_modulation");
+    pinned_modulation_ = display::Modulation(lua);
   }
 
   display::BoundingBox clip;
@@ -93,27 +106,52 @@ Menu::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
 auto Menu::Impl::Choice(Options const& options) -> void
 {
   selection_ = 0;
-  selections_ = static_cast<int>(options.size());
+  selections_ = 0;
 
   idle_text_.clear();
   active_text_.clear();
+  pinned_text_.clear();
 
-  for(std::string const& option : options)
+  for(Option const& option : options)
   {
-    Texture idle;
-    idle.texture_ = display::Texture(option, idle_font_, window_, display::BoundingBox());
-    idle.modulation_ = idle_modulation_;
-    idle_text_.push_back(idle);
+    if(option.second)
+    {
+      Texture pinned;
+      pinned.texture_ = display::Texture(option.first, pinned_font_, window_, display::BoundingBox());
+      pinned.modulation_ = pinned_modulation_;
+      pinned_text_.push_back(pinned);
+    }
+    else
+    {
+      ++selections_;
 
-    Texture active;
-    active.texture_ = display::Texture(option, active_font_, window_, display::BoundingBox());
-    active.modulation_ = active_modulation_;
-    active_text_.push_back(active);
+      Texture idle;
+      idle.texture_ = display::Texture(option.first, idle_font_, window_, display::BoundingBox());
+      idle.modulation_ = idle_modulation_;
+      idle_text_.push_back(idle);
+
+      Texture active;
+      active.texture_ = display::Texture(option.first, active_font_, window_, display::BoundingBox());
+      active.modulation_ = active_modulation_;
+      active_text_.push_back(active);
+    }
   }
 
-  float line_spacing = 1.5f * idle_font_.LineSpacing();
   float height = 0.f;
-  for(auto& text : idle_text_)
+  
+  float line_spacing = 1.5f * idle_font_.LineSpacing();
+  for(auto const& text : idle_text_)
+  {
+    display::Shape shape = text.texture_.Shape();
+    float current = 0.f;
+    while(current < shape.second)
+    {
+      current += line_spacing - shape.second;
+    }
+    height += current;
+  }
+  line_spacing = 1.5f * pinned_font_.LineSpacing();
+  for(auto const& text : pinned_text_)
   {
     display::Shape shape = text.texture_.Shape();
     float current = 0.f;
@@ -125,11 +163,24 @@ auto Menu::Impl::Choice(Options const& options) -> void
   }
 
   float y = background_.render_box_.y() + .5f * (background_.render_box_.h() - height);
-  for(auto& text : idle_text_)
+  auto idle_iter = idle_text_.begin();
+  auto pinned_iter = pinned_text_.begin();
+  for(Option const& option : options)
   {
-    display::Shape shape = text.texture_.Shape();
-    text.render_box_ = display::BoundingBox(background_.render_box_.x() + .5f * (background_.render_box_.w() - shape.first), y, shape.first, shape.second);
-
+    display::Shape shape;
+    if(option.second)
+    {
+      shape = pinned_iter->texture_.Shape();
+      pinned_iter->render_box_ = display::BoundingBox(background_.render_box_.x() + .5f * (background_.render_box_.w() - shape.first), y, shape.first, shape.second);
+      ++pinned_iter;
+    }
+    else
+    {
+      shape = idle_iter->texture_.Shape();
+      idle_iter->render_box_ = display::BoundingBox(background_.render_box_.x() + .5f * (background_.render_box_.w() - shape.first), y, shape.first, shape.second);
+      ++idle_iter;
+    }
+    
     float current = line_spacing;
     while(current < shape.second)
     {
@@ -150,13 +201,24 @@ auto Menu::Impl::Choice(Options const& options) -> void
 
 auto Menu::Impl::SetUp() -> void
 {
-  textures_ = idle_text_;
+  textures_.clear();
+  textures_.push_back(background_);
+  for(auto const& pinned : pinned_text_)
+  {
+    textures_.push_back(pinned);
+  }
+  for(int i = 0; i < selection_; ++i)
+  {
+    textures_.push_back(idle_text_[i]);
+  }
+  for(int i = selection_ + 1; i < selections_; ++i)
+  {
+    textures_.push_back(idle_text_[i]);
+  }
   if(selections_ > 0)
   {
-    textures_[selection_] = active_text_[selection_];
-    std::swap(textures_[selection_], textures_.back());
+    textures_.push_back(active_text_[selection_]);
   }
-  textures_.push_front(background_);
 }
 
 auto Menu::Impl::Add(int index, event::Command const& command) -> void

@@ -30,13 +30,14 @@ public:
   auto Current(int slot, int current) -> void;
   auto Check(int slot) const -> bool;
   auto Save() -> void;
-  SaveArray saves_;
+  auto Delete(int slot) ->void;
   SaveArray::size_type slot_;
+  SaveArray saves_;
   boost::filesystem::path file_;
   bool playing_;
 };
 
-Saves::Impl::Impl(boost::filesystem::path const& file) : file_(file), slot_(0), playing_(false)
+Saves::Impl::Impl(boost::filesystem::path const& file) : file_(file), playing_(false)
 {
   lua::Stack lua("");
   lua.Load(file);
@@ -159,6 +160,14 @@ auto Saves::Impl::LastPlayed() const -> int
   return slot_;
 }
 
+auto Saves::Impl::Delete(int slot) -> void
+{
+  auto& saves = saves_.at(slot);
+  std::get<0>(saves) = 0;
+  std::get<1>(saves) = 0;
+  std::get<2>(saves) = "";
+}
+
 auto Saves::Playing() const -> bool
 {
   return impl_->Playing();
@@ -212,6 +221,11 @@ Saves::operator bool() const
 auto Saves::Save() -> void
 {
   impl_->Save();
+}
+
+auto Saves::Delete(int slot) -> void
+{
+  impl_->Delete(slot);
 }
 
 Saves::Saves(boost::filesystem::path const& file) : impl_(std::make_shared<Impl>(file))

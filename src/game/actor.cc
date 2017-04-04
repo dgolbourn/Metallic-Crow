@@ -165,11 +165,11 @@ auto Actor::Impl::Impulse(game::Position const& impulse) -> void
   }
 }
 
-auto Actor::Impl::Body(std::string const& expression, bool left_facing) -> void
+auto Actor::Impl::Body(std::string const& expression, int direction) -> void
 {
   if(game_body_)
   {
-    animation_.Reset(dilation_ * game_body_.Expression(expression, left_facing), -1);
+    animation_.Reset(dilation_ * game_body_.Expression(expression, direction), -1);
   }
 }
 
@@ -197,11 +197,11 @@ auto Actor::Impl::Body(std::string const& expression) -> void
   }
 }
 
-auto Actor::Impl::Body(bool left_facing) -> void
+auto Actor::Impl::Body(int direction) -> void
 {
   if(game_body_)
   {
-    animation_.Reset(dilation_ * game_body_.Expression(left_facing), -1);
+    animation_.Reset(dilation_ * game_body_.Expression(direction), -1);
   }
 }
 
@@ -468,9 +468,9 @@ auto Actor::Resume() -> void
   impl_->Resume();
 }
 
-auto Actor::Body(std::string const& expression, bool left_facing) -> void
+auto Actor::Body(std::string const& expression, int direction) -> void
 {
-  impl_->Body(expression, left_facing);
+  impl_->Body(expression, direction);
 }
 
 auto Actor::Body(std::string const& expression) -> void
@@ -478,9 +478,9 @@ auto Actor::Body(std::string const& expression) -> void
   impl_->Body(expression);
 }
 
-auto Actor::Body(bool left_facing) -> void
+auto Actor::Body(int direction) -> void
 {
-  impl_->Body(left_facing);
+  impl_->Body(direction);
 }
 
 auto Actor::Eyes(std::string const& expression) -> void

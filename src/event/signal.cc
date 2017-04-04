@@ -1,11 +1,12 @@
 #include "signal.h"
 #include <list>
 #include "bind.h"
+#include "for_each.h"
 namespace event
 {
 typedef std::list<Command> CommandList;
 
-class Signal::Impl final : public std::enable_shared_from_this<Signal::Impl>
+class Signal::Impl final : public std::enable_shared_from_this<Impl>
 {
 public:
   Signal::Impl();
@@ -28,17 +29,7 @@ auto Signal::Impl::Notify() -> void
   if(!active_)
   {
     active_ = true;
-    for(auto iter = commands_.begin(); iter != commands_.end();)
-    {
-      if((*iter)())
-      {
-        ++iter;
-      }
-      else
-      {
-        iter = commands_.erase(iter);
-      }
-    }
+    for_each(commands_);
     active_ = false;
 
     if(clear_)

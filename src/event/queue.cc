@@ -1,5 +1,6 @@
 #include "queue.h"
 #include <list>
+#include "for_each.h"
 namespace event
 {
 class Queue::Impl
@@ -17,17 +18,7 @@ auto Queue::Impl::Add(Command const& command) -> void
 
 auto Queue::Impl::Check() -> void
 {
-  for(auto iter = commands_.begin(); iter != commands_.end();)
-  {
-    if((*iter)())
-    {
-      ++iter;
-    }
-    else
-    {
-      iter = commands_.erase(iter);
-    }
-  }
+  for_each(commands_);
 }
 
 auto Queue::Add(Command const& command) -> void

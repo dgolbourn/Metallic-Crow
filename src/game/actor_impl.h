@@ -14,9 +14,9 @@ public:
   auto Render() const -> void;
   auto Pause() -> void;
   auto Resume() -> void;
-  auto Body(std::string const& expression, bool left_facing) -> void;
+  auto Body(std::string const& expression, int direction) -> void;
   auto Body(std::string const& expression) -> void;
-  auto Body(bool left_facing) -> void;
+  auto Body(int direction) -> void;
   auto Eyes(std::string const& expression) -> void;
   auto Mouth(std::string const& expression) -> void;
   auto Mouth(int open) -> void;

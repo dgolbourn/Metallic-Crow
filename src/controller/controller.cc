@@ -9,6 +9,7 @@
 #include <sstream>
 #include <algorithm>
 #include "sound.h"
+#include "player.h"
 namespace
 {
 enum class State : int
@@ -18,7 +19,8 @@ enum class State : int
   Load,
   Pause,
   Delete,
-  Story
+  Story,
+  Player
 };
 
 typedef std::vector<std::string> Strings;
@@ -74,6 +76,7 @@ auto FirstStartOptions(game::Menu& menu) -> void
 {
   game::Menu::Options options;
   options.push_back({ "Begin", false});
+  options.push_back({ "Controllers", false});
   options.push_back({ "Quit to Desktop", false});
   menu(options);
 }
@@ -85,6 +88,7 @@ auto ContinueStartOptions(game::Menu& menu) -> void
   options.push_back({ "Continue From Chapter", false});
   options.push_back({ "Start Again (current progress will be lost)", false });
   options.push_back({ "Load Saved Game / Start New Game", false});
+  options.push_back({ "Controllers", false});
   options.push_back({ "Quit to Desktop", false});
   menu(options);
 }
@@ -96,6 +100,7 @@ auto StartFullOptions(game::Menu& menu) -> void
   options.push_back({ "Continue From Chapter", false});
   options.push_back({ "Start Again (current progress will be lost)", false });
   options.push_back({ "Load Saved Game", false});
+  options.push_back({ "Controllers", false});
   options.push_back({ "Quit to Desktop", false});
   menu(options);
 }
@@ -106,6 +111,7 @@ auto CompleteStartOptions(game::Menu& menu) -> void
   options.push_back({ "Continue From Chapter", false});
   options.push_back({ "Start Again (current progress will be lost)", false });
   options.push_back({ "Load Saved Game / Start New Game", false});
+  options.push_back({ "Controllers", false});
   options.push_back({ "Quit to Desktop", false});
   menu(options);
 }
@@ -116,6 +122,7 @@ auto CompleteStartFullOptions(game::Menu& menu) -> void
   options.push_back({ "Continue From Chapter", false});
   options.push_back({ "Start Again (current progress will be lost)", false });
   options.push_back({ "Load Saved Game", false});
+  options.push_back({ "Controllers", false});
   options.push_back({ "Quit to Desktop", false});
   menu(options);
 }
@@ -125,6 +132,7 @@ auto NewStartOptions(game::Menu& menu) -> void
   game::Menu::Options options;
   options.push_back({ "Begin", false});
   options.push_back({ "Load Saved Game / Start New Game", false});
+  options.push_back({ "Controllers", false});
   options.push_back({ "Quit to Desktop", false});
   menu(options);
 }
@@ -134,6 +142,7 @@ auto NewStartFullOptions(game::Menu& menu) -> void
   game::Menu::Options options;
   options.push_back({ "Begin", false});
   options.push_back({ "Load Saved Game", false});
+  options.push_back({ "Controllers", false});
   options.push_back({ "Quit to Desktop", false});
   menu(options);
 }
@@ -145,6 +154,75 @@ auto DeleteOptions(game::Menu& menu) -> void
   options.push_back({"No! Keep this Save", false});
   menu(options);
 }
+
+auto OneFirstStartOptions(game::Menu& menu) -> void
+{
+  game::Menu::Options options;
+  options.push_back({ "Begin", false});
+  options.push_back({ "Quit to Desktop", false});
+  menu(options);
+}
+
+auto OneContinueStartOptions(game::Menu& menu) -> void
+{
+  game::Menu::Options options;
+  options.push_back({ "Continue", false});
+  options.push_back({ "Continue From Chapter", false});
+  options.push_back({ "Start Again (current progress will be lost)", false });
+  options.push_back({ "Load Saved Game / Start New Game", false});
+  options.push_back({ "Quit to Desktop", false});
+  menu(options);
+}
+
+auto OneStartFullOptions(game::Menu& menu) -> void
+{
+  game::Menu::Options options;
+  options.push_back({ "Continue", false});
+  options.push_back({ "Continue From Chapter", false});
+  options.push_back({ "Start Again (current progress will be lost)", false });
+  options.push_back({ "Load Saved Game", false});
+  options.push_back({ "Quit to Desktop", false});
+  menu(options);
+}
+
+auto OneCompleteStartOptions(game::Menu& menu) -> void
+{
+  game::Menu::Options options;
+  options.push_back({ "Continue From Chapter", false});
+  options.push_back({ "Start Again (current progress will be lost)", false });
+  options.push_back({ "Load Saved Game / Start New Game", false});
+  options.push_back({ "Quit to Desktop", false});
+  menu(options);
+}
+
+auto OneCompleteStartFullOptions(game::Menu& menu) -> void
+{
+  game::Menu::Options options;
+  options.push_back({ "Continue From Chapter", false});
+  options.push_back({ "Start Again (current progress will be lost)", false });
+  options.push_back({ "Load Saved Game", false});
+  options.push_back({ "Quit to Desktop", false});
+  menu(options);
+}
+
+auto OneNewStartOptions(game::Menu& menu) -> void
+{
+  game::Menu::Options options;
+  options.push_back({ "Begin", false});
+  options.push_back({ "Load Saved Game / Start New Game", false});
+  options.push_back({ "Quit to Desktop", false});
+  menu(options);
+}
+
+auto OneNewStartFullOptions(game::Menu& menu) -> void
+{
+  game::Menu::Options options;
+  options.push_back({ "Begin", false});
+  options.push_back({ "Load Saved Game", false});
+  options.push_back({ "Quit to Desktop", false});
+  menu(options);
+}
+
 
 auto ChapterOptions(game::Menu& menu, int progress, Strings const& chapters) -> void
 {
@@ -219,18 +297,26 @@ class Controller::Impl final : public std::enable_shared_from_this<Impl>
 public:
   Impl(lua::Stack& lua, event::Queue& queue, boost::filesystem::path const& path);
   auto Init() -> void;
-  auto Control(float x, float y) -> void;
-  auto Look(float x, float y) -> void;
-  auto ChoiceUp() -> void;
-  auto ChoiceDown() -> void;
-  auto ChoiceLeft() -> void;
-  auto ChoiceRight() -> void;
-  auto ActionLeft() -> void;
-  auto ActionRight() -> void;
-  auto Select() -> void;
-  auto Back() -> void;
+
+  auto MoveEvent(int player, float x, float y) -> void;
+  auto LookEvent(int player, float x, float y) -> void;
+  auto ChoiceUpEvent(int player) -> void;
+  auto ChoiceDownEvent(int player) -> void;
+  auto ChoiceLeftEvent(int player) -> void;
+  auto ChoiceRightEvent(int player) -> void;
+  auto ActionLeftEvent(int player, bool state) -> void;
+  auto ActionRightEvent(int player, bool state) -> void;
+  auto RawUpEvent(int id) -> void;
+  auto RawDownEvent(int id) -> void;
+  auto AllUpEvent() -> void;
+  auto AllDownEvent() -> void;
+  auto AllSelectEvent() -> void;
+  auto AllBackEvent() -> void;
+  auto AllChoiceSelectEvent() -> void;
+  auto AllChoiceBackEvent() -> void;
+
   auto Render() -> void;
-  auto Add(event::Command const& command) -> void;
+  auto Quit(event::Command const& command) -> void;
   auto PauseContinue() -> void;
   auto PauseMainMenu() -> void;
   auto PauseQuit() -> void;
@@ -245,6 +331,9 @@ public:
   auto Chapter(int chapter) -> void;
   auto ChapterEnd() -> void;
   auto StartMenu() -> void;
+  auto Add(int id) -> void;
+  auto Remove(int id) -> void;
+  auto Player() -> void;
 
   event::Queue queue_;
   display::Window window_;
@@ -260,6 +349,16 @@ public:
   Menu load_menu_;
   Menu start_menu_;
   Menu delete_menu_;
+  Menu one_first_start_menu_;
+  Menu one_continue_start_menu_;
+  Menu one_start_full_menu_;
+  Menu one_new_start_menu_;
+  Menu one_new_start_full_menu_;
+  Menu one_complete_start_menu_;
+  Menu one_complete_start_full_menu_;
+  Menu one_chapter_menu_;
+  Menu one_load_menu_;
+  Menu one_start_menu_;
   Script pause_script_;
   Script start_script_;
   Script story_script_;
@@ -274,7 +373,13 @@ public:
   audio::Sound select_;
   audio::Sound back_;
   int sign_;
+  game::Player player_;
 };
+
+auto Controller::Impl::Player() -> void
+{
+  state_ = State::Player;
+}
 
 auto Controller::Impl::Load(int slot) -> void
 {
@@ -388,6 +493,48 @@ Controller::Impl::Impl(lua::Stack& lua, event::Queue& queue, boost::filesystem::
 
   DeleteOptions(delete_menu_);
 
+  {
+    lua::Guard guard = lua.Field("menu");
+    one_first_start_menu_ = Menu(lua, window_, path_);
+  }
+  OneFirstStartOptions(one_first_start_menu_);
+
+  {
+    lua::Guard guard = lua.Field("menu");
+    one_continue_start_menu_ = Menu(lua, window_, path_);
+  }
+  OneContinueStartOptions(one_continue_start_menu_);
+
+  {
+    lua::Guard guard = lua.Field("menu");
+    one_start_full_menu_ = Menu(lua, window_, path_);
+  }
+  OneStartFullOptions(one_start_full_menu_);
+
+  {
+    lua::Guard guard = lua.Field("menu");
+    one_new_start_menu_ = Menu(lua, window_, path_);
+  }
+  OneNewStartOptions(one_new_start_menu_);
+
+  {
+    lua::Guard guard = lua.Field("menu");
+    one_new_start_full_menu_ = Menu(lua, window_, path_);
+  }
+  OneNewStartFullOptions(one_new_start_full_menu_);
+
+  {
+    lua::Guard guard = lua.Field("menu");
+    one_complete_start_menu_ = Menu(lua, window_, path_);
+  }
+  OneCompleteStartOptions(one_complete_start_menu_);
+
+  {
+    lua::Guard guard = lua.Field("menu");
+    one_complete_start_full_menu_ = Menu(lua, window_, path_);
+  }
+  OneCompleteStartFullOptions(one_complete_start_full_menu_);
+
   volume_ = lua.Field<float>("volume");
 
   {
@@ -404,7 +551,12 @@ Controller::Impl::Impl(lua::Stack& lua, event::Queue& queue, boost::filesystem::
     lua::Guard guard = lua.Field("sound_back");
     back_ = audio::Sound(lua, path_);
   }
-  
+
+  {
+    lua::Guard guard = lua.Field("player");
+    player_ = game::Player(lua, window_, path_);
+  }
+
   StartMenu();
 
   navigate_.Resume();
@@ -416,7 +568,14 @@ auto Controller::Impl::StartMenu() -> void
 {
   if(FirstStart(saves_))
   {
-    start_menu_ = first_start_menu_;
+    if(player_)
+    {
+      start_menu_ = first_start_menu_;
+    }
+    else
+    {
+      start_menu_ = one_first_start_menu_;
+    }
   }
   else
   {
@@ -427,33 +586,75 @@ auto Controller::Impl::StartMenu() -> void
     {
       if(full_start)
       {
-        start_menu_ = new_start_full_menu_;
+        if(player_)
+        {
+          start_menu_ = new_start_full_menu_;
+        }
+        else
+        {
+          start_menu_ = one_new_start_full_menu_;
+        }
       }
       else
       {
-        start_menu_ = new_start_menu_;
+        if(player_)
+        {
+          start_menu_ = new_start_menu_;
+        }
+        else
+        {
+          start_menu_ = one_new_start_menu_;
+        }
       }
     }
     else if(complete_start)
     {
       if(full_start)
       {
-        start_menu_ = complete_start_full_menu_;
+        if(player_)
+        {
+          start_menu_ = complete_start_full_menu_;
+        }
+        else
+        {
+          start_menu_ = one_complete_start_full_menu_;
+        }
       }
       else
       {
-        start_menu_ = complete_start_menu_;
+        if(player_)
+        {
+          start_menu_ = complete_start_menu_;
+        }
+        else
+        {
+          start_menu_ = one_complete_start_menu_;
+        }
       }
     }
     else
     {
       if(full_start)
       {
-        start_menu_ = start_full_menu_;
+        if(player_)
+        {
+          start_menu_ = start_full_menu_;
+        }
+        else
+        {
+          start_menu_ = one_start_full_menu_;
+        }
       }
       else
       {
-        start_menu_ = continue_start_menu_;
+        if(player_)
+        {
+          start_menu_ = continue_start_menu_;
+        }
+        else
+        {
+          start_menu_ = one_continue_start_menu_;
+        }
       }
     }
   }
@@ -468,40 +669,80 @@ auto Controller::Impl::Init() -> void
   pause_menu_.Add(2, function::Bind(&Impl::PauseQuit, shared_from_this()));
 
   first_start_menu_.Add(0, function::Bind(&Impl::StartPlay, shared_from_this()));
-  first_start_menu_.Add(1, function::Bind(&Impl::StartQuit, shared_from_this()));
+  first_start_menu_.Add(1, function::Bind(&Impl::Player, shared_from_this()));
+  first_start_menu_.Add(2, function::Bind(&Impl::StartQuit, shared_from_this()));
 
   continue_start_menu_.Add(0, function::Bind(&Impl::StartPlay, shared_from_this()));
   continue_start_menu_.Add(1, function::Bind(&Impl::StartChooseChapter, shared_from_this()));
   continue_start_menu_.Add(2, function::Bind(&Impl::StartDeleteSave, shared_from_this()));
   continue_start_menu_.Add(3, function::Bind(&Impl::StartLoad, shared_from_this()));
-  continue_start_menu_.Add(4, function::Bind(&Impl::StartQuit, shared_from_this()));
+  continue_start_menu_.Add(4, function::Bind(&Impl::Player, shared_from_this()));
+  continue_start_menu_.Add(5, function::Bind(&Impl::StartQuit, shared_from_this()));
 
   start_full_menu_.Add(0, function::Bind(&Impl::StartPlay, shared_from_this()));
   start_full_menu_.Add(1, function::Bind(&Impl::StartChooseChapter, shared_from_this()));
   start_full_menu_.Add(2, function::Bind(&Impl::StartDeleteSave, shared_from_this()));
   start_full_menu_.Add(3, function::Bind(&Impl::StartLoad, shared_from_this()));
-  start_full_menu_.Add(4, function::Bind(&Impl::StartQuit, shared_from_this()));
+  start_full_menu_.Add(4, function::Bind(&Impl::Player, shared_from_this()));
+  start_full_menu_.Add(5, function::Bind(&Impl::StartQuit, shared_from_this()));
 
   complete_start_menu_.Add(0, function::Bind(&Impl::StartChooseChapter, shared_from_this()));
   complete_start_menu_.Add(1, function::Bind(&Impl::StartDeleteSave, shared_from_this()));
   complete_start_menu_.Add(2, function::Bind(&Impl::StartLoad, shared_from_this()));
-  complete_start_menu_.Add(3, function::Bind(&Impl::StartQuit, shared_from_this()));
+  complete_start_menu_.Add(3, function::Bind(&Impl::Player, shared_from_this()));
+  complete_start_menu_.Add(4, function::Bind(&Impl::StartQuit, shared_from_this()));
 
   complete_start_full_menu_.Add(0, function::Bind(&Impl::StartChooseChapter, shared_from_this()));
   complete_start_full_menu_.Add(1, function::Bind(&Impl::StartDeleteSave, shared_from_this()));
   complete_start_full_menu_.Add(2, function::Bind(&Impl::StartLoad, shared_from_this()));
-  complete_start_full_menu_.Add(3, function::Bind(&Impl::StartQuit, shared_from_this()));
+  complete_start_full_menu_.Add(3, function::Bind(&Impl::Player, shared_from_this()));
+  complete_start_full_menu_.Add(4, function::Bind(&Impl::StartQuit, shared_from_this()));
 
   new_start_menu_.Add(0, function::Bind(&Impl::StartPlay, shared_from_this()));
   new_start_menu_.Add(1, function::Bind(&Impl::StartLoad, shared_from_this()));
-  new_start_menu_.Add(2, function::Bind(&Impl::StartQuit, shared_from_this()));
+  new_start_menu_.Add(2, function::Bind(&Impl::Player, shared_from_this()));
+  new_start_menu_.Add(3, function::Bind(&Impl::StartQuit, shared_from_this()));
 
   new_start_full_menu_.Add(0, function::Bind(&Impl::StartPlay, shared_from_this()));
   new_start_full_menu_.Add(1, function::Bind(&Impl::StartLoad, shared_from_this()));
-  new_start_full_menu_.Add(2, function::Bind(&Impl::StartQuit, shared_from_this()));
+  new_start_full_menu_.Add(2, function::Bind(&Impl::Player, shared_from_this()));
+  new_start_full_menu_.Add(3, function::Bind(&Impl::StartQuit, shared_from_this()));
 
   delete_menu_.Add(0, function::Bind(&Impl::DeletePlay, shared_from_this()));
   delete_menu_.Add(1, function::Bind(&Impl::DeleteBack, shared_from_this()));
+
+  one_first_start_menu_.Add(0, function::Bind(&Impl::StartPlay, shared_from_this()));
+  one_first_start_menu_.Add(1, function::Bind(&Impl::StartQuit, shared_from_this()));
+
+  one_continue_start_menu_.Add(0, function::Bind(&Impl::StartPlay, shared_from_this()));
+  one_continue_start_menu_.Add(1, function::Bind(&Impl::StartChooseChapter, shared_from_this()));
+  one_continue_start_menu_.Add(2, function::Bind(&Impl::StartDeleteSave, shared_from_this()));
+  one_continue_start_menu_.Add(3, function::Bind(&Impl::StartLoad, shared_from_this()));
+  one_continue_start_menu_.Add(4, function::Bind(&Impl::StartQuit, shared_from_this()));
+
+  one_start_full_menu_.Add(0, function::Bind(&Impl::StartPlay, shared_from_this()));
+  one_start_full_menu_.Add(1, function::Bind(&Impl::StartChooseChapter, shared_from_this()));
+  one_start_full_menu_.Add(2, function::Bind(&Impl::StartDeleteSave, shared_from_this()));
+  one_start_full_menu_.Add(3, function::Bind(&Impl::StartLoad, shared_from_this()));
+  one_start_full_menu_.Add(4, function::Bind(&Impl::StartQuit, shared_from_this()));
+
+  one_complete_start_menu_.Add(0, function::Bind(&Impl::StartChooseChapter, shared_from_this()));
+  one_complete_start_menu_.Add(1, function::Bind(&Impl::StartDeleteSave, shared_from_this()));
+  one_complete_start_menu_.Add(2, function::Bind(&Impl::StartLoad, shared_from_this()));
+  one_complete_start_menu_.Add(3, function::Bind(&Impl::StartQuit, shared_from_this()));
+
+  one_complete_start_full_menu_.Add(0, function::Bind(&Impl::StartChooseChapter, shared_from_this()));
+  one_complete_start_full_menu_.Add(1, function::Bind(&Impl::StartDeleteSave, shared_from_this()));
+  one_complete_start_full_menu_.Add(2, function::Bind(&Impl::StartLoad, shared_from_this()));
+  one_complete_start_full_menu_.Add(3, function::Bind(&Impl::StartQuit, shared_from_this()));
+
+  one_new_start_menu_.Add(0, function::Bind(&Impl::StartPlay, shared_from_this()));
+  one_new_start_menu_.Add(1, function::Bind(&Impl::StartLoad, shared_from_this()));
+  one_new_start_menu_.Add(2, function::Bind(&Impl::StartQuit, shared_from_this()));
+
+  one_new_start_full_menu_.Add(0, function::Bind(&Impl::StartPlay, shared_from_this()));
+  one_new_start_full_menu_.Add(1, function::Bind(&Impl::StartLoad, shared_from_this()));
+  one_new_start_full_menu_.Add(2, function::Bind(&Impl::StartQuit, shared_from_this()));
 
   for(int i = 0; i < saves_.Size(); ++i)
   {
@@ -512,6 +753,25 @@ auto Controller::Impl::Init() -> void
   {
     chapter_menu_.Add(i, function::Bind(&Impl::Chapter, shared_from_this(), i));
   }
+
+  player_.Move(function::Bind(&Impl::MoveEvent, shared_from_this()));
+  player_.Look(function::Bind(&Impl::LookEvent, shared_from_this()));
+  player_.ChoiceUp(function::Bind(&Impl::ChoiceUpEvent, shared_from_this()));
+  player_.ChoiceDown(function::Bind(&Impl::ChoiceDownEvent, shared_from_this()));
+  player_.ChoiceLeft(function::Bind(&Impl::ChoiceLeftEvent, shared_from_this()));
+  player_.ChoiceRight(function::Bind(&Impl::ChoiceRightEvent, shared_from_this()));
+  player_.ActionLeft(function::Bind(&Impl::ActionLeftEvent, shared_from_this()));
+  player_.ActionRight(function::Bind(&Impl::ActionRightEvent, shared_from_this()));
+
+  player_.RawUp(function::Bind(&Impl::RawUpEvent, shared_from_this()));
+  player_.RawDown(function::Bind(&Impl::RawDownEvent, shared_from_this()));
+
+  player_.AllUp(function::Bind(&Impl::AllUpEvent, shared_from_this()));
+  player_.AllDown(function::Bind(&Impl::AllDownEvent, shared_from_this()));
+  player_.AllSelect(function::Bind(&Impl::AllSelectEvent, shared_from_this()));
+  player_.AllBack(function::Bind(&Impl::AllBackEvent, shared_from_this()));
+  player_.AllChoiceSelect(function::Bind(&Impl::AllChoiceSelectEvent, shared_from_this()));
+  player_.AllChoiceBack(function::Bind(&Impl::AllChoiceBackEvent, shared_from_this()));
 
   start_script_.Resume();
 }
@@ -607,242 +867,203 @@ auto Controller::Impl::StartQuit() -> void
   signal_();
 }
 
-auto Controller::Impl::Add(event::Command const& command) -> void
+auto Controller::Impl::Quit(event::Command const& command) -> void
 {
   signal_.Add(command);
 }
 
-auto Controller::Impl::Control(float x, float y) -> void
-{
-  int sign = static_cast<int>(0.f < y) - static_cast<int>(y < 0.f);
-  bool up = (sign_ <= 0) && (sign > 0);
-  bool down = (sign_ >= 0) && (sign < 0);
-  sign_ = sign;
 
+auto Controller::Impl::Add(int id) -> void
+{
+  player_.Add(id);
+  StartMenu();
+}
+
+auto Controller::Impl::Remove(int id) -> void
+{
+  player_.Remove(id);
+  StartMenu();
+}
+
+auto Controller::Impl::MoveEvent(int player, float x, float y) -> void
+{
   switch(state_)
   {
-  case State::Start:
-    if(up || down)
-    {
-      navigate_(volume_);
-    }
-    if(up)
-    {
-      start_menu_.Previous();
-    }
-    if(down)
-    {
-      start_menu_.Next();
-    }
-    break;
-  case State::Pause:
-    if(up || down)
-    {
-      navigate_(volume_);
-    }
-    if(up)
-    {
-      pause_menu_.Previous();
-    }
-    if(down)
-    {
-      pause_menu_.Next();
-    }
-    break;
-  case State::Chapter:
-    if(up || down)
-    {
-      navigate_(volume_);
-    }
-    if(up)
-    {
-      chapter_menu_.Previous();
-    }
-    if(down)
-    {
-      chapter_menu_.Next();
-    }
-    break;
-  case State::Load:
-    if(up || down)
-    {
-      navigate_(volume_);
-    }
-    if(up)
-    {
-      load_menu_.Previous();
-    }
-    if(down)
-    {
-      load_menu_.Next();
-    }
-    break;
-  case State::Delete:
-    if(up || down)
-    {
-      navigate_(volume_);
-    }
-    if(up)
-    {
-      delete_menu_.Previous();
-    }
-    if(down)
-    {
-      delete_menu_.Next();
-    }
-    break;
   case State::Story:
-    story_script_.Control(x, y);
+    story_script_.Move(player, x, y);
     break;
   default:
     break;
   }
 }
 
-auto Controller::Impl::Look(float x, float y) -> void
+auto Controller::Impl::LookEvent(int player, float x, float y) -> void
 {
   switch(state_)
   {
-  default:
-  case State::Start:
-  case State::Pause:
-  case State::Chapter:
-  case State::Load:
-  case State::Delete:
-    break;
   case State::Story:
-    story_script_.Look(x, y);
+    story_script_.Look(player, x, y);
+    break;
+  default:
     break;
   }
 }
 
-auto Controller::Impl::ChoiceUp() -> void
+auto Controller::Impl::ChoiceUpEvent(int player) -> void
 {
   switch(state_)
   {
-  default:
-  case State::Start:
-  case State::Pause:
-  case State::Chapter:
-  case State::Load:
-  case State::Delete:
-    break;
   case State::Story:
-    story_script_.ChoiceUp();
+    story_script_.ChoiceUp(player);
+    break;
+  default:
     break;
   }
 }
 
-auto Controller::Impl::ChoiceDown() -> void
+auto Controller::Impl::ChoiceDownEvent(int player) -> void
 {
   switch(state_)
   {
-  default:
-    break;
-  case State::Start:
-    select_(volume_);
-    start_menu_.Select();
-    break;
-  case State::Pause:
-    select_(volume_);
-    pause_menu_.Select();
-    break;
-  case State::Chapter:
-    select_(volume_);
-    chapter_menu_.Select();
-    break;
-  case State::Load:
-    select_(volume_);
-    load_menu_.Select();
-    break;
-  case State::Delete:
-    select_(volume_);
-    delete_menu_.Select();
-    break;
   case State::Story:
-    story_script_.ChoiceDown();
+    story_script_.ChoiceDown(player);
+    break;
+  default:
     break;
   }
 }
 
-auto Controller::Impl::ChoiceLeft() -> void
+auto Controller::Impl::ChoiceLeftEvent(int player) -> void
 {
   switch(state_)
   {
-  default:
-  case State::Start:
-  case State::Pause:
-  case State::Chapter:
-  case State::Load:
-  case State::Delete:
-    break;
   case State::Story:
-    story_script_.ChoiceLeft();
+    story_script_.ChoiceLeft(player);
+    break;
+  default:
     break;
   }
 }
 
-auto Controller::Impl::ActionLeft() -> void
+auto Controller::Impl::ChoiceRightEvent(int player) -> void
 {
   switch(state_)
   {
-  default:
-  case State::Start:
-  case State::Pause:
-  case State::Chapter:
-  case State::Load:
-  case State::Delete:
-    break;
   case State::Story:
-    story_script_.ActionLeft();
+    story_script_.ChoiceRight(player);
+    break;
+  default:
     break;
   }
 }
 
-auto Controller::Impl::ActionRight() -> void
+auto Controller::Impl::ActionLeftEvent(int player, bool state) -> void
 {
   switch(state_)
   {
-  default:
-  case State::Start:
-  case State::Pause:
-  case State::Chapter:
-  case State::Load:
-  case State::Delete:
-    break;
   case State::Story:
-    story_script_.ActionRight();
+    story_script_.ActionLeft(player, state);
+    break;
+  default:
     break;
   }
 }
 
-auto Controller::Impl::ChoiceRight() -> void
+auto Controller::Impl::ActionRightEvent(int player, bool state) -> void
 {
   switch(state_)
   {
-  default:
-  case State::Start:
-    break;
-  case State::Pause:
-    back_(volume_);
-    state_ = State::Story;
-    story_script_.Resume();
-    pause_script_.Pause();
-    break;
-  case State::Load:
-  case State::Chapter:
-  case State::Delete:
-    back_(volume_);
-    state_ = State::Start;
-    StartMenu();
-    break;
   case State::Story:
-    story_script_.ChoiceRight();
+    story_script_.ActionRight(player, state);
+    break;
+  default:
     break;
   }
 }
 
-auto Controller::Impl::Select() -> void
+auto Controller::Impl::RawUpEvent(int id) -> void
+{
+  switch(state_)
+  {
+  case State::Player:
+    player_.Up(id);
+    break;
+  default:
+    break;
+  }
+}
+
+auto Controller::Impl::RawDownEvent(int id) -> void
+{
+  switch(state_)
+  {
+  case State::Player:
+    player_.Down(id);
+    break;
+  default:
+    break;
+  }
+}
+
+auto Controller::Impl::AllUpEvent() -> void
+{
+  switch(state_)
+  {
+  case State::Start:
+    navigate_(volume_);
+    start_menu_.Previous();
+    break;
+  case State::Pause:
+    navigate_(volume_);
+    pause_menu_.Previous();
+    break;
+  case State::Chapter:
+    navigate_(volume_);
+    chapter_menu_.Previous();
+    break;
+  case State::Load:
+    navigate_(volume_);
+    load_menu_.Previous();
+    break;
+  case State::Delete:
+    navigate_(volume_);
+    delete_menu_.Previous();
+    break;
+  default:
+    break;
+  }
+}
+
+auto Controller::Impl::AllDownEvent() -> void
+{
+  switch(state_)
+  {
+  case State::Start:
+    navigate_(volume_);
+    start_menu_.Next();
+    break;
+  case State::Pause:
+    navigate_(volume_);
+    pause_menu_.Next();
+    break;
+  case State::Chapter:
+    navigate_(volume_);
+    chapter_menu_.Next();
+    break;
+  case State::Load:
+    navigate_(volume_);
+    load_menu_.Next();
+    break;
+  case State::Delete:
+    navigate_(volume_);
+    delete_menu_.Next();
+    break;
+  default:
+    break;
+  }
+}
+
+auto Controller::Impl::AllSelectEvent() -> void
 {
   switch(state_)
   {
@@ -866,7 +1087,6 @@ auto Controller::Impl::Select() -> void
     select_(volume_);
     delete_menu_.Select();
     break;
-  default:
   case State::Story:
     back_(volume_);
     state_ = State::Pause;
@@ -874,22 +1094,29 @@ auto Controller::Impl::Select() -> void
     pause_menu_[0];
     pause_script_.Resume();
     break;
+  default:
+    break;
   }
 }
 
-auto Controller::Impl::Back() -> void
+auto Controller::Impl::AllBackEvent() -> void
 {
   switch(state_)
   {
-  default:
-  case State::Start:
-    break;
   case State::Pause:
     back_(volume_);
     state_ = State::Story;
     story_script_.Resume();
     pause_script_.Pause();
     break;
+  case State::Player:
+  case State::Load:
+  case State::Chapter:
+  case State::Delete:
+    back_(volume_);
+    state_ = State::Start;
+    StartMenu();
+    break;
   case State::Story:
     back_(volume_);
     state_ = State::Pause;
@@ -897,12 +1124,59 @@ auto Controller::Impl::Back() -> void
     pause_menu_[0];
     pause_script_.Resume();
     break;
+  default:
+    break;
+  }
+}
+
+auto Controller::Impl::AllChoiceSelectEvent() -> void
+{
+  switch(state_)
+  {
+  case State::Start:
+    select_(volume_);
+    start_menu_.Select();
+    break;
+  case State::Pause:
+    select_(volume_);
+    pause_menu_.Select();
+    break;
+  case State::Chapter:
+    select_(volume_);
+    chapter_menu_.Select();
+    break;
+  case State::Load:
+    select_(volume_);
+    load_menu_.Select();
+    break;
+  case State::Delete:
+    select_(volume_);
+    delete_menu_.Select();
+    break;
+  default:
+    break;  
+  }
+}
+
+auto Controller::Impl::AllChoiceBackEvent() -> void
+{
+  switch(state_)
+  {
+  case State::Pause:
+    back_(volume_);
+    state_ = State::Story;
+    story_script_.Resume();
+    pause_script_.Pause();
+    break;
+  case State::Player:
   case State::Load:
   case State::Chapter:
   case State::Delete:
     back_(volume_);
     state_ = State::Start;
     StartMenu();
+    break;
+  default:
     break;
   }
 }
@@ -946,6 +1220,12 @@ auto Controller::Impl::Render() -> void
     story_script_.Render();
     window_.Show();
     break;
+  case State::Player:
+    window_.Clear();
+    start_script_.Render();
+    player_.Render();
+    window_.Show();
+    break;
   default:
     break;
   }
@@ -956,59 +1236,69 @@ Controller::Controller(lua::Stack& lua, event::Queue& queue, boost::filesystem::
   impl_->Init();
 }
 
-auto Controller::Control(float x, float y) -> void
+auto Controller::Move(int id, float x, float y) -> void
 {
-  impl_->Control(x, y);
+  impl_->player_.Move(id, x, y);
 }
 
-auto Controller::Look(float x, float y) -> void
+auto Controller::Look(int id, float x, float y) -> void
 {
-  impl_->Look(x, y);
+  impl_->player_.Look(id, x, y);
 }
 
-auto Controller::ChoiceUp() -> void
+auto Controller::ChoiceUp(int id) -> void
 {
-  impl_->ChoiceUp();
+  impl_->player_.ChoiceUp(id);
 }
 
-auto Controller::ChoiceDown() -> void
+auto Controller::ChoiceDown(int id) -> void
 {
-  impl_->ChoiceDown();
+  impl_->player_.ChoiceDown(id);
 }
 
-auto Controller::ChoiceLeft() -> void
+auto Controller::ChoiceLeft(int id) -> void
 {
-  impl_->ChoiceLeft();
+  impl_->player_.ChoiceLeft(id);
 }
 
-auto Controller::ChoiceRight() -> void
+auto Controller::ChoiceRight(int id) -> void
 {
-  impl_->ChoiceRight();
+  impl_->player_.ChoiceRight(id);
 }
 
-auto Controller::ActionLeft() -> void
+auto Controller::ActionLeft(int id, bool state) -> void
 {
-  impl_->ActionLeft();
+  impl_->player_.ActionLeft(id, state);
 }
 
-auto Controller::ActionRight() -> void
+auto Controller::ActionRight(int id, bool state) -> void
 {
-  impl_->ActionRight();
+  impl_->player_.ActionRight(id, state);
 }
 
-auto Controller::Select() -> void
+auto Controller::Select(int id) -> void
 {
-  impl_->Select();
+  impl_->player_.Select(id);
 }
 
-auto Controller::Back() -> void
+auto Controller::Back(int id) -> void
 {
-  impl_->Back();
+  impl_->player_.Back(id);
 }
 
-auto Controller::Add(event::Command const& command) -> void
+auto Controller::Quit(event::Command const& command) -> void
 {
-  impl_->Add(command);
+  impl_->Quit(command);
+}
+
+auto Controller::Add(int id) -> void
+{
+  impl_->Add(id);
+}
+
+auto Controller::Remove(int id) -> void
+{
+  impl_->Remove(id);
 }
 
 Controller::operator bool() const

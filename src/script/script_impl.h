@@ -23,6 +23,7 @@
 #include "boost/bimap/bimap.hpp"
 #include "boost/bimap/multiset_of.hpp" 
 #include "boost/bimap/unordered_set_of.hpp" 
+#include <map>
 namespace game
 {
 typedef std::unordered_set<Joint> JointSet;
@@ -32,6 +33,7 @@ typedef std::unordered_set<audio::Sound> SoundSet;
 typedef std::unordered_set<audio::Music> MusicSet;
 typedef std::array<bool, 2> Paused;
 typedef std::array<float, 3> Order;
+typedef std::map<int, Choice> Choices;
 
 typedef boost::bimaps::bimap<boost::bimaps::multiset_of<Order>, boost::bimaps::unordered_set_of<Actor>, boost::bimaps::unconstrained_set_of_relation, boost::bimaps::with_info<Position>> Scene;
 
@@ -50,7 +52,7 @@ struct Stage
   double angle_;
 
   Scene scene_;
-  Choice choice_;
+  Choices choices_;
   Subtitle subtitle_;
   Subtitle title_;
 
@@ -72,14 +74,7 @@ public:
   auto Resume() -> void;
   auto Render() -> void;
 
-  auto ChoiceUp() -> void;
-  auto ChoiceDown() -> void;
-  auto ChoiceLeft() -> void;
-  auto ChoiceRight() -> void;
-  auto ActionLeft() -> void;
-  auto ActionRight() -> void;
-  auto Control(float x, float y) -> void;
-  auto Look(float x, float y) -> void;
+  auto Player(int player, std::string const& call) -> void;
   auto Call(std::string const& call) -> void;
   auto View() -> void;
   auto Pause(StagePtr const& stage, bool& paused) -> void;
@@ -87,6 +82,15 @@ public:
   auto Resume(StagePtr const& stage, bool& paused) -> void;
   auto Add(event::Command const& command) -> void;
   
+  auto ChoiceUp(int player) -> void;
+  auto ChoiceDown(int player) -> void;
+  auto ChoiceLeft(int player) -> void;
+  auto ChoiceRight(int player) -> void;
+  auto ActionLeft(int player, bool state) -> void;
+  auto ActionRight(int player, bool state) -> void;
+  auto Move(int player, float x, float y) -> void;
+  auto Look(int player, float x, float y) -> void;
+
   auto Collect() -> void;
 
   auto ActorInit() -> void;

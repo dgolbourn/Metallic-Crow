@@ -4,43 +4,421 @@
 #include "SDL_scancode.h"
 #include "signal.h"
 #include "sdl_library.h"
-#include <map>
+#include <unordered_map>
 #include <cmath>
 #include "sdl_exception.h"
 #include "log.h"
 #include "lua_exception.h"
+#include <algorithm>
+#include "for_each.h"
 namespace
 {
-typedef std::list<event::Event::Command> Commands;
+typedef std::list<event::Event::Control> Controls;
+typedef std::list<event::Event::Button> Buttons;
+typedef std::list<event::Event::Switch> Switches;
+typedef std::list<event::Event::Index> Indices;
+
+struct Coords
+{
+  float x_;
+  float y_;
+
+  void Reset()
+  {
+    x_ = 0.f;
+    y_ = 0.f;
+  }
+};
+
+struct Axis
+{
+  Sint32 sum_;
+  int n_;
+
+  void Add(Sint16 increment)
+  {
+    sum_ += increment;
+    ++n_;
+  }
+
+  float Mean()
+  {
+    return static_cast<float>(sum_) / n_;
+  }
+
+  explicit operator bool()
+  {
+    return n_ != 0;
+  }
+
+  void Reset()
+  {
+    sum_ = 0;
+    n_ = 0;
+  }
+};
+
+struct Axes
+{
+  Axis x_;
+  Axis y_;
+
+  explicit operator bool()
+  {
+    return x_ || y_;
+  }
+
+  void Reset()
+  {
+    x_.Reset();
+    y_.Reset();
+  }
+};
+
+struct SDLController
+{
+  SDL_GameController* controller_;
+
+  SDLController() : controller_(nullptr)
+  {
+  }
+
+  void Reset(SDL_GameController* controller)
+  {
+    controller_ = controller;
+  }
+
+  ~SDLController()
+  {
+    if(controller_)
+    {
+      SDL_GameControllerClose(controller_);
+    }
+  }
+};
+
+struct ControllerAxes
+{
+  Axes axes_;
+  Coords coords_;
+
+  void Reset()
+  {
+    axes_.Reset();
+    coords_.Reset();
+  }
+
+  void Update(Controls& controls, int id, float offset, float scale, float threshold)
+  {
+    if(axes_)
+    {
+      float x = axes_.x_.Mean();
+      float y = axes_.y_.Mean();
+      float angle = std::atan2(y, x);
+      float length = std::sqrt(x * x + y * y) / INT16_MAX;
+      length += offset;
+      length *= scale;
+      length = std::min(std::max(length, 0.f), 1.f);
+      x = length * std::cos(angle);
+      y = -length * std::sin(angle);
+      float dx = coords_.x_ - x;
+      float dy = coords_.y_ - y;
+      if((dx * dx + dy * dy) > threshold)
+      {
+        coords_.x_ = x;
+        coords_.y_ = y;
+        event::for_each(controls, id, x, y);
+      }
+      axes_.Reset();
+    }
+  }
+};
+
+struct Switch
+{
+  bool next_;
+  bool current_;
+  bool updated_;
+
+  void Reset()
+  {
+    next_ = false;
+    current_ = false;
+    updated_ = false;
+  }
+
+  explicit operator bool()
+  {
+    return updated_;
+  }
+
+  void On()
+  {
+    next_ = true;
+    if(!updated_ && !current_)
+    {
+      updated_ = true;
+    }
+  }
+
+  void Off()
+  {
+    next_ = false;
+    if(!updated_ && current_)
+    {
+      updated_ = true;
+    }
+  }
+
+  void Update(Switches& switches, int id)
+  {
+    if(updated_)
+    {
+      event::for_each(switches, id, next_);
+      if(next_ != current_)
+      {
+        event::for_each(switches, id, current_);
+        current_ = next_;
+      }
+      updated_ = false;
+    }
+  }
+};
+
+struct Button
+{
+  bool state_;
+
+  explicit operator bool()
+  {
+    return state_;
+  }
+
+  void Reset()
+  {
+    state_ = false;
+  }
+
+  void On()
+  {
+    state_ = true;
+  }
+
+  void Update(Buttons& buttons, int id)
+  {
+    if(state_)
+    {
+      event::for_each(buttons, id);
+      state_ = false;
+    }
+  }
+};
+
+struct Report
+{
+  Buttons choice_up_;
+  Buttons choice_down_;
+  Buttons choice_left_;
+  Buttons choice_right_;
+  Buttons back_;
+  Buttons select_;
+  Switches action_left_;
+  Switches action_right_;
+  Controls move_;
+  Controls look_;
+  Indices add_;
+  Indices remove_;
+};
 
 struct ControllerState
 {
-  SDL_GameController* controller_;
-  float x_move_raw_;
-  float y_move_raw_;
-  float x_move_report_;
-  float y_move_report_;
-  float x_look_raw_;
-  float y_look_raw_;
-  float x_look_report_;
-  float y_look_report_;
+  SDLController controller_;
+  ControllerAxes move_;
+  ControllerAxes look_;
+  Button choice_up_;
+  Button choice_down_;
+  Button choice_left_;
+  Button choice_right_;
+  Button back_;
+  Button select_;
+  Switch action_left_;
+  Switch action_right_;
+
+  void Reset(SDL_GameController* controller)
+  {
+    controller_.Reset(controller);
+    move_.Reset();
+    look_.Reset();
+    choice_up_.Reset();
+    choice_down_.Reset();
+    choice_left_.Reset();
+    choice_right_.Reset();
+    back_.Reset();
+    select_.Reset();
+    action_left_.Reset();
+    action_right_.Reset();
+  }
+
+  void Update(Report& report, int id, float offset, float scale, float threshold)
+  {
+    move_.Update(report.move_, id, offset, scale, threshold);
+    look_.Update(report.look_, id, offset, scale, threshold);
+    choice_up_.Update(report.choice_up_, id);
+    choice_down_.Update(report.choice_down_, id);
+    choice_left_.Update(report.choice_left_, id);
+    choice_right_.Update(report.choice_right_, id);
+    back_.Update(report.back_, id);
+    select_.Update(report.select_, id);
+    action_left_.Update(report.action_left_, id);
+    action_right_.Update(report.action_right_, id);
+  }
 };
 
-typedef std::map<Sint32, ControllerState> ControllerStateMap;
+typedef std::unordered_map<SDL_JoystickID, ControllerState> ControllerStateMap;
 
-struct ControllerTemp
+struct KeyState
 {
-  Sint32 x_move_;
-  Sint32 y_move_;
-  int n_move_;
-  int m_move_;
-  Sint32 x_look_;
-  Sint32 y_look_;
-  int n_look_;
-  int m_look_;
+  bool next_;
+  bool current_;
+
+  void Reset()
+  {
+    next_ = false;
+    current_ = false;
+  }
+
+  void Update()
+  {
+    current_ = next_;
+  }
+
+  explicit operator bool()
+  {
+    return current_ != next_;
+  }
+
+  void On()
+  {
+    next_ = true;
+  }
+
+  void Off()
+  {
+    next_ = false;
+  }
+
+  bool State()
+  {
+    return next_;
+  }
 };
 
-typedef std::map<Sint32, ControllerTemp> ControllerTempMap;
+struct KeyAxis
+{
+  KeyState inc_;
+  KeyState dec_;
+
+  explicit operator bool()
+  {
+    return static_cast<bool>(inc_) != static_cast<bool>(dec_);
+  }
+
+  void Update()
+  {
+    inc_.Update();
+    dec_.Update();
+  }
+
+  void Reset()
+  {
+    inc_.Reset();
+    dec_.Reset();
+  }
+
+  int State()
+  {
+    return static_cast<int>(inc_.State()) - static_cast<int>(dec_.State());
+  }
+};
+
+struct KeyAxes
+{
+  KeyAxis x_;
+  KeyAxis y_;
+
+  explicit operator bool()
+  {
+    return x_ || y_;
+  }
+
+  void Reset()
+  {
+    x_.Reset();
+    y_.Reset();
+  }
+
+  void Update(Controls& controls, int id)
+  {
+    if(x_ || y_)
+    {
+      float x_length = static_cast<float>(x_.State());
+      float y_length = static_cast<float>(y_.State());
+
+      if(x_length && y_length)
+      {
+        static const float scale = std::sqrt(.5f);
+        x_length *= scale;
+        y_length *= scale;
+      }
+
+      event::for_each(controls, id, x_length, y_length);
+    }
+    x_.Update();
+    y_.Update();
+  }
+};
+
+struct KeyController
+{
+  KeyAxes move_;
+  KeyAxes look_;
+  Button choice_up_;
+  Button choice_down_;
+  Button choice_left_;
+  Button choice_right_;
+  Button back_;
+  Button select_;
+  Switch action_left_;
+  Switch action_right_;
+
+  void Reset()
+  {
+    move_.Reset();
+    look_.Reset();
+    choice_up_.Reset();
+    choice_down_.Reset();
+    choice_left_.Reset();
+    choice_right_.Reset();
+    back_.Reset();
+    select_.Reset();
+    action_left_.Reset();
+    action_right_.Reset();
+  }
+
+  void Update(Report& report, int id)
+  {
+    move_.Update(report.move_, id);
+    look_.Update(report.look_, id);
+    choice_up_.Update(report.choice_up_, id);
+    choice_down_.Update(report.choice_down_, id);
+    choice_left_.Update(report.choice_left_, id);
+    choice_right_.Update(report.choice_right_, id);
+    back_.Update(report.back_, id);
+    select_.Update(report.select_, id);
+    action_left_.Update(report.action_left_, id);
+    action_right_.Update(report.action_right_, id);
+  }
+};
 
 auto GetScanCodeField(lua::Stack& lua, std::string const& field) -> SDL_Scancode 
 {
@@ -54,32 +432,24 @@ class Event::Impl
 {
 public:
   Impl(lua::Stack& lua);
-  ~Impl();
   auto Check() ->void;
-  auto Control(Command const& command) -> void;
-  auto Look(Command const& command) -> void;
-  auto ChoiceUp(event::Command const& command) -> void;
-  auto ChoiceDown(event::Command const& command) -> void;
-  auto ChoiceLeft(event::Command const& command) -> void;
-  auto ChoiceRight(event::Command const& command) -> void;
-  auto ActionLeft(event::Command const& command) -> void;
-  auto ActionRight(event::Command const& command) -> void;
-  auto Select(event::Command const& command) -> void;
-  auto Back(event::Command const& command) -> void;
-  auto Quit(event::Command const& command) -> void;
-  auto Destroy() noexcept -> void;
+  auto Move(Control const& control) -> void;
+  auto Look(Control const& control) -> void;
+  auto ChoiceUp(Button const& button) -> void;
+  auto ChoiceDown(Button const& button) -> void;
+  auto ChoiceLeft(Button const& button) -> void;
+  auto ChoiceRight(Button const& button) -> void;
+  auto ActionLeft(Switch const& zwitch) -> void;
+  auto ActionRight(Switch const& zwitch) -> void;
+  auto Select(Button const& button) -> void;
+  auto Back(Button const& button) -> void;
+  auto Quit(Command const& command) -> void;
+  auto Add(Index const& id) -> void;
+  auto Remove(Index const& id) -> void;
+  auto Controllers() -> std::vector<int>;
   sdl::Library sdl_;
-  Commands move_report_;
-  Commands look_report_;
-  Signal choice_up_;
-  Signal choice_down_;
-  Signal choice_left_;
-  Signal choice_right_;
+  Report report_;
   Signal quit_;
-  Signal back_;
-  Signal select_;
-  Signal action_left_;
-  Signal action_right_;
   SDL_Scancode key_move_up_;
   SDL_Scancode key_move_down_;
   SDL_Scancode key_move_left_;
@@ -92,179 +462,133 @@ public:
   SDL_Scancode key_choice_down_;
   SDL_Scancode key_choice_left_;
   SDL_Scancode key_choice_right_;
-  SDL_Scancode key_quit_;
   SDL_Scancode key_back_;
   SDL_Scancode key_select_;
   SDL_Scancode key_action_left_;
   SDL_Scancode key_action_right_;
   ControllerStateMap controllers_;
-  float update_offset_;
-  float update_scale_;
-  float update_threshold_;
-  float x_move_report_;
-  float y_move_report_;
-  float x_move_key_;
-  float y_move_key_;
-  float x_look_report_;
-  float y_look_report_;
-  float x_look_key_;
-  float y_look_key_;
-  bool key_move_state_up_;
-  bool key_move_state_down_;
-  bool key_move_state_left_;
-  bool key_move_state_right_;
-  bool key_look_state_up_;
-  bool key_look_state_down_;
-  bool key_look_state_left_;
-  bool key_look_state_right_;
+  KeyController controller_;
+  float offset_;
+  float scale_;
+  float threshold_;
 };
 
-auto Event::Impl::Destroy() noexcept -> void
+auto Event::Impl::Move(Control const& control) -> void
 {
-  try
-  {
-    for(auto& controller : controllers_)
-    {
-      SDL_GameControllerClose(controller.second.controller_);
-    }
-  }
-  catch(...)
-  {
-    exception::Log("Swallowed exception");
-  }
+  report_.move_.push_back(control);
 }
 
-Event::Impl::~Impl()
+auto Event::Impl::Look(Control const& control) -> void
 {
-  Destroy();
+  report_.look_.push_back(control);
 }
 
-auto Event::Impl::Control(Command const& command) -> void
+auto Event::Impl::ChoiceUp(Button const& button) -> void
 {
-  move_report_.push_back(command);
+  report_.choice_up_.push_back(button);
 }
 
-auto Event::Impl::Look(Command const& command) -> void
+auto Event::Impl::ChoiceDown(Button const& button) -> void
 {
-  look_report_.push_back(command);
+  report_.choice_down_.push_back(button);
 }
 
-auto Event::Impl::ChoiceUp(event::Command const& command) -> void
+auto Event::Impl::ChoiceLeft(Button const& button) -> void
 {
-  choice_up_.Add(command);
+  report_.choice_left_.push_back(button);
 }
 
-auto Event::Impl::ChoiceDown(event::Command const& command) -> void
+auto Event::Impl::ChoiceRight(Button const& button) -> void
 {
-  choice_down_.Add(command);
+  report_.choice_right_.push_back(button);
 }
 
-auto Event::Impl::ChoiceLeft(event::Command const& command) -> void
+auto Event::Impl::ActionLeft(Switch const& zwitch) -> void
 {
-  choice_left_.Add(command);
+  report_.action_left_.push_back(zwitch);
 }
 
-auto Event::Impl::ChoiceRight(event::Command const& command) -> void
+auto Event::Impl::ActionRight(Switch const& zwitch) -> void
 {
-  choice_right_.Add(command);
+  report_.action_right_.push_back(zwitch);
 }
 
-auto Event::Impl::ActionLeft(event::Command const& command) -> void
+auto Event::Impl::Select(Button const& button) -> void
 {
-  action_left_.Add(command);
+  report_.select_.push_back(button);
 }
 
-auto Event::Impl::ActionRight(event::Command const& command) -> void
+auto Event::Impl::Back(Button const& button) -> void
 {
-  action_right_.Add(command);
+  report_.back_.push_back(button);
 }
 
-auto Event::Impl::Select(event::Command const& command) -> void
-{
-  select_.Add(command);
-}
-
-auto Event::Impl::Back(event::Command const& command) -> void
-{
-  back_.Add(command);
-}
-
-auto Event::Impl::Quit(event::Command const& command) -> void
+auto Event::Impl::Quit(Command const& command) -> void
 {
   quit_.Add(command);
 }
 
-Event::Impl::Impl(lua::Stack& lua) : sdl_(SDL_INIT_EVENTS | SDL_INIT_GAMECONTROLLER), x_move_report_(0.f), y_move_report_(0.f), x_move_key_(0.f), y_move_key_(0.f), x_look_report_(0.f), y_look_report_(0.f), x_look_key_(0.f), y_look_key_(0.f), key_move_state_up_(false), key_move_state_down_(false), key_move_state_left_(false), key_move_state_right_(false), key_look_state_up_(false), key_look_state_down_(false), key_look_state_left_(false), key_look_state_right_(false)
+auto Event::Impl::Add(Index const& id) -> void
 {
-  try
-  {
-    key_move_up_ = GetScanCodeField(lua, "move_up");
-    key_move_down_ = GetScanCodeField(lua, "move_down");
-    key_move_left_ = GetScanCodeField(lua, "move_left");
-    key_move_right_ = GetScanCodeField(lua, "move_right");
-    key_look_up_ = GetScanCodeField(lua, "look_up");
-    key_look_down_ = GetScanCodeField(lua, "look_down");
-    key_look_left_ = GetScanCodeField(lua, "look_left");
-    key_look_right_ = GetScanCodeField(lua, "look_right");
-    key_choice_up_ = GetScanCodeField(lua, "choice_up");
-    key_choice_down_ = GetScanCodeField(lua, "choice_down");
-    key_choice_left_ = GetScanCodeField(lua, "choice_left");
-    key_choice_right_ = GetScanCodeField(lua, "choice_right");
-    key_action_left_ = GetScanCodeField(lua, "action_left");
-    key_action_right_ = GetScanCodeField(lua, "action_right");
-    key_select_ = GetScanCodeField(lua, "select");
-    key_back_ = GetScanCodeField(lua, "back");
+  report_.add_.push_back(id);
+}
 
-    for(int i = 0; i < SDL_NumJoysticks(); ++i)
+auto Event::Impl::Remove(Index const& id) -> void
+{
+  report_.remove_.push_back(id);
+}
+
+Event::Impl::Impl(lua::Stack& lua) : sdl_(SDL_INIT_EVENTS | SDL_INIT_GAMECONTROLLER)
+{
+  key_move_up_ = GetScanCodeField(lua, "move_up");
+  key_move_down_ = GetScanCodeField(lua, "move_down");
+  key_move_left_ = GetScanCodeField(lua, "move_left");
+  key_move_right_ = GetScanCodeField(lua, "move_right");
+  key_look_up_ = GetScanCodeField(lua, "look_up");
+  key_look_down_ = GetScanCodeField(lua, "look_down");
+  key_look_left_ = GetScanCodeField(lua, "look_left");
+  key_look_right_ = GetScanCodeField(lua, "look_right");
+  key_choice_up_ = GetScanCodeField(lua, "choice_up");
+  key_choice_down_ = GetScanCodeField(lua, "choice_down");
+  key_choice_left_ = GetScanCodeField(lua, "choice_left");
+  key_choice_right_ = GetScanCodeField(lua, "choice_right");
+  key_action_left_ = GetScanCodeField(lua, "action_left");
+  key_action_right_ = GetScanCodeField(lua, "action_right");
+  key_select_ = GetScanCodeField(lua, "select");
+  key_back_ = GetScanCodeField(lua, "back");
+
+  controller_.Reset();
+  for(int i = 0; i < SDL_NumJoysticks(); ++i)
+  {
+    if(SDL_IsGameController(i))
     {
-      if(SDL_IsGameController(i))
+      if(SDL_GameController* game_controller = SDL_GameControllerOpen(i))
       {
-        if(SDL_GameController* game_controller = SDL_GameControllerOpen(i))
-        {
-          int joystick = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(game_controller));
-          if(joystick == -1)
-          {
-            BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
-          }
-          controllers_.emplace(joystick, ControllerState{ game_controller, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f });
-        }
-        else
+        SDL_JoystickID joystick = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(game_controller));
+        if(joystick == -1)
         {
           BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
         }
+        controllers_[joystick].Reset(game_controller);
+      }
+      else
+      {
+        BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
       }
     }
-
-    double max = lua.Field<double>("update_max");
-    double min = lua.Field<double>("update_min");
-    double threshold = lua.Field<double>("update_threshold");
-
-    update_offset_ = -static_cast<float>(min);
-    update_scale_ = static_cast<float>(1. / (max - min));
-    update_threshold_ = static_cast<float>(threshold * threshold);
   }
-  catch(...)
-  {
-    Destroy();
-    throw;
-  }
+
+  double max = lua.Field<double>("update_max");
+  double min = lua.Field<double>("update_min");
+  double threshold = lua.Field<double>("update_threshold");
+
+  offset_ = -static_cast<float>(min);
+  scale_ = static_cast<float>(1. / (max - min));
+  threshold_ = static_cast<float>(threshold * threshold);
 }
 
 auto Event::Impl::Check() -> void
 {
-  ControllerTempMap controllers;
-  bool key_look = false;
-  bool key_move = false;
-  bool key_choice_up = false;
-  bool key_choice_down = false;
-  bool key_choice_left = false;
-  bool key_choice_right = false;
-  bool key_quit = false;
-  bool key_back = false;
-  bool key_select = false;
-  bool key_action_left = false;
-  bool key_action_right = false;
-
   SDL_Event event;
   while(SDL_PollEvent(&event))
   {
@@ -279,75 +603,67 @@ auto Event::Impl::Check() -> void
         SDL_Scancode code = event.key.keysym.scancode;
         if(code == key_move_up_)
         {
-          key_move_state_up_ = true;
-          key_move = true;
+          controller_.move_.y_.inc_.On();
         }
         else if(code == key_move_down_)
         {
-          key_move_state_down_ = true;
-          key_move = true;
+          controller_.move_.y_.dec_.On();
         }
         else if(code == key_move_left_)
         {
-          key_move_state_left_ = true;
-          key_move = true;
+          controller_.move_.x_.dec_.On();
         }
         else if(code == key_move_right_)
         {
-          key_move_state_right_ = true;
-          key_move = true;
+          controller_.move_.x_.inc_.On();
         }
         else if(code == key_look_up_)
         {
-          key_look_state_up_ = true;
-          key_look = true;
+          controller_.look_.y_.inc_.On();
         }
         else if(code == key_look_down_)
         {
-          key_look_state_down_ = true;
-          key_look = true;
+          controller_.look_.y_.dec_.On();
         }
         else if(code == key_look_left_)
         {
-          key_look_state_left_ = true;
-          key_look = true;
+          controller_.look_.x_.dec_.On();
         }
         else if(code == key_look_right_)
         {
-          key_look_state_right_ = true;
-          key_look = true;
+          controller_.look_.x_.inc_.On();
         }
         else if(code == key_choice_up_)
         {
-          key_choice_up = true;
+          controller_.choice_up_.On();
         }
         else if(code == key_choice_down_)
         {
-          key_choice_down = true;
+          controller_.choice_down_.On();
         }
         else if(code == key_choice_left_)
         {
-          key_choice_left = true;
+          controller_.choice_left_.On();
         }
         else if(code == key_choice_right_)
         {
-          key_choice_right = true;
+          controller_.choice_right_.On();
         }       
         else if(code == key_action_left_)
         {
-          key_action_left = true;
+          controller_.action_left_.On();
         }
         else if(code == key_action_right_)
         {
-          key_action_right = true;
+          controller_.action_right_.On();
         }
         else if(code == key_select_)
         {
-          key_select = true;
+          controller_.select_.On();
         }
         else if(code == key_back_)
         {
-          key_back = true;
+          controller_.back_.On();
         }
       }
       break;
@@ -357,51 +673,43 @@ auto Event::Impl::Check() -> void
         SDL_Scancode code = event.key.keysym.scancode;
         if(code == key_move_up_)
         {
-          key_move_state_up_ = false;
-          key_move = true;
+          controller_.move_.y_.inc_.Off();
         }
         else if(code == key_move_down_)
         {
-          key_move_state_down_ = false;
-          key_move = true;
+          controller_.move_.y_.dec_.Off();
         }
         else if(code == key_move_left_)
         {
-          key_move_state_left_ = false;
-          key_move = true;
+          controller_.move_.x_.dec_.Off();
         }
         else if(code == key_move_right_)
         {
-          key_move_state_right_ = false;
-          key_move = true;
+          controller_.move_.x_.inc_.Off();
         }
         else if(code == key_look_up_)
         {
-          key_look_state_up_ = false;
-          key_look = true;
+          controller_.look_.y_.inc_.Off();
         }
         else if(code == key_look_down_)
         {
-          key_look_state_down_ = false;
-          key_look = true;
+          controller_.look_.y_.dec_.Off();
         }
         else if(code == key_look_left_)
         {
-          key_look_state_left_ = false;
-          key_look = true;
+          controller_.look_.x_.dec_.Off();
         }
         else if(code == key_look_right_)
         {
-          key_look_state_right_ = false;
-          key_look = true;
+          controller_.look_.x_.inc_.Off();
         }       
         else if(code == key_action_left_)
         {
-          key_action_left = true;
+          controller_.action_left_.Off();
         }
         else if(code == key_action_right_)
         {
-          key_action_right = true;
+          controller_.action_right_.Off();
         }
       }
       break;
@@ -413,7 +721,8 @@ auto Event::Impl::Check() -> void
         {
           BOOST_THROW_EXCEPTION(sdl::Exception() << sdl::Exception::What(sdl::Error()));
         }
-        controllers_.emplace(joystick, ControllerState{ game_controller, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f });
+        controllers_[joystick].Reset(game_controller);
+        for_each(report_.add_, joystick);
       }
       else
       {
@@ -421,41 +730,35 @@ auto Event::Impl::Check() -> void
       }
       break;
     case SDL_CONTROLLERDEVICEREMOVED:
-    {
-      auto iter = controllers_.find(event.cdevice.which);
-      if(iter != controllers_.end())
-      {
-        SDL_GameControllerClose(iter->second.controller_);
-        controllers_.erase(iter);
-      }
-    }
+      controllers_.erase(event.cdevice.which);
+      for_each(report_.remove_, event.cdevice.which);
       break;
     case SDL_CONTROLLERBUTTONDOWN:
       switch(event.cbutton.button)
       {
       case SDL_CONTROLLER_BUTTON_A:
-        key_choice_down = true;
+        controllers_[event.cbutton.which].choice_down_.On();
         break;
       case SDL_CONTROLLER_BUTTON_B:
-        key_choice_right = true;
+        controllers_[event.cbutton.which].choice_right_.On();
         break;
       case SDL_CONTROLLER_BUTTON_X:
-        key_choice_left = true;
+        controllers_[event.cbutton.which].choice_left_.On();
         break;
       case SDL_CONTROLLER_BUTTON_Y:
-        key_choice_up = true;
+        controllers_[event.cbutton.which].choice_up_.On();
         break;
       case SDL_CONTROLLER_BUTTON_BACK:
-        key_back = true;
+        controllers_[event.cbutton.which].back_.On();
         break;
       case SDL_CONTROLLER_BUTTON_START:
-        key_select = true;
+        controllers_[event.cbutton.which].select_.On();
         break;
       case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
-        key_action_left = true;
+        controllers_[event.cbutton.which].action_left_.On();
         break;
       case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
-        key_action_right = true;
+        controllers_[event.cbutton.which].action_right_.On();
         break;
       default:
         break;
@@ -465,10 +768,10 @@ auto Event::Impl::Check() -> void
       switch(event.cbutton.button)
       {
       case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
-        key_action_left = true;
+        controllers_[event.cbutton.which].action_left_.Off();
         break;
       case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
-        key_action_right = true;
+        controllers_[event.cbutton.which].action_right_.Off();
         break;
       default:
         break;
@@ -478,52 +781,16 @@ auto Event::Impl::Check() -> void
       switch(event.caxis.axis)
       {
       case SDL_CONTROLLER_AXIS_LEFTX:
-        if(controllers_.find(event.cdevice.which) != controllers_.end())
-        {
-          auto iter = controllers.find(event.cdevice.which);
-          if(iter == controllers.end())
-          {
-            iter = controllers.emplace(event.cdevice.which, ControllerTemp{0, 0, 0, 0, 0, 0, 0, 0}).first;
-          }
-          iter->second.x_move_ += event.caxis.value;
-          ++(iter->second.m_move_);
-        }
+        controllers_[event.caxis.which].move_.axes_.x_.Add(event.caxis.value);
         break;
       case SDL_CONTROLLER_AXIS_LEFTY:
-        if(controllers_.find(event.cdevice.which) != controllers_.end())
-        {
-          auto iter = controllers.find(event.cdevice.which);
-          if(iter == controllers.end())
-          {
-            iter = controllers.emplace(event.cdevice.which, ControllerTemp{0, 0, 0, 0, 0, 0, 0, 0}).first;
-          }
-          iter->second.y_move_ += event.caxis.value;
-          ++(iter->second.n_move_);
-        }
+        controllers_[event.caxis.which].move_.axes_.y_.Add(event.caxis.value);
         break;
       case SDL_CONTROLLER_AXIS_RIGHTX:
-        if(controllers_.find(event.cdevice.which) != controllers_.end())
-        {
-          auto iter = controllers.find(event.cdevice.which);
-          if(iter == controllers.end())
-          {
-            iter = controllers.emplace(event.cdevice.which, ControllerTemp{0, 0, 0, 0, 0, 0, 0, 0}).first;
-          }
-          iter->second.x_look_ += event.caxis.value;
-          ++(iter->second.m_look_);
-        }
+        controllers_[event.caxis.which].look_.axes_.x_.Add(event.caxis.value);
         break;
       case SDL_CONTROLLER_AXIS_RIGHTY:
-        if(controllers_.find(event.cdevice.which) != controllers_.end())
-        {
-          auto iter = controllers.find(event.cdevice.which);
-          if(iter == controllers.end())
-          {
-            iter = controllers.emplace(event.cdevice.which, ControllerTemp{0, 0, 0, 0, 0, 0, 0, 0}).first;
-          }
-          iter->second.y_look_ += event.caxis.value;
-          ++(iter->second.n_look_);
-        }
+        controllers_[event.caxis.which].look_.axes_.y_.Add(event.caxis.value);
         break;
       default:
         break;
@@ -534,301 +801,23 @@ auto Event::Impl::Check() -> void
     }
   }
 
-  if(key_choice_up)
+  controller_.Update(report_, -1);
+  for(auto& controller : controllers_)
   {
-    choice_up_();
+    controller.second.Update(report_, controller.first, offset_, scale_, threshold_);
   }
-  else if(key_choice_down)
+}
+
+auto Event::Impl::Controllers() -> std::vector<int>
+{
+  std::vector<int> controllers;
+  controllers.push_back(-1);
+  for(auto& controller : controllers_)
   {
-    choice_down_();
+    controllers.push_back(controller.first);
   }
-  else if(key_choice_left)
-  {
-    choice_left_();
-  }
-  else if(key_choice_right)
-  {
-    choice_right_();
-  }
-  else if(key_action_left)
-  {
-    action_left_();
-  }
-  else if(key_action_right)
-  {
-    action_right_();
-  }
-  else if(key_select)
-  {
-    select_();
-  }
-  else if(key_back)
-  {
-    back_();
-  }
-
-  for(auto& controller : controllers)
-  {
-    auto state = controllers_.find(controller.first);
-    if(state != controllers_.end())
-    {
-      if((controller.second.m_move_) || (controller.second.n_move_))
-      {
-        if(controller.second.m_move_)
-        {
-          state->second.x_move_raw_ = static_cast<float>(controller.second.x_move_) / controller.second.m_move_;
-        }
-        if(controller.second.n_move_)
-        {
-          state->second.y_move_raw_ = static_cast<float>(controller.second.y_move_) / controller.second.n_move_;
-        }
-
-        float angle = std::atan2(state->second.y_move_raw_, state->second.x_move_raw_);
-        float length = std::sqrt(state->second.x_move_raw_ * state->second.x_move_raw_ + state->second.y_move_raw_ * state->second.y_move_raw_) / INT16_MAX;
-        length += update_offset_;
-        length *= update_scale_;
-        length = std::min(std::max(length, 0.f), 1.f);
-
-        state->second.x_move_report_ = length * std::cos(angle);
-        state->second.y_move_report_ = -length * std::sin(angle);
-      }
-
-      if((controller.second.m_look_) || (controller.second.n_look_))
-      {
-        if(controller.second.m_look_)
-        {
-          state->second.x_look_raw_ = static_cast<float>(controller.second.x_look_) / controller.second.m_look_;
-        }
-        if(controller.second.n_look_)
-        {
-          state->second.y_look_raw_ = static_cast<float>(controller.second.y_look_) / controller.second.n_look_;
-        }
-
-        float angle = std::atan2(state->second.y_look_raw_, state->second.x_look_raw_);
-        float length = std::sqrt(state->second.x_look_raw_ * state->second.x_look_raw_ + state->second.y_look_raw_ * state->second.y_look_raw_) / INT16_MAX;
-        length += update_offset_;
-        length *= update_scale_;
-        length = std::min(std::max(length, 0.f), 1.f);
-
-        state->second.x_look_report_ = length * std::cos(angle);
-        state->second.y_look_report_ = -length * std::sin(angle);
-      }
-    }
-  }
-
-  float x_move_report = 0.f;
-  float y_move_report = 0.f;
-  bool move_update = false;
-
-  if(!controllers_.empty())
-  {
-    int n = 0;
-    for(auto& controller : controllers_)
-    {
-      if((controller.second.x_move_report_ != 0.f) || (controller.second.y_move_report_ != 0.f))
-      {
-        x_move_report += controller.second.x_move_report_;
-        y_move_report += controller.second.y_move_report_;
-        ++n;
-      }
-      else if(controllers.find(controller.first) != controllers.end())
-      {
-        ++n;
-      }
-    }
-    if(n)
-    {
-      float scale = 1.f / n;
-      x_move_report *= scale;
-      y_move_report *= scale;
-      move_update = true;
-    }
-  }
-
-  if(key_move)
-  {
-    float length;
-    if((key_move_state_left_ != key_move_state_right_) && (key_move_state_up_ != key_move_state_down_))
-    {
-      length = std::sqrt(.5f);
-    }
-    else
-    {
-      length = 1.f;
-    }
-
-    if(key_move_state_left_ != key_move_state_right_)
-    {
-      if(key_move_state_right_)
-      {
-        x_move_key_ = length;
-      }
-      else
-      {
-        x_move_key_ = -length;
-      }
-    }
-    else
-    {
-      x_move_key_ = 0.f;
-    }
-
-    if(key_move_state_up_ != key_move_state_down_)
-    {
-      if(key_move_state_up_)
-      {
-        y_move_key_ = length;
-      }
-      else
-      {
-        y_move_key_ = -length;
-      }
-    }
-    else
-    {
-      y_move_key_ = 0.f;
-    }
-
-    x_move_report += x_move_key_;
-    y_move_report += y_move_key_;
-    move_update = true;
-  }
-  else if(key_move_state_up_ || key_move_state_down_ || key_move_state_left_ || key_move_state_right_)
-  {
-    x_move_report += x_move_key_;
-    y_move_report += y_move_key_;
-    move_update = true;
-  }
-
-  if(move_update)
-  { 
-    float dx = x_move_report_ - x_move_report;
-    float dy = y_move_report_ - y_move_report;
-    if((dx * dx + dy * dy) > update_threshold_)
-    {
-      x_move_report_ = x_move_report;
-      y_move_report_ = y_move_report;
-  
-      for(auto iter = move_report_.begin(); iter != move_report_.end();)
-      {
-        if((*iter)(x_move_report_, y_move_report_))
-        {
-          ++iter;
-        }
-        else
-        {
-          iter = move_report_.erase(iter);
-        }
-      }
-    }
-  }
-
-  float x_look_report = 0.f;
-  float y_look_report = 0.f;
-  bool look_update = false;
-
-  if(!controllers_.empty())
-  {
-    int n = 0;
-    for(auto& controller : controllers_)
-    {
-      if((controller.second.x_look_report_ != 0.f) || (controller.second.y_look_report_ != 0.f))
-      {
-        x_look_report += controller.second.x_look_report_;
-        y_look_report += controller.second.y_look_report_;
-        ++n;
-      }
-      else if(controllers.find(controller.first) != controllers.end())
-      {
-        ++n;
-      }
-    }
-    if(n)
-    {
-      float scale = 1.f / n;
-      x_look_report *= scale;
-      y_look_report *= scale;
-      look_update = true;
-    }
-  }
-
-  if(key_look)
-  {
-    float length;
-    if((key_look_state_left_ != key_look_state_right_) && (key_look_state_up_ != key_look_state_down_))
-    {
-      length = std::sqrt(.5f);
-    }
-    else
-    {
-      length = 1.f;
-    }
-
-    if(key_look_state_left_ != key_look_state_right_)
-    {
-      if(key_look_state_right_)
-      {
-        x_look_key_ = length;
-      }
-      else
-      {
-        x_look_key_ = -length;
-      }
-    }
-    else
-    {
-      x_look_key_ = 0.f;
-    }
-
-    if(key_look_state_up_ != key_look_state_down_)
-    {
-      if(key_look_state_up_)
-      {
-        y_look_key_ = length;
-      }
-      else
-      {
-        y_look_key_ = -length;
-      }
-    }
-    else
-    {
-      y_look_key_ = 0.f;
-    }
-
-    x_look_report += x_look_key_;
-    y_look_report += y_look_key_;
-    look_update = true;
-  }
-  else if(key_look_state_up_ || key_look_state_down_ || key_look_state_left_ || key_look_state_right_)
-  {
-    x_look_report += x_look_key_;
-    y_look_report += y_look_key_;
-    look_update = true;
-  }
-
-  if(look_update)
-  { 
-    float dx = x_look_report_ - x_look_report;
-    float dy = y_look_report_ - y_look_report;
-    if((dx * dx + dy * dy) > update_threshold_)
-    {
-      x_look_report_ = x_look_report;
-      y_look_report_ = y_look_report;
-  
-      for(auto iter = look_report_.begin(); iter != look_report_.end();)
-      {
-        if((*iter)(x_look_report_, y_look_report_))
-        {
-          ++iter;
-        }
-        else
-        {
-          iter = look_report_.erase(iter);
-        }
-      }
-    }
-  }
+  std::sort(controllers.begin(), controllers.end());
+  return controllers;
 }
 
 Event::Event(lua::Stack& lua) : impl_(std::make_shared<Impl>(lua))
@@ -840,59 +829,74 @@ auto Event::operator()() -> void
   impl_->Check();
 }
 
-auto Event::Control(Command const& command) -> void
+auto Event::Move(Control const& control) -> void
 {
-  impl_->Control(command);
+  impl_->Move(control);
 }
 
-auto Event::Look(Command const& command) -> void
+auto Event::Look(Control const& control) -> void
 {
-  impl_->Look(command);
+  impl_->Look(control);
 }
 
-auto Event::ChoiceUp(event::Command const& command) -> void
+auto Event::ChoiceUp(Button const& button) -> void
 {
-  impl_->ChoiceUp(command);
+  impl_->ChoiceUp(button);
 }
 
-auto Event::ChoiceDown(event::Command const& command) -> void
+auto Event::ChoiceDown(Button const& button) -> void
 {
-  impl_->ChoiceDown(command);
+  impl_->ChoiceDown(button);
 }
 
-auto Event::ChoiceLeft(event::Command const& command) -> void
+auto Event::ChoiceLeft(Button const& button) -> void
 {
-  impl_->ChoiceLeft(command);
+  impl_->ChoiceLeft(button);
 }
 
-auto Event::ChoiceRight(event::Command const& command) -> void
+auto Event::ChoiceRight(Button const& button) -> void
 {
-  impl_->ChoiceRight(command);
+  impl_->ChoiceRight(button);
 }
 
-auto Event::ActionLeft(event::Command const& command) -> void
+auto Event::ActionLeft(Switch const& zwitch) -> void
 {
-  impl_->ActionLeft(command);
+  impl_->ActionLeft(zwitch);
 }
 
-auto Event::ActionRight(event::Command const& command) -> void
+auto Event::ActionRight(Switch const& zwitch) -> void
 {
-  impl_->ActionRight(command);
+  impl_->ActionRight(zwitch);
 }
 
-auto Event::Select(event::Command const& command) -> void
+auto Event::Select(Button const& button) -> void
 {
-  impl_->Select(command);
+  impl_->Select(button);
 }
 
-auto Event::Back(event::Command const& command) -> void
+auto Event::Back(Button const& button) -> void
 {
-  impl_->Back(command);
+  impl_->Back(button);
 }
 
-auto Event::Quit(event::Command const& command) -> void
+auto Event::Quit(Command const& command) -> void
 {
   impl_->Quit(command);
+}
+
+auto Event::Controllers() -> std::vector<int>
+{
+  return impl_->Controllers();
+}
+
+auto Event::Add(Index const& id) -> void
+{
+  impl_->Add(id);
+}
+
+auto Event::Remove(Index const& id) -> void
+{
+  impl_->Remove(id);
 }
 
 Event::operator bool() const

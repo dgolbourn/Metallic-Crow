@@ -15,9 +15,9 @@ class Body
 public:
   Body() = default;
   Body(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes, Feature const& mouth);
-  auto Expression(std::string const& expression, bool left_facing) -> double;
+  auto Expression(std::string const& expression, int direction) -> double;
   auto Expression(std::string const& expression) -> double;
-  auto Expression(bool left_facing) -> double;
+  auto Expression(int direction) -> double;
   auto Next() -> double;
   auto Period() const -> double;
   auto Position(Position const& position) -> void;

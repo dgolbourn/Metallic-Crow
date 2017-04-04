@@ -16,14 +16,14 @@ public:
   auto Pause() -> void;
   auto Resume() -> void;
   auto Render() -> void;
-  auto ChoiceUp() -> void;
-  auto ChoiceDown() -> void;
-  auto ChoiceLeft() -> void;
-  auto ChoiceRight() -> void;
-  auto ActionLeft() -> void;
-  auto ActionRight() -> void;
-  auto Control(float x, float y) -> void;
-  auto Look(float x, float y) -> void;
+  auto ChoiceUp(int player) -> void;
+  auto ChoiceDown(int player) -> void;
+  auto ChoiceLeft(int player) -> void;
+  auto ChoiceRight(int player) -> void;
+  auto ActionLeft(int player, bool state) -> void;
+  auto ActionRight(int player, bool state) -> void;
+  auto Move(int player, float x, float y) -> void;
+  auto Look(int player, float x, float y) -> void;
   auto Add(event::Command const& command) -> void;
   explicit operator bool() const;
 private:

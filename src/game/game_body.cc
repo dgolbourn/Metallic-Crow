@@ -15,7 +15,7 @@ struct Renderable
   double angle_;
   display::Modulation modulation_;
   float parallax_;
-  bool facing_;
+  int direction_;
   virtual auto operator()() -> void = 0;
 };
 
@@ -24,7 +24,7 @@ struct Feature final : public Renderable
   game::Feature feature_;
   auto operator()() -> void override
   {
-    feature_(current_box_, modulation_, parallax_, current_angle_, facing_);
+    feature_(current_box_, modulation_, parallax_, current_angle_, direction_);
   }
 };
 
@@ -50,7 +50,7 @@ struct Frame
 struct Frames
 {
   std::vector<Frame> frames_;
-  typedef std::pair<std::string, bool> Key;
+  typedef std::pair<std::string, int> Key;
   typedef std::unordered_map<Key, Frames, boost::hash<Key>> Map;
   Map::iterator next_;
   bool iterruptable_;
@@ -81,9 +81,9 @@ class Body::Impl
 {
 public:
   Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path, Feature const& eyes, Feature const& mouth);
-  auto Expression(std::string const& expression, bool left_facing) -> double;
+  auto Expression(std::string const& expression, int direction) -> double;
   auto Expression(std::string const& expression) -> double;
-  auto Expression(bool left_facing) -> double;
+  auto Expression(int direction) -> double;
   auto Expression() -> double;
   auto Next() -> double;
   auto Period() const -> double;
@@ -128,18 +128,18 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
 
       std::string name = lua.Field<std::string>("name");
     
-      bool facing = lua.Field<bool>("left_facing");
+      int direction = lua.Field<int>("direction");
       
       bool interruptable = lua.Field<bool>("interruptable");
 
       std::string next_expression = lua.Field<std::string>("next_name");
       
-      bool next_facing = lua.Field<bool>("next_left_facing");
+      int next_direction = lua.Field<int>("next_direction");
     
-      Frames& frames = expressions_[Frames::Key(name, facing)];
+      Frames& frames = expressions_[Frames::Key(name, direction)];
       frames.iterruptable_ = (interruptable != 0);
 
-      next[Frames::Key(next_expression, next_facing)].push_back(&frames.next_);
+      next[Frames::Key(next_expression, next_direction)].push_back(&frames.next_);
 
       {
         lua::Guard guard = lua.Field("frames");
@@ -153,7 +153,7 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
           {
             RenderPtr render = std::make_shared<::Feature>();
 
-            render->facing_ = lua.Field<bool>("left_facing");
+            render->direction_ = lua.Field<int>("direction");
            
             render->parallax_ = lua.Field<float>("eyes_parallax");
             
@@ -185,7 +185,7 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
           {
             RenderPtr render = std::make_shared<::Feature>();
 
-            render->facing_ = lua.Field<bool>("left_facing");
+            render->direction_ = lua.Field<int>("direction");
             
             render->parallax_ = lua.Field<float>("mouth_parallax");
             
@@ -288,7 +288,7 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
     }
   }
 
-  bool begin_facing = lua.Field<bool>("left_facing");
+  int begin_direction = lua.Field<int>("direction");
 
   std::string begin_expression = lua.Field<std::string>("expression");
   
@@ -316,7 +316,7 @@ Body::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::pa
     }
   }
 
-  state_ = Frames::Key(begin_expression, begin_facing);
+  state_ = Frames::Key(begin_expression, begin_direction);
   current_frames_ = expressions_.find(state_);
   current_frame_ = current_frames_->second.frames_.begin();
   next_ = expressions_.end();
@@ -338,10 +338,10 @@ auto Body::Impl::UpdateFrame() -> void
   }
 }
 
-auto Body::Impl::Expression(std::string const& expression, bool left_facing) -> double
+auto Body::Impl::Expression(std::string const& expression, int direction) -> double
 {
   state_.first = expression;
-  state_.second = left_facing;
+  state_.second = direction;
   return Expression();
 }
 
@@ -351,9 +351,9 @@ auto Body::Impl::Expression(std::string const& expression) -> double
   return Expression();
 }
 
-auto Body::Impl::Expression(bool left_facing) -> double
+auto Body::Impl::Expression(int direction) -> double
 {
-  state_.second = left_facing;
+  state_.second = direction;
   return Expression();
 }
 
@@ -498,14 +498,14 @@ Body::Body(lua::Stack& lua, display::Window& window, boost::filesystem::path con
 {
 }
 
-auto Body::Expression(std::string const& expression, bool left_facing) -> double
+auto Body::Expression(std::string const& expression, int direction) -> double
 {
-  return impl_->Expression(expression, left_facing);
+  return impl_->Expression(expression, direction);
 }
 
-auto Body::Expression(bool left_facing) -> double
+auto Body::Expression(int direction) -> double
 {
-  return impl_->Expression(left_facing);
+  return impl_->Expression(direction);
 }
 
 auto Body::Expression(std::string const& expression) -> double

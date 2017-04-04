@@ -115,18 +115,18 @@ auto Script::Impl::ActorBody() -> void
   if(actor)
   {
     std::string expression = lua_.At<std::string>(-2);
-    int facing = lua_.At<int>(-1);
+    int direction = lua_.At<int>(-1);
 
     if(expression == "")
     {
-      if(facing)
+      if(direction)
       {
-        actor.Body(facing < 0);
+        actor.Body(direction);
       }
     }
-    else if(facing)
+    else if(direction)
     {
-      actor.Body(expression, facing < 0);
+      actor.Body(expression, direction);
     }
     else
     {

@@ -1,10 +1,11 @@
 #include "feature.h"
 #include <unordered_map>
+#include <map>
 #include "boost/functional/hash.hpp"
 namespace
 {
 typedef std::pair<std::string, int> Key;
-typedef std::unordered_map<Key, std::pair<display::Texture, display::Texture>, boost::hash<Key>> TextureMap;
+typedef std::unordered_map<Key, std::map<int, display::Texture>, boost::hash<Key>> TextureMap;
 }
 
 namespace game
@@ -17,7 +18,7 @@ public:
   auto Expression(std::string const& expression) -> void;
   auto Expression(int index) -> void;
   auto Expression() -> void;
-  auto Render(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, double angle, bool facing) const -> void;
+  auto Render(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, double angle, int direction) const -> void;
   TextureMap textures_;
   TextureMap::iterator current_;
   Key state_;
@@ -35,7 +36,7 @@ Feature::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem:
 
       int expession_index = lua.Field<int>("index");
     
-      bool facing = lua.Field<bool>("left_facing");
+      int direction = lua.Field<int>("direction");
     
       display::BoundingBox clip;
       {
@@ -44,18 +45,12 @@ Feature::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem:
       }
 
       display::Texture texture(path / lua.Field<std::string>("page"), window, clip);
-      if(facing)
-      {
-        textures_[Key(expression, expession_index)].first = texture;
-      }
-      else
-      {
-        textures_[Key(expression, expession_index)].second = texture;
-      }
+      
+      textures_[Key(expression, expession_index)][direction] = texture; 
     }
   }
 
-  state_ = std::make_pair(lua.Field<std::string>("begin_expression"), lua.Field<int>("begin_index"));
+  state_ = Key(lua.Field<std::string>("begin_expression"), lua.Field<int>("begin_index"));
   current_ = textures_.find(state_);
 }
 
@@ -89,18 +84,11 @@ auto Feature::Impl::Expression() -> void
   state_.second = current_->first.second;
 }
 
-auto Feature::Impl::Render(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, double angle, bool facing) const -> void
+auto Feature::Impl::Render(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, double angle, int direction) const -> void
 {
   if(current_ != textures_.end())
   {
-    if(facing)
-    {
-      current_->second.first(display::BoundingBox(), render_box, parallax, false, false, angle, modulation);
-    }
-    else
-    {
-      current_->second.second(display::BoundingBox(), render_box, parallax, false, false, angle, modulation);
-    }
+    current_->second[direction](display::BoundingBox(), render_box, parallax, false, false, angle, modulation);
   }
 }
 
@@ -123,12 +111,12 @@ auto Feature::Expression(int index) -> void
   impl_->Expression(index);
 }
 
-auto Feature::operator()(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, double angle, bool facing) const -> bool
+auto Feature::operator()(display::BoundingBox const& render_box, display::Modulation const& modulation, float parallax, double angle, int direction) const -> bool
 {
   bool valid = static_cast<bool>(impl_);
   if(valid)
   {
-    impl_->Render(render_box, modulation, parallax, angle, facing);
+    impl_->Render(render_box, modulation, parallax, angle, direction);
   }
   return valid;
 }

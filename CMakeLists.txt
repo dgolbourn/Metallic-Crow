@@ -52,6 +52,8 @@ set (CONTROLLER_SOURCES
     "${PROJECT_SOURCE_DIR}/src/controller/controller.h"
     "${PROJECT_SOURCE_DIR}/src/controller/menu.h"
     "${PROJECT_SOURCE_DIR}/src/controller/menu.cc"
+    "${PROJECT_SOURCE_DIR}/src/controller/player.h"
+    "${PROJECT_SOURCE_DIR}/src/controller/player.cc"
     "${PROJECT_SOURCE_DIR}/src/controller/saves.h"
     "${PROJECT_SOURCE_DIR}/src/controller/saves.cc")
 
@@ -133,12 +135,11 @@ set (EVENT_SOURCES
     "${PROJECT_SOURCE_DIR}/src/event/command.h"
     "${PROJECT_SOURCE_DIR}/src/event/event.cc"
     "${PROJECT_SOURCE_DIR}/src/event/event.h"
+	"${PROJECT_SOURCE_DIR}/src/event/for_each.h"
     "${PROJECT_SOURCE_DIR}/src/event/queue.cc"
     "${PROJECT_SOURCE_DIR}/src/event/queue.h"
     "${PROJECT_SOURCE_DIR}/src/event/signal.cc"
     "${PROJECT_SOURCE_DIR}/src/event/signal.h"
-    "${PROJECT_SOURCE_DIR}/src/event/sync.cc"
-    "${PROJECT_SOURCE_DIR}/src/event/sync.h"
     "${PROJECT_SOURCE_DIR}/src/event/timer.cc"
     "${PROJECT_SOURCE_DIR}/src/event/timer.h")
 

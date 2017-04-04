@@ -41,6 +41,19 @@ auto Script::Impl::Init(boost::filesystem::path const& file) -> void
   lua_.Pause();
 }
 
+auto Script::Impl::Player(int player, std::string const& call) -> void
+{
+  lua::Guard guard0 = lua_.Get("package");
+  lua::Guard guard1 = lua_.Field("loaded");
+  lua::Guard guard2 = lua_.Field("metallic_crow");
+  lua::Guard guard3 = lua_.Field(call);
+  if(lua_.Check())
+  {
+    lua::Guard guard4 = lua_.Push(player);
+    lua_.Call(1, 0);
+  }
+}
+
 auto Script::Impl::Call(std::string const& call) -> void
 {
   lua::Guard guard0 = lua_.Get("package");
@@ -103,70 +116,108 @@ auto Script::Impl::Render() -> void
     {
       actor.second.Render();
     }
-    stage_->choice_.Render();
+    for(auto& choice : stage_->choices_)
+    {
+      choice.second.Render();
+    }
     stage_->subtitle_.Render();
     stage_->title_.Render();
   }
   fade_.Render();
 }
 
-auto Script::Impl::ChoiceUp() -> void
+auto Script::Impl::ChoiceUp(int player) -> void
 {
   if(stage_)
   {
-    stage_->choice_.Up();
+    auto iter = stage_->choices_.find(player);
+    if(iter != stage_->choices_.end())
+    {
+      iter->second.Up();
+    }
   }
 }
 
-auto Script::Impl::ChoiceDown() -> void
+auto Script::Impl::ChoiceDown(int player) -> void
 {
   if(stage_)
   {
-    stage_->choice_.Down();
+    auto iter = stage_->choices_.find(player);
+    if(iter != stage_->choices_.end())
+    {
+      iter->second.Down();
+    }
   }
 }
 
-auto Script::Impl::ChoiceLeft() -> void
+auto Script::Impl::ChoiceLeft(int player) -> void
 {
   if(stage_)
   {
-    stage_->choice_.Left();
+    auto iter = stage_->choices_.find(player);
+    if(iter != stage_->choices_.end())
+    {
+      iter->second.Left();
+    }
   }
 }
 
-auto Script::Impl::ChoiceRight() -> void
+auto Script::Impl::ChoiceRight(int player) -> void
 {
   if(stage_)
   {
-    stage_->choice_.Right();
+    auto iter = stage_->choices_.find(player);
+    if(iter != stage_->choices_.end())
+    {
+      iter->second.Right();
+    }
   }
 }
 
-auto Script::Impl::ActionLeft() -> void
-{
-  Call("action_left");
-}
-
-auto Script::Impl::ActionRight() -> void
-{
-  Call("action_right");
-}
-
-auto Script::Impl::Control(float x, float y) -> void
+auto Script::Impl::ActionLeft(int player, bool state) -> void
 {
   lua::Guard guard0 = lua_.Get("package");
   lua::Guard guard1 = lua_.Field("loaded");
   lua::Guard guard2 = lua_.Field("metallic_crow");
-  lua::Guard guard3 = lua_.Field("control");
+  lua::Guard guard3 = lua_.Field("action_left");
   if(lua_.Check())
   {
-    lua::Guard guard4 = lua_.Push(x);
-    lua::Guard guard5 = lua_.Push(y);
+    lua::Guard guard4 = lua_.Push(player);
+    lua::Guard guard5 = lua_.Push(state);
     lua_.Call(2, 0);
   }
 }
 
-auto Script::Impl::Look(float x, float y) -> void
+auto Script::Impl::ActionRight(int player, bool state) -> void
+{
+  lua::Guard guard0 = lua_.Get("package");
+  lua::Guard guard1 = lua_.Field("loaded");
+  lua::Guard guard2 = lua_.Field("metallic_crow");
+  lua::Guard guard3 = lua_.Field("action_right");
+  if(lua_.Check())
+  {
+    lua::Guard guard4 = lua_.Push(player);
+    lua::Guard guard5 = lua_.Push(state);
+    lua_.Call(2, 0);
+  }
+}
+
+auto Script::Impl::Move(int player, float x, float y) -> void
+{
+  lua::Guard guard0 = lua_.Get("package");
+  lua::Guard guard1 = lua_.Field("loaded");
+  lua::Guard guard2 = lua_.Field("metallic_crow");
+  lua::Guard guard3 = lua_.Field("move");
+  if(lua_.Check())
+  {
+    lua::Guard guard4 = lua_.Push(player);
+    lua::Guard guard5 = lua_.Push(x);
+    lua::Guard guard6 = lua_.Push(y);
+    lua_.Call(3, 0);
+  }
+}
+
+auto Script::Impl::Look(int player, float x, float y) -> void
 {
   lua::Guard guard0 = lua_.Get("package");
   lua::Guard guard1 = lua_.Field("loaded");
@@ -174,9 +225,10 @@ auto Script::Impl::Look(float x, float y) -> void
   lua::Guard guard3 = lua_.Field("look");
   if(lua_.Check())
   {
-    lua::Guard guard4 = lua_.Push(x);
-    lua::Guard guard5 = lua_.Push(y);
-    lua_.Call(2, 0);
+    lua::Guard guard4 = lua_.Push(player);
+    lua::Guard guard5 = lua_.Push(x);
+    lua::Guard guard6 = lua_.Push(y);
+    lua_.Call(3, 0);
   }
 }
 
@@ -200,44 +252,44 @@ auto Script::Render() -> void
   impl_->Render();
 }
 
-auto Script::ChoiceUp() -> void
+auto Script::ChoiceUp(int player) -> void
 {
-  impl_->ChoiceUp();
+  impl_->ChoiceUp(player);
 }
 
-auto Script::ChoiceDown() -> void
+auto Script::ChoiceDown(int player) -> void
 {
-  impl_->ChoiceDown();
+  impl_->ChoiceDown(player);
 }
 
-auto Script::ChoiceLeft() -> void
+auto Script::ChoiceLeft(int player) -> void
 {
-  impl_->ChoiceLeft();
+  impl_->ChoiceLeft(player);
 }
 
-auto Script::ChoiceRight() -> void
+auto Script::ChoiceRight(int player) -> void
 {
-  impl_->ChoiceRight();
+  impl_->ChoiceRight(player);
 }
 
-auto Script::ActionLeft() -> void
+auto Script::ActionLeft(int player, bool state) -> void
 {
-  impl_->ActionLeft();
+  impl_->ActionLeft(player, state);
 }
 
-auto Script::ActionRight() -> void
+auto Script::ActionRight(int player, bool state) -> void
 {
-  impl_->ActionRight();
+  impl_->ActionRight(player, state);
 }
 
-auto Script::Control(float x, float y) -> void
+auto Script::Move(int player, float x, float y) -> void
 {
-  impl_->Control(x, y);
+  impl_->Move(player, x, y);
 }
 
-auto Script::Look(float x, float y) -> void
+auto Script::Look(int player, float x, float y) -> void
 {
-  impl_->Look(x, y);
+  impl_->Look(player, x, y);
 }
 
 auto Script::Add(event::Command const& command) -> void

@@ -42,12 +42,16 @@ auto main(int argc, char* argv[]) -> int
 
       queue.Add(function::Bind(&event::Event::operator(), event));
       
-      controller.Add(Quit);
+      controller.Quit(Quit);
 
+      for(auto i : event.Controllers())
+      {
+        controller.Add(i);
+      }
       event.Quit(Quit);
       event.Select(function::Bind(&game::Controller::Select, controller));
       event.Back(function::Bind(&game::Controller::Back, controller));
-      event.Control(function::Bind(&game::Controller::Control, controller));
+      event.Move(function::Bind(&game::Controller::Move, controller));
       event.Look(function::Bind(&game::Controller::Look, controller));
       event.ChoiceUp(function::Bind(&game::Controller::ChoiceUp, controller));
       event.ChoiceDown(function::Bind(&game::Controller::ChoiceDown, controller));
@@ -55,6 +59,8 @@ auto main(int argc, char* argv[]) -> int
       event.ChoiceRight(function::Bind(&game::Controller::ChoiceRight, controller));
       event.ActionLeft(function::Bind(&game::Controller::ActionLeft, controller));
       event.ActionRight(function::Bind(&game::Controller::ActionRight, controller));
+      event.Add(function::Bind(&game::Controller::Add, controller));
+      event.Remove(function::Bind(&game::Controller::Remove, controller));
 
       while(run)
       {

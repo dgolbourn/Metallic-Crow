@@ -102,18 +102,20 @@ auto Script::Impl::StageLoad() -> void
     }
   }
 
-  Choice choice;
   {
-    lua::Guard guard = lua_.Field("choice");
-    choice = Choice(lua_, window_, queue_, path_);
+    lua::Guard guard = lua_.Field("choices");
+    for(int index = 1, end = lua_.Size(); index <= end; ++index)
+    {
+      lua::Guard guard = lua_.Field(index);
+      Choice choice(lua_, window_, queue_, path_);
+      choice.Up(function::Bind(&Impl::Player, shared_from_this(), index, "choice_up"));
+      choice.Down(function::Bind(&Impl::Player, shared_from_this(), index, "choice_down"));
+      choice.Left(function::Bind(&Impl::Player, shared_from_this(), index, "choice_left"));
+      choice.Right(function::Bind(&Impl::Player, shared_from_this(), index, "choice_right"));
+      choice.Timer(function::Bind(&Impl::Player, shared_from_this(), index, "choice_timer"));
+      stage->choices_[index] = choice;
+    }
   }
-
-  choice.Up(function::Bind(&Impl::Call, shared_from_this(), "choice_up"));
-  choice.Down(function::Bind(&Impl::Call, shared_from_this(), "choice_down"));
-  choice.Left(function::Bind(&Impl::Call, shared_from_this(), "choice_left"));
-  choice.Right(function::Bind(&Impl::Call, shared_from_this(), "choice_right"));
-  choice.Timer(function::Bind(&Impl::Call, shared_from_this(), "choice_timer"));
-  stage->choice_ = choice;
 
   {
     lua::Guard guard = lua_.Field("subtitle");
@@ -183,7 +185,10 @@ auto Script::Impl::Pause(StagePtr const& stage, bool& paused) -> void
       actor.Pause();
     }
     stage->world_.Pause();
-    stage->choice_.Pause();
+    for(auto choice : stage->choices_)
+    {
+      choice.second.Pause();
+    }
     for(auto timer : stage->timers_)
     {
       timer.Pause();
@@ -212,7 +217,10 @@ auto Script::Impl::Resume(StagePtr const& stage, bool& paused) -> void
       actor.Resume();
     }
     stage->world_.Resume();
-    stage->choice_.Resume();
+    for(auto choice : stage->choices_)
+    {
+      choice.second.Resume();
+    }
     for(auto timer : stage->timers_)
     {
       timer.Resume();

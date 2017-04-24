@@ -237,6 +237,16 @@ auto Script::Impl::Add(event::Command const& command) -> void
   signal_.Add(command);
 }
 
+auto Script::Impl::Join(int player) -> void
+{
+  Player(player, "join");
+}
+
+auto Script::Impl::Leave(int player) -> void
+{
+  Player(player, "leave");
+}
+
 auto Script::Pause() -> void
 {
   impl_->Pause();
@@ -295,6 +305,16 @@ auto Script::Look(int player, float x, float y) -> void
 auto Script::Add(event::Command const& command) -> void
 {
   impl_->Add(command);
+}
+
+auto Script::Join(int player) -> void
+{
+  impl_->Join(player);
+}
+
+auto Script::Leave(int player) -> void
+{
+  impl_->Leave(player);
 }
 
 Script::operator bool() const

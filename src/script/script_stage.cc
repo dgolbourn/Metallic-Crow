@@ -2,7 +2,6 @@
 #include "bind.h"
 #include <algorithm>
 #include "lua_data.h"
-#include <boost/bimap/support/lambda.hpp>
 namespace game
 {
 auto Script::Impl::StageGet() -> StagePtr

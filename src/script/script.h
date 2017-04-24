@@ -25,6 +25,8 @@ public:
   auto Move(int player, float x, float y) -> void;
   auto Look(int player, float x, float y) -> void;
   auto Add(event::Command const& command) -> void;
+  auto Join(int player) -> void;
+  auto Leave(int player) -> void;
   explicit operator bool() const;
 private:
   class Impl;

@@ -20,7 +20,8 @@ enum class State : int
   Pause,
   Delete,
   Story,
-  Player
+  Player,
+  PausePlayer
 };
 
 typedef std::vector<std::string> Strings;
@@ -280,7 +281,17 @@ auto LoadOptions(game::Menu& menu, game::Saves& saves, Strings const& chapters) 
   menu[saves.LastPlayed()];
 }
 
-auto PauseMenuOptions(game::Menu& menu) -> void
+auto PlayerPauseMenuOptions(game::Menu& menu) -> void
+{
+  game::Menu::Options options;
+  options.push_back({"Resume Story", false});
+  options.push_back({"Controllers", false});
+  options.push_back({"Quit to Menu", false});
+  options.push_back({"Quit to Desktop", false});
+  menu(options);
+}
+
+auto OnePauseMenuOptions(game::Menu& menu) -> void
 {
   game::Menu::Options options;
   options.push_back({"Resume Story", false});
@@ -314,6 +325,7 @@ public:
   auto AllBackEvent() -> void;
   auto AllChoiceSelectEvent() -> void;
   auto AllChoiceBackEvent() -> void;
+  auto JoinEvent(int player, bool state) -> void;
 
   auto Render() -> void;
   auto Quit(event::Command const& command) -> void;
@@ -334,9 +346,13 @@ public:
   auto Add(int id) -> void;
   auto Remove(int id) -> void;
   auto Player() -> void;
+  auto PausePlayer() -> void;
+  auto PauseMenu() -> void;
 
   event::Queue queue_;
   display::Window window_;
+  Menu one_pause_menu_;
+  Menu player_pause_menu_;
   Menu pause_menu_;
   Menu first_start_menu_;
   Menu continue_start_menu_;
@@ -381,6 +397,11 @@ auto Controller::Impl::Player() -> void
   state_ = State::Player;
 }
 
+auto Controller::Impl::PausePlayer() -> void
+{
+  state_ = State::PausePlayer;
+}
+
 auto Controller::Impl::Load(int slot) -> void
 {
   saves_.Play(slot);
@@ -415,10 +436,16 @@ Controller::Impl::Impl(lua::Stack& lua, event::Queue& queue, boost::filesystem::
 
   {
     lua::Guard guard = lua.Field("menu");
-    pause_menu_ = Menu(lua, window_, path_);
+    one_pause_menu_ = Menu(lua, window_, path_);
   }
+  OnePauseMenuOptions(one_pause_menu_);
 
-  PauseMenuOptions(pause_menu_);
+  {
+    lua::Guard guard = lua.Field("menu");
+    player_pause_menu_ = Menu(lua, window_, path_);
+  }
+  PlayerPauseMenuOptions(player_pause_menu_);
+
   pause_script_ = Script(path_ / lua.Field<std::string>("pause_menu_script"), window_, queue_, path_, volume_);
 
   {
@@ -558,10 +585,23 @@ Controller::Impl::Impl(lua::Stack& lua, event::Queue& queue, boost::filesystem::
   }
 
   StartMenu();
+  PauseMenu();
 
   navigate_.Resume();
   select_.Resume();
   back_.Resume();
+}
+
+auto Controller::Impl::PauseMenu() -> void
+{
+  if(player_)
+  {
+    pause_menu_ = player_pause_menu_;
+  }
+  else
+  {
+    pause_menu_ = one_pause_menu_;
+  }
 }
 
 auto Controller::Impl::StartMenu() -> void
@@ -664,9 +704,14 @@ auto Controller::Impl::Init() -> void
 {
   queue_.Add(function::Bind(&Impl::Render, shared_from_this()));
 
-  pause_menu_.Add(0, function::Bind(&Impl::PauseContinue, shared_from_this()));
-  pause_menu_.Add(1, function::Bind(&Impl::PauseMainMenu, shared_from_this()));
-  pause_menu_.Add(2, function::Bind(&Impl::PauseQuit, shared_from_this()));
+  one_pause_menu_.Add(0, function::Bind(&Impl::PauseContinue, shared_from_this()));
+  one_pause_menu_.Add(1, function::Bind(&Impl::PauseMainMenu, shared_from_this()));
+  one_pause_menu_.Add(2, function::Bind(&Impl::PauseQuit, shared_from_this()));
+
+  player_pause_menu_.Add(0, function::Bind(&Impl::PauseContinue, shared_from_this()));
+  player_pause_menu_.Add(1, function::Bind(&Impl::PausePlayer, shared_from_this()));
+  player_pause_menu_.Add(2, function::Bind(&Impl::PauseMainMenu, shared_from_this()));
+  player_pause_menu_.Add(3, function::Bind(&Impl::PauseQuit, shared_from_this()));
 
   first_start_menu_.Add(0, function::Bind(&Impl::StartPlay, shared_from_this()));
   first_start_menu_.Add(1, function::Bind(&Impl::Player, shared_from_this()));
@@ -773,7 +818,25 @@ auto Controller::Impl::Init() -> void
   player_.AllChoiceSelect(function::Bind(&Impl::AllChoiceSelectEvent, shared_from_this()));
   player_.AllChoiceBack(function::Bind(&Impl::AllChoiceBackEvent, shared_from_this()));
 
+  player_.Join(function::Bind(&Impl::JoinEvent, shared_from_this()));
+
   start_script_.Resume();
+}
+
+auto Controller::Impl::JoinEvent(int player, bool state) -> void
+{
+  PauseMenu();
+  if(story_script_)
+  {
+    if(state)
+    {
+      story_script_.Join(player);
+    }
+    else
+    {
+      story_script_.Leave(player);
+    }
+  }
 }
 
 auto Controller::Impl::ChapterEnd() -> void
@@ -847,6 +910,10 @@ auto Controller::Impl::StartPlay() -> void
   saves_.Play(saves_.LastPlayed());
   story_script_ = Script(chapter_files_[saves_.Current(saves_.LastPlayed())], window_, queue_, path_, volume_);
   story_script_.Add(function::Bind(&Impl::ChapterEnd, shared_from_this()));
+  for(auto i : player_.Current())
+  {
+    story_script_.Join(i);
+  }
   story_script_.Resume();
 }
 
@@ -985,6 +1052,7 @@ auto Controller::Impl::RawUpEvent(int id) -> void
 {
   switch(state_)
   {
+  case State::PausePlayer:
   case State::Player:
     player_.Up(id);
     break;
@@ -997,6 +1065,7 @@ auto Controller::Impl::RawDownEvent(int id) -> void
 {
   switch(state_)
   {
+  case State::PausePlayer:
   case State::Player:
     player_.Down(id);
     break;
@@ -1109,6 +1178,10 @@ auto Controller::Impl::AllBackEvent() -> void
     story_script_.Resume();
     pause_script_.Pause();
     break;
+  case State::PausePlayer:
+    back_(volume_);
+    state_ = State::Pause;
+    break;
   case State::Player:
   case State::Load:
   case State::Chapter:
@@ -1168,6 +1241,10 @@ auto Controller::Impl::AllChoiceBackEvent() -> void
     story_script_.Resume();
     pause_script_.Pause();
     break;
+  case State::PausePlayer:
+    back_(volume_);
+    state_ = State::Pause;
+    break;
   case State::Player:
   case State::Load:
   case State::Chapter:
@@ -1220,6 +1297,7 @@ auto Controller::Impl::Render() -> void
     story_script_.Render();
     window_.Show();
     break;
+  case State::PausePlayer:
   case State::Player:
     window_.Clear();
     start_script_.Render();

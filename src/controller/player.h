@@ -48,6 +48,9 @@ public:
   auto AllChoiceSelect(event::Command const& command) -> void;
   auto AllChoiceBack(event::Command const& command) -> void;
 
+  auto Join(Switch const& zwitch) -> void;
+  auto Current()->std::vector<int>;
+
   auto Add(int id) -> void;
   auto Remove(int id) -> void;
 

@@ -186,6 +186,9 @@ public:
 
   auto Scale() const -> float;
 
+  auto Join(int player) -> void;
+  auto Leave(int player) -> void;
+
   lua::Stack lua_;
   display::Window window_;
   event::Queue queue_;

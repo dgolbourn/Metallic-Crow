@@ -72,7 +72,7 @@ WindowImpl::WindowImpl(lua::Stack& lua) : sdl_(SDL_INIT_VIDEO), img_(IMG_INIT_PN
     }
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, vsync.c_str());
 
-    std::string quality = "best";
+    std::string quality = "linear";
     {
       lua::Guard guard = lua.Field("quality");
       if(lua.Check())
@@ -81,6 +81,16 @@ WindowImpl::WindowImpl(lua::Stack& lua) : sdl_(SDL_INIT_VIDEO), img_(IMG_INIT_PN
       }
     }
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, quality.c_str());
+
+    std::string driver = "opengl";
+    {
+      lua::Guard guard = lua.Field("driver");
+      if(lua.Check())
+      { 
+        lua.Pop(driver);
+      }
+    }
+    SDL_SetHint(SDL_HINT_RENDER_DRIVER, driver.c_str());
 
     std::string mode;
     {

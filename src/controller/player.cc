@@ -3,6 +3,8 @@
 #include "signal.h"
 #include <list>
 #include "for_each.h"
+#include <set>
+#include <algorithm>
 namespace
 {
 struct Texture
@@ -93,6 +95,10 @@ public:
 
   auto Render() -> void;
 
+  auto Join(Switch const& zwitch) -> void;
+
+  auto Current()->std::vector<int>;
+
   auto Assort() -> void;
 
   explicit operator bool();
@@ -121,6 +127,7 @@ public:
   Buttons choice_right_;
   Switches action_left_;
   Switches action_right_;
+  Switches join_;
   Buttons raw_up_;
   Buttons raw_down_;
   Commands all_up_;
@@ -129,7 +136,49 @@ public:
   Commands all_back_;
   Commands all_choice_select_;
   Commands all_choice_back_;
+
+  struct Notifier
+  {
+    std::set<int> prev_;
+    Player::Impl& impl_;
+    explicit Notifier(Impl& impl);
+    auto operator()() -> void;
+  };
 };
+
+Player::Impl::Notifier::Notifier(Player::Impl& impl) : impl_(impl)
+{
+  for(auto& id : impl_.ids_)
+  {
+    if(id.second.active_ && id.second.player_ >= 0)
+    {
+      prev_.insert(id.second.player_ + 1);
+    }
+  }
+}
+
+auto Player::Impl::Notifier::operator()() -> void
+{
+  std::set<int> next;
+  for(auto& id : impl_.ids_)
+  {
+    if(id.second.active_ && id.second.player_ >= 0)
+    {
+      next.insert(id.second.player_ + 1);
+    }
+  }
+  std::vector<int> out(std::max(next.size(), prev_.size()));
+  auto end = std::set_difference(prev_.begin(), prev_.end(), next.begin(), next.end(), out.begin());
+  for(auto iter = out.begin(); iter != end; ++iter)
+  {
+    event::for_each(impl_.join_, *iter, false);
+  }
+  end = std::set_difference(next.begin(), next.end(), prev_.begin(), prev_.end(), out.begin());
+  for(auto iter = out.begin(); iter != end; ++iter)
+  {
+    event::for_each(impl_.join_, *iter, true);
+  }
+}
 
 auto Player::Impl::Render() -> void
 {
@@ -217,6 +266,7 @@ auto Player::Impl::Assort() -> void
 
 auto Player::Impl::Up(int id) -> void
 {
+  Notifier notifier(*this);
   auto iter = ids_.find(id);
   if(iter != ids_.end() && iter->second.active_)
   {
@@ -230,10 +280,12 @@ auto Player::Impl::Up(int id) -> void
       redraw_ = true;
     }
   }
+  notifier();
 }
 
 auto Player::Impl::Down(int id) -> void
 {
+  Notifier notifier(*this);
   auto iter = ids_.find(id);
   if(iter != ids_.end() && iter->second.active_)
   {
@@ -243,10 +295,12 @@ auto Player::Impl::Down(int id) -> void
       redraw_ = true;
     }
   }
+  notifier();
 }
 
 auto Player::Impl::Add(int id) -> void
 {
+  Notifier notifier(*this);
   auto iter = ids_.find(id);
   if(iter != ids_.end())
   {
@@ -263,10 +317,12 @@ auto Player::Impl::Add(int id) -> void
     ++next_ %= players_.size();
     redraw_ = true;
   }
+  notifier();
 }
 
 auto Player::Impl::Remove(int id) -> void
 {
+  Notifier notifier(*this);
   auto iter = ids_.find(id);
   if(iter != ids_.end())
   {
@@ -277,6 +333,7 @@ auto Player::Impl::Remove(int id) -> void
       Assort();
     }
   }
+  notifier();
 }
 
 Player::Impl::Impl(lua::Stack& lua, display::Window& window, boost::filesystem::path const& path) : next_(0), redraw_(true), sign_(0)
@@ -433,7 +490,7 @@ auto Player::Impl::Move(int id, float x, float y) -> void
         event::for_each(all_down_);
       }
 
-      event::for_each(move_, iter->second.player_, player_x / player_n, player_y / player_n);
+      event::for_each(move_, iter->second.player_ + 1, player_x / player_n, player_y / player_n);
     }
   }
 }
@@ -462,7 +519,7 @@ auto Player::Impl::Look(int id, float x, float y) -> void
           }
         }
       }
-      event::for_each(look_, iter->second.player_, player_x / player_n, player_y / player_n);
+      event::for_each(look_, iter->second.player_ + 1, player_x / player_n, player_y / player_n);
     }
   }
 }
@@ -472,7 +529,7 @@ auto Player::Impl::ChoiceUp(int id) -> void
   auto iter = ids_.find(id);
   if(iter != ids_.end() && iter->second.active_ && iter->second.player_ >= 0)
   {
-    event::for_each(choice_up_, iter->second.player_);
+    event::for_each(choice_up_, iter->second.player_ + 1);
   }
 }
 
@@ -481,7 +538,7 @@ auto Player::Impl::ChoiceDown(int id) -> void
   auto iter = ids_.find(id);
   if(iter != ids_.end() && iter->second.active_ && iter->second.player_ >= 0)
   {
-    event::for_each(choice_down_, iter->second.player_);
+    event::for_each(choice_down_, iter->second.player_ + 1);
     event::for_each(all_choice_select_);
   }
 }
@@ -491,7 +548,7 @@ auto Player::Impl::ChoiceLeft(int id) -> void
   auto iter = ids_.find(id);
   if(iter != ids_.end() && iter->second.active_ && iter->second.player_ >= 0)
   {
-    event::for_each(choice_left_, iter->second.player_);
+    event::for_each(choice_left_, iter->second.player_ + 1);
     event::for_each(all_choice_back_);
   }
 }
@@ -501,7 +558,7 @@ auto Player::Impl::ChoiceRight(int id) -> void
   auto iter = ids_.find(id);
   if(iter != ids_.end() && iter->second.active_ && iter->second.player_ >= 0)
   {
-    event::for_each(choice_right_, iter->second.player_);
+    event::for_each(choice_right_, iter->second.player_ + 1);
   }
 }
 
@@ -533,18 +590,21 @@ auto Player::Impl::ActionLeft(int id, bool state) -> void
         }
       }
 
-      if(players_[iter->second.player_].action_left_)
+      ::Player& player = players_.at(iter->second.player_);
+      if(player.action_left_)
       {
         if(sign < 0)
         {
-          event::for_each(action_left_, iter->second.player_, false);
+          player.action_left_ = false;
+          event::for_each(action_left_, iter->second.player_ + 1, false);
         }
       }
       else
       {
         if(sign > 0)
         {
-          event::for_each(action_left_, iter->second.player_, true);
+          player.action_left_ = true;
+          event::for_each(action_left_, iter->second.player_ + 1, true);
         }
       }
     }
@@ -578,18 +638,21 @@ auto Player::Impl::ActionRight(int id, bool state) -> void
           }
         }
       }
-      if(players_[iter->second.player_].action_right_)
+      ::Player& player = players_.at(iter->second.player_);
+      if(player.action_right_)
       {
         if(sign < 0)
         {
-          event::for_each(action_right_, iter->second.player_, false);
+          player.action_right_ = false;
+          event::for_each(action_right_, iter->second.player_ + 1, false);
         }
       }
       else
       {
         if(sign > 0)
         {
-          event::for_each(action_right_, iter->second.player_, true);
+          player.action_right_ = true;
+          event::for_each(action_right_, iter->second.player_ + 1, true);
         }
       }
     }
@@ -693,6 +756,29 @@ auto Player::Impl::AllChoiceSelect(event::Command const& command) -> void
 auto Player::Impl::AllChoiceBack(event::Command const& command) -> void
 {
   all_choice_back_.push_back(command);
+}
+
+auto Player::Impl::Current()->std::vector<int>
+{
+  std::set<int> players;
+  for(auto& id : ids_)
+  {
+    if(id.second.active_ && id.second.player_ >= 0)
+    {
+      players.insert(id.second.player_ + 1);
+    }
+  }
+  std::vector<int> ret(players.size());
+  for(auto player : players)
+  {
+    ret.push_back(player);
+  }
+  return ret;
+}
+
+auto Player::Impl::Join(Switch const& zwitch) -> void
+{
+  join_.push_back(zwitch);
 }
 
 Player::Impl::operator bool()
@@ -862,6 +948,16 @@ auto Player::Down(int id) -> void
 auto Player::Render() -> void
 {
   impl_->Render();
+}
+
+auto Player::Join(Switch const& zwitch) -> void
+{
+  impl_->Join(zwitch);
+}
+
+auto Player::Current()->std::vector<int>
+{
+  return impl_->Current();
 }
 
 Player::operator bool()

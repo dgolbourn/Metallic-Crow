@@ -5,6 +5,10 @@ Metallic Crow is a game engine for 2D sprite-based games.
 
 It was primarily written for story games and has some features which support this, and omits other features that aren't relevant to games of that type. The engine is written in C++. It uses SDL for the core multimedia functionality, Box2D for physics, Boost for data structures and algorithms and Lua for the embedded extension language. Metallic Crow is configured and extended using Lua. You build your game from Lua scripts which are called from the Metallic Crow executable.
 
+For an example of what can be made with the engine see
+
+https://www.youtube.com/channel/UC-kdxtu8EZwM3wx1x_219rw
+
 .. highlight:: lua
 
 

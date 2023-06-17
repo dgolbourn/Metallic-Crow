@@ -24,7 +24,7 @@
 	ignore = dirty	
 [submodule "lib/box2d"]
 	path = lib/box2d
-	url = https://github.com/ansman/box2d.git
+	url = https://github.com/erincatto/box2d.git
 [submodule "lib/lua"]
 	path = lib/lua
 	url = https://github.com/LuaDist/lua.git

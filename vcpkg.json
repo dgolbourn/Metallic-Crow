@@ -1,0 +1,13 @@
+{
+    "dependencies" : [
+        "jansson",
+        "sdl2",	
+        "sdl2-ttf",
+        "sdl2-mixer",
+        "sdl2-image",
+        "ffmpeg",	
+        "box2d",
+        "lua",
+        "boost"
+    ]
+}

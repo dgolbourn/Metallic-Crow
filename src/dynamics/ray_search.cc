@@ -6,7 +6,7 @@ RaySearch::RaySearch(b2Vec2 const& point_a, b2Vec2 const& point_b, b2World const
   world.RayCast(this, point_a, point_b);
 }
 
-auto RaySearch::ReportFixture(b2Fixture* fixture, b2Vec2 const&, b2Vec2 const&, float32 fraction) -> float32
+auto RaySearch::ReportFixture(b2Fixture* fixture, b2Vec2 const&, b2Vec2 const&, float fraction) -> float
 {
   if(b2Body* body = fixture->GetBody())
   {

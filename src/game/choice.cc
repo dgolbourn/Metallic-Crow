@@ -242,7 +242,7 @@ template<int T> auto Choice::Impl::Event() -> void
   {
     if(icons_[T].size() >= 2)
     {
-      animation_timer_ = event::Timer(interval_, icons_[T].size() - 2);
+      animation_timer_ = event::Timer(interval_, static_cast<int>(icons_[T].size() - 2));
       animation_timer_.Add(function::Bind(&Impl::Step<T>, shared_from_this()));
       animation_timer_.End(function::Bind(&Impl::Reset, shared_from_this()));
       queue_.Add(function::Bind(&event::Timer::operator(), animation_timer_));

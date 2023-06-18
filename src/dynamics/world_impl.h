@@ -32,10 +32,10 @@ public:
   auto Ambient(float r, float g, float b) -> void;
   auto SayGoodbye(b2Joint* joint) -> void override;
   auto SayGoodbye(b2Fixture* fixture) -> void override;
-  auto Metres(double pixels) const -> float32;
-  auto Pixels(float32 metres) const -> float;
-  float32 f_;
-  float32 dt_;
+  auto Metres(double pixels) const -> float;
+  auto Pixels(float metres) const -> float;
+  float f_;
+  float dt_;
   collision::Group collision_;
   event::Signal begin_;
   event::Signal end_;
@@ -46,7 +46,7 @@ public:
   bool paused_;
   b2Vec3 ambient_;
   BodyImplCount contact_;
-  float32 scale_;
+  float scale_;
 };
 }
 #endif

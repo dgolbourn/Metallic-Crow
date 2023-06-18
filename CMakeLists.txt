@@ -5,6 +5,8 @@ project (Metallic-Crow)
 set_property (GLOBAL PROPERTY USE_FOLDERS ON)
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4459 /wd4456 /wd4457")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4996")
 
 find_package(jansson REQUIRED)
 find_package(SDL2 REQUIRED)	
@@ -15,10 +17,6 @@ find_package(ffmpeg REQUIRED)
 find_package(box2d REQUIRED)
 find_package(lua REQUIRED)
 find_package(boost REQUIRED)
-
-#set (CMAKE_GENERATOR_TOOLSET "CTP_Nov2013" CACHE STRING "Platform Toolset" FORCE)
-
-#set (CMAKE_VS_PLATFORM_TOOLSET "CTP_Nov2013" CACHE STRING "Platform Toolset" FORCE)
 
 include_directories ("${PROJECT_SOURCE_DIR}/src/audio")
 
@@ -244,81 +242,12 @@ add_executable (metallic-crow
                 ${TIME_SOURCES})
 
 include_directories ("${SDL2_INCLUDE_DIRS}")
-#include_directories ("${PROJECT_SOURCE_DIR}/lib/SDL2/src/render")
-#add_library(SDL2 SHARED IMPORTED)
-#set_property(TARGET SDL2 PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/bin/shared/SDL2.dll")
-#set_property(TARGET SDL2 PROPERTY IMPORTED_IMPLIB "${PROJECT_SOURCE_DIR}/bin/shared/SDL2.lib")
 target_link_libraries(metallic-crow SDL2)
-
-#include_directories ("${PROJECT_SOURCE_DIR}/lib/SDL2_image")
-#add_library(SDL2-image SHARED IMPORTED)
-#set_property(TARGET SDL2-image PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/bin/shared/SDL2_image.dll")
-#set_property(TARGET SDL2-image PROPERTY IMPORTED_IMPLIB "${PROJECT_SOURCE_DIR}/bin/shared/SDL2_image.lib")
-
-#add_library(zlib SHARED IMPORTED)
-#set_property(TARGET zlib PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/bin/shared/zlib.dll")
-#set_property(TARGET zlib PROPERTY IMPORTED_IMPLIB "${PROJECT_SOURCE_DIR}/bin/shared/zlib.lib")
-
-#add_library(libpng SHARED IMPORTED)
-#set_property(TARGET libpng PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/bin/shared/libpng16.dll")
-#set_property(TARGET libpng PROPERTY IMPORTED_IMPLIB "${PROJECT_SOURCE_DIR}/bin/shared/libpng16.lib")
-
 target_link_libraries(metallic-crow SDL2-image zlib libpng)
-
-#include_directories ("${PROJECT_SOURCE_DIR}/lib/SDL2_ttf")
-#add_library(SDL2-ttf SHARED IMPORTED)
-#set_property(TARGET SDL2-ttf PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/bin/shared/SDL2_ttf.dll")
-#set_property(TARGET SDL2-ttf PROPERTY IMPORTED_IMPLIB "${PROJECT_SOURCE_DIR}/bin/shared/SDL2_ttf.lib")
-
-#add_library(freetype SHARED IMPORTED)
-#set_property(TARGET freetype PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/bin/shared/freetype.dll")
-#set_property(TARGET freetype PROPERTY IMPORTED_IMPLIB "${PROJECT_SOURCE_DIR}/bin/shared/freetype.lib")
 target_link_libraries(metallic-crow SDL2-ttf freetype)
-
-#include_directories ("${PROJECT_SOURCE_DIR}/lib/SDL2_mixer")
-#add_library(SDL2-mixer SHARED IMPORTED)
-#set_property(TARGET SDL2-mixer PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/bin/shared/SDL2_mixer.dll")
-#set_property(TARGET SDL2-mixer PROPERTY IMPORTED_IMPLIB "${PROJECT_SOURCE_DIR}/bin/shared/SDL2_mixer.lib")
-
-#add_library(libogg SHARED IMPORTED)
-#set_property(TARGET libogg PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/bin/shared/libogg.dll")
-#set_property(TARGET libogg PROPERTY IMPORTED_IMPLIB "${PROJECT_SOURCE_DIR}/bin/shared/libogg.lib")
-
-#add_library(libvorbis SHARED IMPORTED)
-#set_property(TARGET libvorbis PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/bin/shared/libvorbis.dll")
-#set_property(TARGET libvorbis PROPERTY IMPORTED_IMPLIB "${PROJECT_SOURCE_DIR}/bin/shared/libogg.lib")
-
-#add_library(libvorbisfile SHARED IMPORTED)
-#set_property(TARGET libvorbisfile PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/bin/shared/libvorbisfile-3.dll")
-#set_property(TARGET libvorbisfile PROPERTY IMPORTED_IMPLIB "${PROJECT_SOURCE_DIR}/bin/shared/libvorbisfile-3.lib")
 target_link_libraries(metallic-crow SDL2-mixer libogg libvorbis libvorbisfile)
-
-#include_directories ("${PROJECT_SOURCE_DIR}/lib/box2d/Box2D")
-#add_library(Box2D STATIC IMPORTED)
-#set_property(TARGET Box2D PROPERTY IMPORTED_LOCATION_RELEASE "${PROJECT_SOURCE_DIR}/bin/static/Box2D.lib")
-#set_property(TARGET Box2D PROPERTY IMPORTED_LOCATION_DEBUG "${PROJECT_SOURCE_DIR}/bin/static/Box2D_d.lib")
 target_link_libraries(metallic-crow Box2D)
-
-#include_directories ("${PROJECT_SOURCE_DIR}/lib/lua/src")
-#include_directories ("${PROJECT_SOURCE_DIR}/lib/lua")
-#add_library(lua STATIC IMPORTED)
-#set_property(TARGET lua PROPERTY IMPORTED_LOCATION_RELEASE "${PROJECT_SOURCE_DIR}/bin/static/lua.lib")
-#set_property(TARGET lua PROPERTY IMPORTED_LOCATION_DEBUG "${PROJECT_SOURCE_DIR}/bin/static/lua_d.lib")
 target_link_libraries(metallic-crow lua)
-
-#include_directories ("${PROJECT_SOURCE_DIR}/lib/boost")
-
-#add_library(boost-filesystem STATIC IMPORTED)
-#set_property(TARGET boost-filesystem PROPERTY IMPORTED_LOCATION_RELEASE "${PROJECT_SOURCE_DIR}/bin/static/libboost_filesystem-vc120-mt-1_56.lib")
-#set_property(TARGET boost-filesystem PROPERTY IMPORTED_LOCATION_DEBUG "${PROJECT_SOURCE_DIR}/bin/static/libboost_filesystem-vc120-mt-gd-1_56.lib")
 target_link_libraries(metallic-crow boost-filesystem)
-
-#add_library(boost-program-options STATIC IMPORTED)
-#set_property(TARGET boost-program-options PROPERTY IMPORTED_LOCATION_RELEASE "${PROJECT_SOURCE_DIR}/bin/static/libboost_program_options-vc120-mt-1_56.lib")
-#set_property(TARGET boost-program-options PROPERTY IMPORTED_LOCATION_DEBUG "${PROJECT_SOURCE_DIR}/bin/static/libboost_program_options-vc120-mt-gd-1_56.lib")
 target_link_libraries(metallic-crow boost-program-options)
-
-#add_library(boost-system STATIC IMPORTED)
-#set_property(TARGET boost-system PROPERTY IMPORTED_LOCATION_RELEASE "${PROJECT_SOURCE_DIR}/bin/static/libboost_system-vc120-mt-1_56.lib")
-#set_property(TARGET boost-system PROPERTY IMPORTED_LOCATION_DEBUG "${PROJECT_SOURCE_DIR}/bin/static/libboost_system-vc120-mt-gd-1_56.lib")
 target_link_libraries(metallic-crow boost-system)

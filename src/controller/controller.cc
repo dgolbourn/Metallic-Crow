@@ -621,7 +621,7 @@ auto Controller::Impl::StartMenu() -> void
   {
     bool new_start = NewStart(saves_);
     bool full_start = FullStart(saves_);
-    bool complete_start = CompleteStart(saves_, chapter_files_.size());
+    bool complete_start = CompleteStart(saves_, static_cast<int>(chapter_files_.size()));
     if(new_start)
     {
       if(full_start)
@@ -796,7 +796,7 @@ auto Controller::Impl::Init() -> void
 
   for(Strings::size_type i = 0; i < chapter_names_.size(); ++i)
   {
-    chapter_menu_.Add(i, function::Bind(&Impl::Chapter, shared_from_this(), i));
+    chapter_menu_.Add(static_cast<int>(i), function::Bind(&Impl::Chapter, shared_from_this(), static_cast<int>(i)));
   }
 
   player_.Move(function::Bind(&Impl::MoveEvent, shared_from_this()));

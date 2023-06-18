@@ -8,6 +8,7 @@
 #include <mutex>
 #include <boost/flyweight.hpp>
 #include <boost/flyweight/key_value.hpp>
+
 namespace
 {
 struct StreamContainer

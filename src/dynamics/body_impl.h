@@ -26,8 +26,8 @@ public:
   auto Force(float x, float y) -> void;
   auto Impulse(float x, float y) -> void;
   auto Begin() -> void;
-  auto End(float32 dt) -> void;
-  auto Update(float32 ds) -> void;
+  auto End(float dt) -> void;
+  auto Update(float ds) -> void;
   auto Modulation() const -> display::Modulation;
   auto Emit(float r, float g, float b) -> void;
   auto Intrinsic(float r, float g, float b) -> void;

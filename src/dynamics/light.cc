@@ -27,12 +27,12 @@ struct LightPoint
 
 typedef std::queue<LightPoint> LightQueue;
 
-const float32 min_illumination = .001f;
+const float min_illumination = .001f;
 
 auto LightBox(b2Vec3 const& emission, dynamics::BodyImpl const& body) -> b2AABB
 {
-  float32 max_emission = std::max({emission.x, emission.y, emission.z});
-  float32 max_distance = b2Sqrt(max_emission / min_illumination);
+  float max_emission = std::max({emission.x, emission.y, emission.z});
+  float max_distance = b2Sqrt(max_emission / min_illumination);
   b2Vec2 delta(max_distance, max_distance);
   b2Vec2 const& position = body.body_->GetPosition();
   b2AABB box;
@@ -43,7 +43,7 @@ auto LightBox(b2Vec3 const& emission, dynamics::BodyImpl const& body) -> b2AABB
   return box;
 }
 
-auto Distance2(b2Vec2 const& body_a, b2Vec2 const& body_b) -> float32
+auto Distance2(b2Vec2 const& body_a, b2Vec2 const& body_b) -> float
 {
   b2Vec2 distance = body_a;
   distance -= body_b;
@@ -52,7 +52,7 @@ auto Distance2(b2Vec2 const& body_a, b2Vec2 const& body_b) -> float32
 
 auto Attenuation(b2Vec2 const& body_a, b2Vec2 const& body_b) -> b2Vec3
 {
-  float32 temp = 1.f / (1.f + Distance2(body_a, body_b));
+  float temp = 1.f / (1.f + Distance2(body_a, body_b));
   return b2Vec3(temp, temp, temp);
 }
 
@@ -154,7 +154,7 @@ Light::Light(lua::Stack& lua) : emit(false), transmit(false), diffuse(false), il
     if(lua.Check())
     {
       emit = true;
-      emission.Set(lua.Field<float32>(1), lua.Field<float32>(2), lua.Field<float32>(3));
+      emission.Set(lua.Field<float>(1), lua.Field<float>(2), lua.Field<float>(3));
     }
   }
 
@@ -163,7 +163,7 @@ Light::Light(lua::Stack& lua) : emit(false), transmit(false), diffuse(false), il
     if(lua.Check())
     {
       transmit = true;
-      transmission.Set(lua.Field<float32>(1), lua.Field<float32>(2), lua.Field<float32>(3));
+      transmission.Set(lua.Field<float>(1), lua.Field<float>(2), lua.Field<float>(3));
     }
   }
 
@@ -172,7 +172,7 @@ Light::Light(lua::Stack& lua) : emit(false), transmit(false), diffuse(false), il
     if(lua.Check())
     {
       diffuse = true;
-      diffusion.Set(lua.Field<float32>(1), lua.Field<float32>(2), lua.Field<float32>(3));
+      diffusion.Set(lua.Field<float>(1), lua.Field<float>(2), lua.Field<float>(3));
     }
   }
 
@@ -181,7 +181,7 @@ Light::Light(lua::Stack& lua) : emit(false), transmit(false), diffuse(false), il
     illuminate = lua.Check();
     if(illuminate)
     {
-      intrinsic.Set(lua.Field<float32>(1), lua.Field<float32>(2), lua.Field<float32>(3));
+      intrinsic.Set(lua.Field<float>(1), lua.Field<float>(2), lua.Field<float>(3));
     }
   }
 
@@ -191,7 +191,7 @@ Light::Light(lua::Stack& lua) : emit(false), transmit(false), diffuse(false), il
     illuminate = lua.Check();
     if(illuminate)
     {
-      absorption.Set(lua.Field<float32>(1), lua.Field<float32>(2), lua.Field<float32>(3));
+      absorption.Set(lua.Field<float>(1), lua.Field<float>(2), lua.Field<float>(3));
     }
   }
 }

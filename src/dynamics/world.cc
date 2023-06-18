@@ -110,8 +110,8 @@ auto WorldImpl::Update() -> void
       Light();
     }
 
-    static const float32 scale = static_cast<float32>(Clock::period::num) / static_cast<float32>(Clock::period::den);
-    float32 ds = static_cast<float32>(elapsed.count()) * scale / dt_;
+    static const float scale = static_cast<float>(Clock::period::num) / static_cast<float>(Clock::period::den);
+    float ds = static_cast<float>(elapsed.count()) * scale / dt_;
 
     for(auto& body : world_)
     {
@@ -138,14 +138,14 @@ WorldImpl::WorldImpl(lua::Stack& lua, collision::Group& collision) : world_(b2Ve
  
   {
     lua::Guard guard = lua.Field("ambient");
-    ambient_ = {lua.Field<float32>(1), lua.Field<float32>(2), lua.Field<float32>(3)};
+    ambient_ = {lua.Field<float>(1), lua.Field<float>(2), lua.Field<float>(3)};
   }
 
   double rate = lua.Field<double>("frame_rate");
-  f_ = static_cast<float32>(rate);
+  f_ = static_cast<float>(rate);
   double interval = 1. / rate;
 
-  dt_ = static_cast<float32>(interval);
+  dt_ = static_cast<float>(interval);
   interval *= static_cast<double>(Clock::period::den) / static_cast<double>(Clock::period::num);
   interval_ = static_cast<Clock::duration>(static_cast<Clock::rep>(interval));
   remaining_ = interval_;
@@ -186,15 +186,15 @@ auto WorldImpl::Resume() -> void
 
 auto WorldImpl::Ambient(float r, float g, float b) -> void
 {
-  ambient_.Set(static_cast<float32>(r), static_cast<float32>(g), static_cast<float32>(b));
+  ambient_.Set(static_cast<float>(r), static_cast<float>(g), static_cast<float>(b));
 }
 
-auto WorldImpl::Metres(double pixels) const -> float32
+auto WorldImpl::Metres(double pixels) const -> float
 {
-  return static_cast<float32>(pixels) / scale_;
+  return static_cast<float>(pixels) / scale_;
 }
 
-auto WorldImpl::Pixels(float32 metres) const -> float
+auto WorldImpl::Pixels(float metres) const -> float
 {
   return static_cast<float>(metres * scale_);
 }

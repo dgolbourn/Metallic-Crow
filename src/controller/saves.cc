@@ -52,7 +52,7 @@ Saves::Impl::Impl(boost::filesystem::path const& file) : file_(file), playing_(f
   lua::Guard guard = lua.Get("saves");
   for(SaveArray::size_type i = 0; i < saves_.size(); ++i)
   {
-    lua::Guard guard = lua.Field(i + 1);
+    lua::Guard guard = lua.Field(static_cast<int>(i + 1));
     auto& saves = saves_[i];
     std::get<0>(saves) = lua.Field<int>("progress");
     std::get<1>(saves) = lua.Field<int>("current");
@@ -127,7 +127,7 @@ auto Saves::Impl::Playing() const -> bool
 
 auto Saves::Impl::Size() const -> int
 {
-  return saves_.size();
+  return static_cast<int>(saves_.size());
 }
 
 auto Saves::Impl::Progress(int slot) const -> int
@@ -157,7 +157,7 @@ auto Saves::Impl::LastPlayed(int slot) const -> std::string
 
 auto Saves::Impl::LastPlayed() const -> int
 {
-  return slot_;
+  return static_cast<int>(slot_);
 }
 
 auto Saves::Impl::Delete(int slot) -> void

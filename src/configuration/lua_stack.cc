@@ -509,7 +509,7 @@ auto Stack::Field(int index) -> Guard
 
 auto Stack::Size() -> int
 {
-  return lua_rawlen(impl_->state_, -1);
+  return static_cast<int>(lua_rawlen(impl_->state_, -1));
 }
 
 Stack::Stack(boost::filesystem::path const& path) : impl_(std::make_shared<StackImpl>(path))

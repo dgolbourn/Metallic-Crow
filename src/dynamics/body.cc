@@ -6,14 +6,14 @@
 #include "SDL_stdinc.h"
 namespace 
 {
-auto Radians(double degrees) -> float32
+auto Radians(double degrees) -> float
 {
   static const double scale = M_PI / 180.;
-  return static_cast<float32>(degrees * scale);
+  return static_cast<float>(degrees * scale);
 }
 
 typedef std::unique_ptr<b2Shape> Shape;
-typedef std::pair<Shape, float32> ShapePair;
+typedef std::pair<Shape, float> ShapePair;
 
 auto Box(dynamics::WorldImpl const& world, lua::Stack& lua) -> ShapePair
 {
@@ -26,8 +26,8 @@ auto Box(dynamics::WorldImpl const& world, lua::Stack& lua) -> ShapePair
     }
   }
 
-  float32 width = world.Metres(lua.Field<double>(3));
-  float32 height = world.Metres(lua.Field<double>(4));
+  float width = world.Metres(lua.Field<double>(3));
+  float height = world.Metres(lua.Field<double>(4));
 
   ShapePair shape;
   shape.first = Shape(new b2PolygonShape);
@@ -75,7 +75,7 @@ auto Chain(dynamics::WorldImpl const& world, lua::Stack& lua) -> ShapePair
   return shape;
 }
 
-auto BodyDefinition(dynamics::WorldImpl const& world, lua::Stack& lua, float32 damping, float32 x, float32 y, bool allow_rotation, float32 angle) -> b2BodyDef
+auto BodyDefinition(dynamics::WorldImpl const& world, lua::Stack& lua, float damping, float x, float y, bool allow_rotation, float angle) -> b2BodyDef
 {
   b2BodyDef body_def;
  
@@ -100,10 +100,10 @@ auto BodyDefinition(dynamics::WorldImpl const& world, lua::Stack& lua, float32 d
   return body_def;
 }
 
-auto FixtureDefinition(float32 area, float32 mass, float32 friction, float32 restitution, bool sensor) -> b2FixtureDef
+auto FixtureDefinition(float area, float mass, float friction, float restitution, bool sensor) -> b2FixtureDef
 {
   b2FixtureDef fixture;
-  float32 density = 0.f;
+  float density = 0.f;
   if(area > 0.f)
   {
     density = mass / area;
@@ -136,7 +136,7 @@ auto Velocity(b2Body const& body) -> b2Vec3
   return b2Vec3(xy.x, xy.y, body.GetAngularVelocity());
 }
 
-auto Degrees(float32 radians) -> double
+auto Degrees(float radians) -> double
 {
   static const double scale = 180. / M_PI;
   return static_cast<double>(radians) * scale;
@@ -147,7 +147,7 @@ namespace dynamics
 {
 BodyImpl::BodyImpl(lua::Stack& lua, World& world)
 {
-  float32 area = 0.f;
+  float area = 0.f;
   std::vector<Shape> shapes;
 
   {
@@ -165,21 +165,21 @@ BodyImpl::BodyImpl(lua::Stack& lua, World& world)
       if(type == "box")
       {
         lua::Guard guard = lua.Field("shape");
-        float32 temp;
+        float temp;
         std::tie(shape, temp) = Box(*world.impl_, lua);
         area += temp;
       }
       else if(type == "circle")
       {
         lua::Guard guard = lua.Field("shape");
-        float32 temp;
+        float temp;
         std::tie(shape, temp) = Circle(*world.impl_, lua);
         area += temp;
       }
       else if(type == "chain")
       {
         lua::Guard guard = lua.Field("shape");
-        float32 temp;
+        float temp;
         std::tie(shape, temp) = Chain(*world.impl_, lua);
         area += temp;
       }
@@ -192,7 +192,7 @@ BodyImpl::BodyImpl(lua::Stack& lua, World& world)
     }
   }
 
-  float32 drag = lua.Field<float>("drag");
+  float drag = lua.Field<float>("drag");
 
   double x, y;
   {
@@ -352,7 +352,7 @@ auto BodyImpl::Begin() -> void
   }
 }
 
-auto BodyImpl::End(float32 dt) -> void
+auto BodyImpl::End(float dt) -> void
 {
   if(body_->GetType() != b2_staticBody)
   {
@@ -365,7 +365,7 @@ auto BodyImpl::End(float32 dt) -> void
   }
 }
 
-auto BodyImpl::Update(float32 ds) -> void
+auto BodyImpl::Update(float ds) -> void
 {
   if(body_->GetType() != b2_staticBody)
   {

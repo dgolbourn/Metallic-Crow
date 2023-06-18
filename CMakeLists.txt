@@ -243,7 +243,7 @@ add_executable (metallic-crow
                 ${SCRIPT_SOURCES}
                 ${TIME_SOURCES})
 
-#include_directories ("${PROJECT_SOURCE_DIR}/lib/SDL2/include")
+include_directories ("${SDL2_INCLUDE_DIRS}")
 #include_directories ("${PROJECT_SOURCE_DIR}/lib/SDL2/src/render")
 #add_library(SDL2 SHARED IMPORTED)
 #set_property(TARGET SDL2 PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/bin/shared/SDL2.dll")
